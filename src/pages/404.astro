@@ -1,0 +1,27 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import { CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { getHomePermalink } from '~/utils/permalinks';
+import { whatsappLink } from '~/utils/whatsapp';
+---
+
+<Layout metadata={{ title: 'Página no encontrada', robots: { index: false, follow: true } }}>
+  <section class="mx-auto flex max-w-xl flex-col items-center px-4 py-20 text-center md:py-28">
+    <p class="font-heading text-8xl font-extrabold text-primary md:text-9xl" aria-hidden="true">404</p>
+    <h1 class="mt-6 font-heading text-3xl font-bold text-heading">No encontramos esta página</h1>
+    <p class="mt-4 text-lg text-muted">Puede que el enlace esté mal escrito o que la página ya no exista.</p>
+    <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+      <a class="btn-primary" href={getHomePermalink()}>Ir al inicio</a>
+      <a
+        class="btn"
+        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.header)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+        Escríbenos
+      </a>
+    </div>
+  </section>
+</Layout>

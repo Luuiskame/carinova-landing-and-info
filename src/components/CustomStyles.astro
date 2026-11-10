@@ -1,0 +1,57 @@
+---
+// Carinova brand tokens (colours sampled from the logo). Fonts come from Astro's Fonts API
+// (see `fonts` in astro.config.ts and <Font /> in Layout.astro).
+//
+// Contrast notes (WCAG AA): the logo orange #FA7005 only reaches 2.9:1 with white text, so
+// buttons use navy text on orange (6.7:1) and orange *text* on white uses #B84D00 (5.1:1).
+// `.dark` is used for navy sections (header, hero, CTA, footer), not for a site-wide dark mode.
+---
+
+<style is:inline>
+  :root {
+    --aw-font-sans: var(--font-inter);
+    --aw-font-serif: var(--font-inter);
+    --aw-font-heading: var(--font-montserrat);
+
+    --aw-color-primary: rgb(5 58 134); /* brand blue #053A86: icons, links */
+    --aw-color-secondary: rgb(184 77 0); /* deep orange #B84D00: taglines */
+    --aw-color-accent: rgb(184 77 0); /* highlighted words on light backgrounds */
+    --aw-color-link: rgb(5 58 134);
+
+    --aw-color-cta: rgb(250 112 5); /* logo orange #FA7005: main buttons */
+    --aw-color-cta-hover: rgb(229 98 0);
+    --aw-color-on-cta: rgb(1 16 40);
+
+    --aw-color-text-heading: rgb(1 16 40); /* logo navy #011028 */
+    --aw-color-text-default: rgb(30 41 59);
+    --aw-color-text-muted: rgb(30 41 59 / 72%);
+    --aw-color-bg-page: rgb(255 255 255);
+
+    --aw-color-bg-page-dark: rgb(1 16 40);
+
+    ::selection {
+      background-color: rgb(250 112 5 / 25%);
+    }
+  }
+
+  .dark {
+    --aw-font-sans: var(--font-inter);
+    --aw-font-serif: var(--font-inter);
+    --aw-font-heading: var(--font-montserrat);
+
+    --aw-color-primary: rgb(147 197 253);
+    --aw-color-secondary: rgb(253 186 116);
+    --aw-color-accent: rgb(250 112 5); /* logo orange on navy: 6.7:1 */
+    --aw-color-link: rgb(250 112 5);
+
+    --aw-color-text-heading: rgb(255 255 255);
+    --aw-color-text-default: rgb(226 232 240);
+    --aw-color-text-muted: rgb(226 232 240 / 78%);
+    --aw-color-bg-page: rgb(1 16 40);
+
+    ::selection {
+      background-color: rgb(250 112 5 / 35%);
+      color: white;
+    }
+  }
+</style>

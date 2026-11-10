@@ -1,0 +1,94 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Content from '~/components/widgets/Content.astro';
+import Features2 from '~/components/widgets/Features2.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Branches from '~/components/carinova/Branches.astro';
+
+import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+
+const metadata = {
+  title: 'Nosotros',
+  description: `Carinova es una empresa nicaragüense de envíos de Estados Unidos a Nicaragua, con sucursales en ${cities}.`,
+};
+---
+
+<Layout metadata={metadata}>
+  <HeroText
+    tagline="Nosotros"
+    title="Somos Carinova"
+    subtitle={`Una empresa nicaragüense que acerca las tiendas de Estados Unidos a ${cities}.`}
+  />
+
+  <!-- TODO: replace with Carinova's real story (founding year, founders, milestones). -->
+  <Content
+    image={{
+      src: '~/assets/images/carinova-logo.jpeg',
+      alt: 'Logo de Carinova: tres personas levantan juntas una antorcha encendida frente a un globo terráqueo.',
+    }}
+    classes={{ container: 'pt-4 md:pt-6 lg:pt-8' }}
+  >
+    <Fragment slot="content">
+      <h2 class="mb-4 font-heading text-3xl font-bold tracking-tight text-heading">Nuestra historia</h2>
+      <p class="mb-4">
+        Carinova nació en Nicaragua con una idea sencilla: que comprar en Estados Unidos sea fácil, seguro y con precios
+        claros para todos.
+      </p>
+      <p>
+        Desde nuestras sucursales en {cities} atendemos a cada cliente de forma personal, por WhatsApp y en persona, y nos
+        encargamos de que cada compra llegue bien a su destino.
+      </p>
+    </Fragment>
+  </Content>
+
+  <!-- TODO: confirm the values with Carinova (drafted from the symbols in the logo). -->
+  <Features2
+    tagline="Nuestros valores"
+    title="Lo que nos mueve"
+    columns={3}
+    items={[
+      {
+        title: 'Trabajo en equipo',
+        description:
+          'Como en nuestro logo: tres personas levantando juntas la misma antorcha. Cada envío es trabajo de equipo, desde Miami hasta tu sucursal.',
+        icon: 'tabler:users-group',
+      },
+      {
+        title: 'Alcance internacional',
+        description:
+          'El globo de nuestro nombre es el puente que cruzamos todos los días entre Estados Unidos y Nicaragua.',
+        icon: 'tabler:world',
+      },
+      {
+        title: 'Compromiso',
+        description: 'La llama es nuestra promesa: cuidar cada paquete como si fuera nuestro.',
+        icon: 'tabler:flame',
+      },
+    ]}
+  >
+    <Fragment slot="bg">
+      <div class="absolute inset-0 bg-slate-50"></div>
+    </Fragment>
+  </Features2>
+
+  <Branches title="Dónde estamos" soft={false} />
+
+  <CallToAction
+    isDark
+    title="Hagamos tu primer envío"
+    subtitle="Escríbenos y te ayudamos a abrir tu casillero."
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Escribir por WhatsApp',
+        icon: 'tabler:brand-whatsapp',
+        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero),
+        target: '_blank',
+      },
+    ]}
+  />
+</Layout>

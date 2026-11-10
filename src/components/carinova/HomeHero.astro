@@ -1,0 +1,79 @@
+---
+// Home hero: the promise, the main WhatsApp button and the quote calculator side by side.
+// Only the text column is `.dark` (white text on navy); the calculator card keeps light colours.
+import { Icon } from 'astro-icon/components';
+import ShippingCalculator from '~/components/carinova/ShippingCalculator.astro';
+import { BRANCHES, CONTACT, RATES, WA_MESSAGES } from '~/data/carinova';
+import { formatUSD } from '~/utils/rates';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const cities = BRANCHES.map((branch) => branch.city);
+const lowestRate = formatUSD(Math.min(...RATES.services.map((service) => service.pricePerLb)));
+---
+
+<section class="relative overflow-hidden bg-dark">
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div
+      class="absolute inset-0 bg-[radial-gradient(45%_60%_at_95%_0%,rgb(250_112_5/0.18),transparent_70%),radial-gradient(50%_60%_at_0%_100%,rgb(5_58_134/0.55),transparent_70%)]"
+    >
+    </div>
+  </div>
+
+  <div
+    class="relative mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-14 lg:py-20"
+  >
+    <div class="dark text-center lg:text-left">
+      <p
+        class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm font-semibold text-accent"
+      >
+        <Icon name="tabler:plane-departure" class="h-4 w-4" />
+        Estados Unidos → Nicaragua
+      </p>
+
+      <h1
+        class="mt-5 font-heading text-4xl font-extrabold leading-[1.1] tracking-tight text-balance text-heading sm:text-5xl lg:text-[3.35rem]"
+      >
+        Compra en EE.&nbsp;UU. y recíbelo en <span class="text-accent">{cities.join(' o ')}</span>
+      </h1>
+
+      <p class="mx-auto mt-5 max-w-xl text-lg text-muted md:text-xl lg:mx-0">
+        Tu casillero en Miami para comprar en Amazon, Shein, Temu y más. Envíos aéreos y marítimos desde {lowestRate} la libra,
+        con atención directa por WhatsApp.
+      </p>
+
+      <div
+        class="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:justify-start"
+      >
+        <a
+          class="btn-primary"
+          href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.hero)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+          Cotizar por WhatsApp
+        </a>
+        <a class="btn" href="#tarifas">Ver tarifas</a>
+      </div>
+
+      <ul class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted lg:justify-start">
+        <li class="flex items-center gap-2">
+          <Icon name="tabler:map-pin" class="h-5 w-5 text-accent" />
+          Sucursales en {cities.join(' y ')}
+        </li>
+        <li class="flex items-center gap-2">
+          <Icon name="tabler:scale" class="h-5 w-5 text-accent" />
+          Precio claro por libra
+        </li>
+        <li class="flex items-center gap-2">
+          <Icon name="tabler:message-circle" class="h-5 w-5 text-accent" />
+          Te atendemos por WhatsApp
+        </li>
+      </ul>
+    </div>
+
+    <div id="cotizar" class="mx-auto w-full max-w-md scroll-mt-24 lg:max-w-none">
+      <ShippingCalculator />
+    </div>
+  </div>
+</section>

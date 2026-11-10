@@ -1,0 +1,51 @@
+---
+// Floating WhatsApp button on every page. With one number it opens the chat directly; when the
+// branches have different numbers it opens a small branch menu (native <details>, no JS).
+import { Icon } from 'astro-icon/components';
+import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const perBranch = new Set(BRANCHES.map((branch) => branch.whatsapp)).size > 1;
+
+// #1DA851: WhatsApp green dark enough for the white icon to reach 3:1.
+const buttonClass =
+  'flex h-14 w-14 items-center justify-center rounded-full bg-[#1DA851] text-white shadow-lg shadow-black/30 transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1DA851] motion-reduce:transition-none';
+---
+
+<!-- z-30: below the header (z-40), so the open mobile menu covers it. -->
+<div class="fixed bottom-4 right-4 z-30 md:bottom-6 md:right-6 rtl:left-4 rtl:right-auto">
+  {
+    perBranch ? (
+      <details class="relative">
+        <summary class:list={[buttonClass, 'cursor-pointer list-none [&::-webkit-details-marker]:hidden']}>
+          <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
+          <span class="sr-only">Escríbenos por WhatsApp</span>
+        </summary>
+        <div class="absolute bottom-16 right-0 w-56 rounded-xl bg-white p-2 text-slate-800 shadow-xl ring-1 ring-black/5">
+          <p class="px-3 py-2 text-sm font-semibold">¿Con qué sucursal?</p>
+          {BRANCHES.map((branch) => (
+            <a
+              href={whatsappLink(branch.whatsapp, WA_MESSAGES.branch(branch.city))}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100"
+            >
+              <Icon name="tabler:map-pin" class="h-4 w-4 text-slate-500" />
+              {branch.city}
+            </a>
+          ))}
+        </div>
+      </details>
+    ) : (
+      <a
+        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.floating)}
+        target="_blank"
+        rel="noopener noreferrer"
+        class={buttonClass}
+      >
+        <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
+        <span class="sr-only">Escríbenos por WhatsApp</span>
+      </a>
+    )
+  }
+</div>

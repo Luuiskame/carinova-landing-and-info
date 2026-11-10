@@ -1,0 +1,75 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import FAQs from '~/components/widgets/FAQs.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import StructuredData from '~/components/common/StructuredData.astro';
+
+import { CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { FAQ_GROUPS, faqSchema } from '~/data/faq';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const metadata = {
+  title: 'Preguntas frecuentes',
+  description:
+    'Casillero, tarifas, tiempos de entrega, aduana y retiro de paquetes: respuestas a las dudas más comunes sobre los envíos de Carinova de EE. UU. a Nicaragua.',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- One FAQPage block for the whole page (the widgets below don't emit their own). -->
+  <StructuredData slot="head" schema={faqSchema(FAQ_GROUPS.flatMap((group) => group.items))} />
+
+  <HeroText
+    tagline="Ayuda"
+    title="Preguntas frecuentes"
+    subtitle="Todo sobre tu casillero, las tarifas, los tiempos de entrega y el retiro de tus paquetes."
+  />
+
+  <nav aria-label="Temas" class="mx-auto max-w-3xl px-4 pb-4">
+    <ul class="flex flex-wrap justify-center gap-2">
+      {
+        FAQ_GROUPS.map((group) => (
+          <li>
+            <a
+              href={`#${group.id}`}
+              class="inline-block rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium transition hover:border-primary hover:text-primary"
+            >
+              {group.title}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    FAQ_GROUPS.map((group) => (
+      <FAQs
+        id={group.id}
+        title={group.title}
+        items={group.items}
+        defaultOpen={-1}
+        classes={{
+          container: 'py-8 md:py-10 lg:py-10',
+          headline: { container: 'max-w-3xl mb-4 md:mb-6', title: 'text-2xl md:text-3xl' },
+        }}
+      />
+    ))
+  }
+
+  <CallToAction
+    isDark
+    title="¿No encontraste tu respuesta?"
+    subtitle="Escríbenos por WhatsApp y te ayudamos."
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Preguntar por WhatsApp',
+        icon: 'tabler:brand-whatsapp',
+        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.faq),
+        target: '_blank',
+      },
+    ]}
+  />
+</Layout>

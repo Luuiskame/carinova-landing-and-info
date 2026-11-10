@@ -1,0 +1,154 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+
+import HomeHero from '~/components/carinova/HomeHero.astro';
+import Stores from '~/components/carinova/Stores.astro';
+import HowItWorks from '~/components/carinova/HowItWorks.astro';
+import Rates from '~/components/carinova/Rates.astro';
+import Branches from '~/components/carinova/Branches.astro';
+import Features2 from '~/components/widgets/Features2.astro';
+import Testimonials from '~/components/widgets/Testimonials.astro';
+import FAQs from '~/components/widgets/FAQs.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import StructuredData from '~/components/common/StructuredData.astro';
+
+import { SITE, METADATA, I18N } from 'astrowind:config';
+import { BRANCHES, CONTACT, REVIEWS, SOCIAL_LINKS, WA_MESSAGES } from '~/data/carinova';
+import { FEATURED_FAQS } from '~/data/faq';
+import { getPermalink } from '~/utils/permalinks';
+import { whatsappLink } from '~/utils/whatsapp';
+import logoImage from '~/assets/favicons/apple-touch-icon.png';
+
+const metadata = {
+  title: 'Carinova — Courier de EE. UU. a Nicaragua | Managua y Estelí',
+  ignoreTitleTemplate: true,
+  description: METADATA?.description,
+};
+
+const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+const hasReviews = REVIEWS.length > 0;
+
+// Structured data for the site and the company, built from src/config.yaml and src/data/carinova.ts.
+const organizationId = `${SITE?.site}/#organization`;
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE?.site}/#website`,
+    name: SITE?.name,
+    url: SITE?.site,
+    inLanguage: I18N?.language,
+    publisher: { '@id': organizationId },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': organizationId,
+    name: SITE?.name,
+    url: SITE?.site,
+    logo: new URL(logoImage.src, SITE?.site).toString(),
+    ...(SOCIAL_LINKS.length ? { sameAs: SOCIAL_LINKS.map((link) => link.href) } : {}),
+  },
+];
+---
+
+<Layout metadata={metadata}>
+  <StructuredData slot="head" schema={structuredData} />
+
+  <HomeHero />
+
+  <Stores />
+
+  <HowItWorks />
+
+  <Rates />
+
+  <Features2
+    id="por-que-carinova"
+    tagline="Por qué Carinova"
+    title="Envíos sin complicaciones"
+    subtitle="Lo que necesitas para comprar en Estados Unidos con confianza."
+    columns={3}
+    items={[
+      {
+        title: 'Precios claros',
+        description: 'Tarifas publicadas por libra y una calculadora para saber el costo antes de comprar.',
+        icon: 'tabler:receipt-2',
+      },
+      {
+        title: 'Atención por WhatsApp',
+        description: 'Te responde nuestro equipo en Nicaragua, por el canal que ya usas todos los días.',
+        icon: 'tabler:brand-whatsapp',
+      },
+      {
+        title: 'Aéreo o marítimo',
+        description: 'Rapidez para lo urgente, el mejor precio por libra para las compras grandes.',
+        icon: 'tabler:plane',
+      },
+      {
+        title: `Sucursales en ${cities}`,
+        description: 'Retira tu paquete en la sucursal que te quede más cerca.',
+        icon: 'tabler:building-store',
+      },
+      {
+        title: 'Cualquier tienda',
+        description: 'Si la tienda envía dentro de Estados Unidos, tu compra puede llegar a tu casillero.',
+        icon: 'tabler:shopping-bag',
+      },
+      {
+        // TODO: confirm the notifications Carinova sends.
+        title: 'Te avisamos en cada paso',
+        description: 'Cuando tu paquete llega a Miami, cuando viaja y cuando está listo para retirar.',
+        icon: 'tabler:bell-ringing',
+      },
+    ]}
+  >
+    <Fragment slot="bg">
+      <div class="absolute inset-0 bg-slate-50"></div>
+    </Fragment>
+  </Features2>
+
+  {
+    hasReviews && (
+      <Testimonials
+        id="resenas"
+        tagline="Reseñas"
+        title="Lo que dicen nuestros clientes"
+        testimonials={REVIEWS.map((review) => ({
+          testimonial: review.text,
+          name: review.name,
+          job: review.source ?? 'Reseña de Google',
+          rating: review.rating,
+        }))}
+      />
+    )
+  }
+
+  <!-- Section backgrounds alternate white / grey whether or not the reviews section is shown. -->
+  <Branches soft={hasReviews} />
+
+  <FAQs
+    id="preguntas"
+    tagline="Preguntas frecuentes"
+    title="Lo que más nos preguntan"
+    subtitle={`¿Tienes otra duda? <a class="text-link underline" href="${getPermalink('/preguntas-frecuentes')}">Ver todas las preguntas</a>`}
+    items={FEATURED_FAQS}
+    bg={hasReviews ? undefined : '<div class="absolute inset-0 bg-slate-50"></div>'}
+  />
+
+  <CallToAction
+    isDark
+    title="¿Listo para tu primera compra en Estados Unidos?"
+    subtitle="Escríbenos y te ayudamos a abrir tu casillero hoy mismo."
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Escribir por WhatsApp',
+        icon: 'tabler:brand-whatsapp',
+        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.closing),
+        target: '_blank',
+      },
+      { text: 'Calcular mi envío', href: '#cotizar' },
+    ]}
+  />
+</Layout>

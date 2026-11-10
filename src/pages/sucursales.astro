@@ -1,0 +1,87 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Branches from '~/components/carinova/Branches.astro';
+import StructuredData from '~/components/common/StructuredData.astro';
+
+import { SITE } from 'astrowind:config';
+import { BRANCHES, CONTACT, SITE_STATUS, SOCIAL_LINKS, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+
+const metadata = {
+  title: 'Sucursales y contacto',
+  description: `Direcciones, horarios y WhatsApp de Carinova en ${cities}.`,
+};
+
+// LocalBusiness data only once the addresses are real (it is what Google shows on maps).
+const localBusinesses = SITE_STATUS.isPreview
+  ? []
+  : BRANCHES.map((branch) => ({
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      '@id': `${SITE?.site}/sucursales#${branch.id}`,
+      name: `${SITE?.name} ${branch.city}`,
+      url: `${SITE?.site}/sucursales#${branch.id}`,
+      telephone: `+${branch.whatsapp}`,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: branch.address,
+        addressLocality: branch.city,
+        addressCountry: 'NI',
+      },
+      parentOrganization: { '@id': `${SITE?.site}/#organization` },
+      ...(branch.mapsUrl ? { hasMap: branch.mapsUrl } : {}),
+    }));
+---
+
+<Layout metadata={metadata}>
+  {localBusinesses.length > 0 && <StructuredData slot="head" schema={localBusinesses} />}
+
+  <HeroText
+    tagline="Contacto"
+    title="Sucursales y contacto"
+    subtitle="Visítanos o escríbenos por WhatsApp: te atiende la sucursal donde retiras tus paquetes."
+  />
+
+  <Branches tagline="" title="" />
+
+  <section class="mx-auto max-w-3xl px-4 py-12 text-center md:py-16">
+    <h2 class="font-heading text-2xl font-bold text-heading">Otras formas de contactarnos</h2>
+    <ul class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <li>
+        <a
+          class="btn"
+          href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.header)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+          WhatsApp general
+        </a>
+      </li>
+      {
+        CONTACT.email && (
+          <li>
+            <a class="btn" href={`mailto:${CONTACT.email}`}>
+              <Icon name="tabler:mail" class="mr-2 h-5 w-5" />
+              {CONTACT.email}
+            </a>
+          </li>
+        )
+      }
+      {
+        SOCIAL_LINKS.map((link) => (
+          <li>
+            <a class="btn" href={link.href} target="_blank" rel="noopener noreferrer">
+              <Icon name={link.icon} class="mr-2 h-5 w-5" />
+              {link.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Layout>

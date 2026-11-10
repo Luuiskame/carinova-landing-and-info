@@ -1,0 +1,183 @@
+---
+// Instant shipping quote: service + weight + pickup branch → estimated total, and a WhatsApp button
+// that sends the quote. The first quote (1 lb, first service, first branch) is rendered on the server,
+// so the card and its link work before the script runs.
+import { Icon } from 'astro-icon/components';
+import { BRANCHES, RATES, WA_MESSAGES } from '~/data/carinova';
+import { billablePounds, formatPounds, formatUSD, quoteTotal } from '~/utils/rates';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const [service] = RATES.services;
+const [branch] = BRANCHES;
+const pounds = 1;
+const total = formatUSD(quoteTotal(pounds, service.pricePerLb, service.minLb, RATES.roundUpToPound));
+const billable = billablePounds(pounds, service.minLb, RATES.roundUpToPound);
+
+const config = {
+  roundUp: RATES.roundUpToPound,
+  services: RATES.services.map(({ id, name, pricePerLb, minLb, transit }) => ({
+    id,
+    name,
+    pricePerLb,
+    minLb,
+    transit,
+  })),
+  branches: BRANCHES.map(({ id, city, whatsapp }) => ({ id, city, whatsapp })),
+};
+
+const optionClass =
+  'flex h-full rounded-xl border-2 border-slate-200 px-3 py-2.5 transition peer-checked:border-cta peer-checked:bg-orange-50 peer-focus-visible:ring-2 peer-focus-visible:ring-[#053A86] peer-focus-visible:ring-offset-2';
+---
+
+<cn-calculator data-config={JSON.stringify(config)} class="block">
+  <form
+    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-2xl shadow-black/30 ring-1 ring-black/5 sm:p-7"
+    novalidate
+  >
+    <h2 class="font-heading text-2xl font-bold text-[#011028]">Calcula tu envío</h2>
+    <p class="mt-1 text-sm text-slate-600">Precio estimado al instante, sin registrarte.</p>
+
+    <fieldset class="mt-5">
+      <legend class="text-sm font-semibold text-slate-700">Tipo de envío</legend>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        {
+          RATES.services.map((option, index) => (
+            <label class="relative block cursor-pointer">
+              <input type="radio" name="service" value={option.id} checked={index === 0} class="peer sr-only" />
+              <span class:list={[optionClass, 'flex-col']}>
+                <span class="flex items-center gap-1.5 font-semibold text-[#011028]">
+                  <Icon name={option.icon} class="h-5 w-5" />
+                  {option.name}
+                </span>
+                <span class="text-xs text-slate-600">{option.transit}</span>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div class="mt-4">
+      <label for="cn-weight" class="text-sm font-semibold text-slate-700">Peso del paquete</label>
+      <div class="mt-2 flex items-center rounded-xl border-2 border-slate-200 transition focus-within:border-[#053A86]">
+        <input
+          id="cn-weight"
+          name="weight"
+          type="number"
+          inputmode="decimal"
+          min="0.1"
+          max="2000"
+          step="0.1"
+          value={pounds}
+          class="w-full rounded-xl bg-transparent px-3 py-2.5 text-lg font-semibold text-[#011028] outline-none"
+        />
+        <span class="pr-4 font-semibold text-slate-500">lb</span>
+      </div>
+      <p class="mt-1 text-xs text-slate-500">¿Lo tienes en kilos? 1 kg = 2.2 lb.</p>
+    </div>
+
+    <fieldset class="mt-4">
+      <legend class="text-sm font-semibold text-slate-700">¿Dónde lo retiras?</legend>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        {
+          BRANCHES.map((option, index) => (
+            <label class="relative block cursor-pointer">
+              <input type="radio" name="branch" value={option.id} checked={index === 0} class="peer sr-only" />
+              <span class:list={[optionClass, 'items-center gap-1.5 font-semibold text-[#011028]']}>
+                <Icon name="tabler:map-pin" class="h-5 w-5" />
+                {option.city}
+              </span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div class="mt-5 rounded-xl bg-slate-100 p-4" aria-live="polite" aria-atomic="true">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-slate-600">Total estimado</p>
+          <p class="font-heading text-4xl font-extrabold text-[#011028]" data-cn-total>{total}</p>
+        </div>
+        <p class="text-right text-sm text-slate-600" data-cn-detail>
+          {formatPounds(billable)} lb × {formatUSD(service.pricePerLb)}
+        </p>
+      </div>
+      <p class="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
+        <Icon name="tabler:clock" class="h-4 w-4" />
+        <span data-cn-transit>Llega en {service.transit}</span>
+      </p>
+    </div>
+
+    <a
+      data-cn-whatsapp
+      href={whatsappLink(branch.whatsapp, WA_MESSAGES.quote(service.name, formatPounds(pounds), branch.city, total))}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-primary mt-5 w-full"
+    >
+      <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+      Enviar cotización por WhatsApp
+    </a>
+    <p class="mt-3 text-xs leading-relaxed text-slate-500">
+      Estimado referencial en USD; el precio final se confirma al pesar tu paquete{
+        RATES.roundUpToPound ? ' y cada libra iniciada se cobra completa' : ''
+      }. No incluye impuestos de aduana.
+    </p>
+  </form>
+</cn-calculator>
+
+<script>
+  import { WA_MESSAGES } from '~/data/carinova';
+  import { billablePounds, formatPounds, formatUSD, quoteTotal } from '~/utils/rates';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  interface Config {
+    roundUp: boolean;
+    services: Array<{ id: string; name: string; pricePerLb: number; minLb: number; transit: string }>;
+    branches: Array<{ id: string; city: string; whatsapp: string }>;
+  }
+
+  class CnCalculator extends HTMLElement {
+    connectedCallback() {
+      const config: Config = JSON.parse(this.dataset.config ?? '{}');
+      const form = this.querySelector('form');
+      const total = this.querySelector<HTMLElement>('[data-cn-total]');
+      const detail = this.querySelector<HTMLElement>('[data-cn-detail]');
+      const transit = this.querySelector<HTMLElement>('[data-cn-transit]');
+      const link = this.querySelector<HTMLAnchorElement>('[data-cn-whatsapp]');
+      if (!form || !total || !detail || !transit || !link || !config.services?.length) return;
+
+      const update = () => {
+        const data = new FormData(form);
+        const service = config.services.find((s) => s.id === data.get('service')) ?? config.services[0];
+        const branch = config.branches.find((b) => b.id === data.get('branch')) ?? config.branches[0];
+        const pounds = Number(String(data.get('weight') ?? '').replace(',', '.'));
+
+        transit.textContent = `Llega en ${service.transit}`;
+        if (!(pounds > 0)) {
+          total.textContent = '—';
+          detail.textContent = 'Ingresa el peso';
+          link.href = whatsappLink(branch.whatsapp, WA_MESSAGES.hero);
+          return;
+        }
+
+        const amount = formatUSD(quoteTotal(pounds, service.pricePerLb, service.minLb, config.roundUp));
+        const billable = billablePounds(pounds, service.minLb, config.roundUp);
+        total.textContent = amount;
+        detail.textContent = `${formatPounds(billable)} lb × ${formatUSD(service.pricePerLb)}`;
+        link.href = whatsappLink(
+          branch.whatsapp,
+          WA_MESSAGES.quote(service.name, formatPounds(pounds), branch.city, amount)
+        );
+      };
+
+      form.addEventListener('input', update);
+      form.addEventListener('change', update);
+      form.addEventListener('submit', (event) => event.preventDefault());
+      update();
+    }
+  }
+
+  if (!customElements.get('cn-calculator')) customElements.define('cn-calculator', CnCalculator);
+</script>

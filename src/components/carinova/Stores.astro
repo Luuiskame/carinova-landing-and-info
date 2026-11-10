@@ -1,0 +1,22 @@
+---
+// Strip of stores customers can buy from. Names only (no logos): most store logos are not
+// available under an open licence; real logo files can replace the names later.
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import { STORES } from '~/data/carinova';
+---
+
+<WidgetWrapper id="tiendas" containerClass="max-w-6xl py-10 md:py-12 lg:py-12">
+  <h2 class="text-center text-sm font-semibold tracking-wider text-muted uppercase">
+    Compra en tus tiendas favoritas de Estados Unidos
+  </h2>
+  <ul class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
+    {
+      STORES.map((store) => (
+        <li class="rounded-full border border-slate-200 bg-white px-4 py-2 font-heading text-base font-bold text-slate-700 sm:text-lg">
+          {store}
+        </li>
+      ))
+    }
+    <li class="px-2 py-2 text-base text-muted sm:text-lg">y muchas más</li>
+  </ul>
+</WidgetWrapper>

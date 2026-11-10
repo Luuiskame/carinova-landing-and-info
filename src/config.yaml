@@ -1,0 +1,73 @@
+site:
+  name: Carinova
+  # TODO: final domain. Used for canonical URLs, the sitemap and share images.
+  # `.example` is a reserved TLD, so preview builds never point at someone else's site.
+  site: 'https://carinova.example'
+  base: '/'
+  trailingSlash: false
+
+# Default SEO metadata
+metadata:
+  title:
+    default: Carinova — Courier de EE. UU. a Nicaragua
+    template: '%s | Carinova'
+  description: 'Compra en Estados Unidos y recibe en Managua o Estelí. Envíos aéreos y marítimos con precios claros por libra. Cotiza al instante por WhatsApp.'
+  robots:
+    # Preview: keep search engines out until the placeholder content is replaced.
+    # Set both to true at launch (and SITE_STATUS.isPreview to false in src/data/carinova.ts).
+    index: false
+    follow: false
+  openGraph:
+    images:
+      - url: '~/assets/images/og-default.jpg'
+        width: 1200
+        height: 630
+    type: website
+    locale: es_NI
+  twitter:
+    cardType: summary_large_image
+
+i18n:
+  language: es
+  textDirection: ltr
+
+apps:
+  blog:
+    # Off until there are a few posts. Pages, RSS and widgets are ready; see .agents/skills/disable-blog.md.
+    isEnabled: false
+    postsPerPage: 8
+
+    post:
+      isEnabled: true
+      permalink: '/blog/%slug%' # Variables: %slug%, %year%, %month%, %day%, %hour%, %minute%, %second%, %category%
+      robots:
+        index: true
+
+    list:
+      isEnabled: true
+      pathname: 'blog'
+      robots:
+        index: true
+
+    category:
+      isEnabled: true
+      pathname: 'categoria'
+      robots:
+        index: true
+
+    tag:
+      isEnabled: true
+      pathname: 'etiqueta'
+      robots:
+        index: false
+
+    isRelatedPostsEnabled: true
+    relatedPostsCount: 4
+
+analytics:
+  vendors:
+    googleAnalytics:
+      id: null # or "G-XXXXXXXXXX"
+
+ui:
+  theme: 'light:only' # Values: "system" | "light" | "dark" | "light:only" | "dark:only"

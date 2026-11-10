@@ -1,0 +1,84 @@
+---
+// Branch cards: address, hours, WhatsApp of the branch and "Cómo llegar" (when there is a Maps link).
+// Each card has the branch id as anchor (/sucursales#esteli).
+import { Icon } from 'astro-icon/components';
+import Headline from '~/components/ui/Headline.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import { BRANCHES, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+export interface Props {
+  id?: string;
+  tagline?: string;
+  title?: string;
+  subtitle?: string;
+  /** Light grey section background; turn off when the previous section already has it. */
+  soft?: boolean;
+}
+
+const {
+  id = 'sucursales',
+  tagline = 'Sucursales',
+  title = `Retira en ${BRANCHES.map((branch) => branch.city).join(' o ')}`,
+  subtitle,
+  soft = true,
+} = Astro.props;
+
+// Card titles sit under the section title (h2) when there is one, otherwise right under the page h1.
+const CardHeading = title || subtitle || tagline ? 'h3' : 'h2';
+---
+
+<WidgetWrapper
+  id={id}
+  containerClass="max-w-5xl"
+  bg={soft ? '<div class="absolute inset-0 bg-slate-50"></div>' : '<div class="absolute inset-0"></div>'}
+>
+  <Headline tagline={tagline} title={title} subtitle={subtitle} />
+  <div class="grid gap-6 md:grid-cols-2">
+    {
+      BRANCHES.map((branch) => (
+        <article
+          id={branch.id}
+          class="flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8"
+        >
+          <CardHeading class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+            <Icon name="tabler:building-store" class="h-7 w-7 text-primary" />
+            {branch.city}
+          </CardHeading>
+          <p class="mt-4 flex gap-2">
+            <Icon name="tabler:map-pin" class="mt-0.5 h-5 w-5 shrink-0 text-muted" />
+            <span>
+              {branch.address}
+              {branch.reference && <span class="block text-sm text-muted">{branch.reference}</span>}
+            </span>
+          </p>
+          <dl class="mt-4 flex-1 text-sm">
+            {branch.hours.map((row) => (
+              <div class="flex justify-between gap-4 border-b border-slate-100 py-2 last:border-0">
+                <dt class="text-muted">{row.days}</dt>
+                <dd class="font-medium text-right">{row.time}</dd>
+              </div>
+            ))}
+          </dl>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <a
+              class="btn-primary flex-1"
+              href={whatsappLink(branch.whatsapp, WA_MESSAGES.branch(branch.city))}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+              WhatsApp {branch.city}
+            </a>
+            {branch.mapsUrl && (
+              <a class="btn flex-1" href={branch.mapsUrl} target="_blank" rel="noopener noreferrer">
+                <Icon name="tabler:directions" class="mr-2 h-5 w-5" />
+                Cómo llegar
+              </a>
+            )}
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</WidgetWrapper>

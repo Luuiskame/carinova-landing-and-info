@@ -1,0 +1,18 @@
+// Cloudflare Workers configuration (only used if the site is hosted on Cloudflare;
+// Netlify uses netlify.toml). The site is fully static, so the Worker only serves
+// the `dist/` folder as assets; no adapter is needed.
+// Docs: https://developers.cloudflare.com/workers/static-assets/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "carinova-web",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    // Astro writes pages as `nosotros/index.html`, but links, canonical URLs and the
+    // sitemap use `/nosotros` (trailingSlash: false). The default "auto-trailing-slash"
+    // would 307-redirect every page to `/nosotros/`; this serves `/nosotros` directly
+    // and redirects `/nosotros/` and `/nosotros/index.html` to it.
+    "html_handling": "drop-trailing-slash",
+  },
+}
