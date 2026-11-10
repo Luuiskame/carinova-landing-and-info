@@ -12,9 +12,11 @@ yarn-error.log*
 pnpm-debug.log*
 
 
-# environment variables
+# environment variables and secrets (.env.example is the template that is committed)
 .env
-.env.production
+.env.*
+!.env.example
+.dev.vars*
 
 # macOS-specific files
 .DS_Store

@@ -1,0 +1,493 @@
+---
+// Sign-up form (/registro). Its fields follow Carinova's address sheet (country, name, last name,
+// phone, address, apt/suite, city, state, postal code) plus the e-mail that gets confirmed.
+// The script posts it to /api/signup, which validates it and e-mails the confirmation link
+// (worker/api.ts); the options, the rules per country and the examples shown as placeholders come
+// from src/data/signup.ts.
+import { Icon } from 'astro-icon/components';
+import { CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { CONFIRM_LINK_HOURS, SIGNUP_COUNTRIES, SIGNUP_NAME_EXAMPLES } from '~/data/signup';
+import { getPermalink } from '~/utils/permalinks';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const [initial] = SIGNUP_COUNTRIES;
+
+const labelClass = 'block text-sm font-semibold text-slate-700';
+const inputClass =
+  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-[#011028] outline-none transition placeholder:text-slate-400 focus:border-[#053A86] aria-[invalid=true]:border-red-600';
+const hintClass = 'mt-1 text-xs text-slate-500';
+const errorClass = 'mt-1 text-sm font-medium text-red-700';
+const legalLinkClass = 'font-medium text-link underline';
+---
+
+<cn-signup class="block">
+  <!--
+    method="dialog" with no <dialog> around it: submitting does nothing by itself, so if the script
+    has not loaded yet the form neither reloads the page nor puts personal data in the address bar.
+  -->
+  <form
+    method="dialog"
+    novalidate
+    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+  >
+    <h2 class="font-heading text-2xl font-bold text-[#011028]">Tus datos</h2>
+    <p class="mt-1 text-sm text-slate-600">Te toma un par de minutos.</p>
+
+    <noscript>
+      <p class="mt-4 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">
+        Para registrarte en línea necesitas activar JavaScript en tu navegador. También puedes abrir tu casillero por
+        WhatsApp.
+      </p>
+    </noscript>
+
+    <div class="mt-6 grid gap-x-4 gap-y-5 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="cn-country" class={labelClass}>País</label>
+        <select
+          id="cn-country"
+          name="country"
+          autocomplete="country"
+          required
+          class={inputClass}
+          aria-describedby="cn-country-error"
+        >
+          {
+            SIGNUP_COUNTRIES.map((country) => (
+              <option
+                value={country.code}
+                data-examples={JSON.stringify(country.examples)}
+                data-postal-required={country.postalCode.required ? '' : undefined}
+              >
+                {country.name}
+              </option>
+            ))
+          }
+        </select>
+        <p id="cn-country-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-firstName" class={labelClass}>Nombre</label>
+        <input
+          id="cn-firstName"
+          name="firstName"
+          type="text"
+          autocomplete="given-name"
+          required
+          maxlength="60"
+          placeholder={SIGNUP_NAME_EXAMPLES.firstName}
+          class={inputClass}
+          aria-describedby="cn-firstName-error"
+        />
+        <p id="cn-firstName-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-lastName" class={labelClass}>Apellido</label>
+        <input
+          id="cn-lastName"
+          name="lastName"
+          type="text"
+          autocomplete="family-name"
+          required
+          maxlength="60"
+          placeholder={SIGNUP_NAME_EXAMPLES.lastName}
+          class={inputClass}
+          aria-describedby="cn-lastName-error"
+        />
+        <p id="cn-lastName-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-email" class={labelClass}>Correo electrónico</label>
+        <input
+          id="cn-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+          maxlength="254"
+          placeholder={SIGNUP_NAME_EXAMPLES.email}
+          class={inputClass}
+          aria-describedby="cn-email-hint cn-email-error"
+        />
+        <p id="cn-email-hint" class={hintClass}>Te enviaremos un enlace para confirmar tu cuenta.</p>
+        <p id="cn-email-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-phone" class={labelClass}>Teléfono</label>
+        <input
+          id="cn-phone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          required
+          maxlength="30"
+          placeholder={initial.examples.phone}
+          class={inputClass}
+          aria-describedby="cn-phone-hint cn-phone-error"
+        />
+        <p id="cn-phone-hint" class={hintClass}>De preferencia, el número que usas en WhatsApp.</p>
+        <p id="cn-phone-error" class={errorClass} hidden></p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="cn-address1" class={labelClass}>Dirección</label>
+        <input
+          id="cn-address1"
+          name="address1"
+          type="text"
+          autocomplete="address-line1"
+          required
+          maxlength="120"
+          placeholder={initial.examples.address1}
+          class={inputClass}
+          aria-describedby="cn-address1-error"
+        />
+        <p id="cn-address1-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-address2" class={labelClass}>
+          Apto / Suite <span class="font-normal text-slate-500">(opcional)</span>
+        </label>
+        <input
+          id="cn-address2"
+          name="address2"
+          type="text"
+          autocomplete="address-line2"
+          maxlength="60"
+          placeholder={initial.examples.address2}
+          class={inputClass}
+          aria-describedby="cn-address2-error"
+        />
+        <p id="cn-address2-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-city" class={labelClass}>Ciudad</label>
+        <input
+          id="cn-city"
+          name="city"
+          type="text"
+          autocomplete="address-level2"
+          required
+          maxlength="60"
+          placeholder={initial.examples.city}
+          class={inputClass}
+          aria-describedby="cn-city-error"
+        />
+        <p id="cn-city-error" class={errorClass} hidden></p>
+      </div>
+
+      {
+        /* One list per country; the script shows the one of the chosen country and disables the rest. */
+        SIGNUP_COUNTRIES.map((country) => (
+          <div data-cn-states={country.code} hidden={country !== initial}>
+            <label for={`cn-state-${country.code}`} class={labelClass}>
+              {country.stateLabel}
+            </label>
+            <select
+              id={`cn-state-${country.code}`}
+              name="state"
+              autocomplete="address-level1"
+              required
+              disabled={country !== initial}
+              class={inputClass}
+              aria-describedby={`cn-state-${country.code}-error`}
+            >
+              <option value="">Elige uno</option>
+              {country.states.map((state) => (
+                <option value={state}>{state}</option>
+              ))}
+            </select>
+            <p id={`cn-state-${country.code}-error`} class={errorClass} hidden />
+          </div>
+        ))
+      }
+
+      <div>
+        <label for="cn-postalCode" class={labelClass}>
+          Código postal{' '}
+          <span class="font-normal text-slate-500" data-cn-postal-optional hidden={initial.postalCode.required}>
+            (opcional)
+          </span>
+        </label>
+        <input
+          id="cn-postalCode"
+          name="postalCode"
+          type="text"
+          autocomplete="postal-code"
+          required={initial.postalCode.required}
+          maxlength="10"
+          placeholder={initial.examples.postalCode}
+          class={inputClass}
+          aria-describedby="cn-postalCode-error"
+        />
+        <p id="cn-postalCode-error" class={errorClass} hidden></p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="flex items-start gap-3 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            name="terms"
+            required
+            class="mt-0.5 h-5 w-5 shrink-0 accent-[#053A86]"
+            aria-describedby="cn-terms-error"
+          />
+          <span>
+            {/* Explicit spaces: line breaks between text and tags are dropped from the output. */}
+            Acepto los{' '}
+            <a class={legalLinkClass} href={getPermalink('/terminos')} target="_blank" rel="noopener"
+              >Términos y condiciones</a
+            >{' '}
+            y la{' '}
+            <a class={legalLinkClass} href={getPermalink('/privacidad')} target="_blank" rel="noopener"
+              >Política de privacidad</a
+            >.
+          </span>
+        </label>
+        <p id="cn-terms-error" class={errorClass} hidden></p>
+      </div>
+
+      <!-- Honeypot: people never see or reach this field; whatever fills it is not a person. -->
+      <div class="hidden" aria-hidden="true">
+        <label for="cn-contact-time">Deja este campo vacío</label>
+        <input id="cn-contact-time" name="contact_time" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+    </div>
+
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+      role="alert"
+      data-cn-alert
+      hidden
+    >
+      <p data-cn-alert-text></p>
+      <a
+        class="mt-2 inline-flex items-center gap-1.5 font-semibold underline"
+        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.signupHelp)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Icon name="tabler:brand-whatsapp" class="h-5 w-5" />
+        Escribir por WhatsApp
+      </a>
+    </div>
+    <p class="sr-only" aria-live="polite" data-cn-status></p>
+
+    <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label="Enviando…">
+      Abrir mi casillero
+    </button>
+    <p class="mt-3 text-center text-xs text-slate-500">Al enviar, te mandamos un correo para confirmar tu cuenta.</p>
+  </form>
+
+  <div
+    class="rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    data-cn-sent
+    hidden
+  >
+    <Icon name="tabler:mail-check" class="h-12 w-12 text-primary" />
+    <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-sent-title>
+      Revisa tu correo
+    </h2>
+    <p class="mt-3">
+      Enviamos un enlace a <strong class="break-all" data-cn-sent-email></strong>. Ábrelo para confirmar tu cuenta y
+      recibir tu número de cliente y tu dirección en Miami.
+    </p>
+    <ul class="mt-4 list-disc space-y-1.5 pl-5 text-sm text-slate-600">
+      <li>Puede tardar un par de minutos en llegar.</li>
+      <li>Si no lo ves, revisa la carpeta de spam o correo no deseado.</li>
+      <li>El enlace vence en {CONFIRM_LINK_HOURS} horas.</li>
+    </ul>
+    <button type="button" class="mt-6 text-sm font-semibold text-link underline" data-cn-edit>
+      ¿Escribiste mal tu correo? Corrígelo
+    </button>
+  </div>
+</cn-signup>
+
+<script>
+  type Control = HTMLInputElement | HTMLSelectElement;
+
+  const MESSAGES = {
+    missing: 'Completa este campo.',
+    terms: 'Para continuar, acepta los términos y la política de privacidad.',
+    unavailable:
+      'El registro en línea no está disponible en este momento. Escríbenos por WhatsApp y abrimos tu casillero.',
+    busy: 'Recibimos demasiados intentos seguidos. Espera un minuto y vuelve a intentarlo.',
+    failed: 'No pudimos enviar tu registro. Revisa tu conexión e inténtalo de nuevo, o escríbenos por WhatsApp.',
+  };
+
+  class CnSignup extends HTMLElement {
+    private form!: HTMLFormElement;
+    private busy = false;
+
+    connectedCallback() {
+      const form = this.querySelector('form');
+      if (!form) return;
+      this.form = form;
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void this.submit();
+      });
+      // An error goes away as soon as its field is touched.
+      form.addEventListener('input', (event) => this.clearError(event.target as Control));
+      form.addEventListener('change', (event) => {
+        const control = event.target as Control;
+        if (control.name === 'country') this.applyCountry();
+        this.clearError(control);
+      });
+      this.querySelector('[data-cn-edit]')?.addEventListener('click', () => this.showForm());
+
+      // Browsers can restore the previous choice when coming back to the page.
+      this.applyCountry();
+    }
+
+    /** The fields that are part of the submission: the hidden country's state list is disabled. */
+    private controls(): Array<Control> {
+      return Array.from(this.form.querySelectorAll<Control>('input[name], select[name]')).filter(
+        (control) => !control.disabled && control.name !== 'contact_time'
+      );
+    }
+
+    private errorOf(control: Control): HTMLElement | null {
+      const id = control.getAttribute('aria-describedby')?.split(' ').pop();
+      return id ? document.getElementById(id) : null;
+    }
+
+    /** State list, postal code rule and placeholders of the chosen country. */
+    private applyCountry() {
+      const select = this.form.querySelector<HTMLSelectElement>('select[name="country"]');
+      const option = select?.selectedOptions[0];
+      if (!select || !option) return;
+
+      for (const group of this.querySelectorAll<HTMLElement>('[data-cn-states]')) {
+        const active = group.dataset.cnStates === select.value;
+        group.hidden = !active;
+        const states = group.querySelector('select');
+        if (states) states.disabled = !active;
+      }
+
+      const postal = this.form.querySelector<HTMLInputElement>('input[name="postalCode"]');
+      const optional = this.querySelector<HTMLElement>('[data-cn-postal-optional]');
+      const required = option.dataset.postalRequired !== undefined;
+      if (postal) {
+        postal.required = required;
+        this.clearError(postal);
+      }
+      if (optional) optional.hidden = required;
+
+      // The examples are keyed by field name (src/data/signup.ts).
+      const examples = JSON.parse(option.dataset.examples ?? '{}') as Record<string, string>;
+      for (const [name, example] of Object.entries(examples)) {
+        const input = this.form.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+        if (input) input.placeholder = example;
+      }
+    }
+
+    private clearError(control: Control | null) {
+      if (!control?.name) return;
+      control.removeAttribute('aria-invalid');
+      const error = this.errorOf(control);
+      if (error) error.hidden = true;
+    }
+
+    private showErrors(fields: Record<string, string>) {
+      let first: Control | undefined;
+      let count = 0;
+      for (const control of this.controls()) {
+        const message = fields[control.name];
+        const error = this.errorOf(control);
+        if (!message || !error) continue;
+        control.setAttribute('aria-invalid', 'true');
+        error.textContent = message;
+        error.hidden = false;
+        first ??= control;
+        count += 1;
+      }
+      first?.focus();
+      const status = this.querySelector('[data-cn-status]');
+      if (status) status.textContent = count === 1 ? 'Hay un campo por corregir.' : `Hay ${count} campos por corregir.`;
+    }
+
+    private showAlert(message: string | null) {
+      const alert = this.querySelector<HTMLElement>('[data-cn-alert]');
+      const text = this.querySelector('[data-cn-alert-text]');
+      if (!alert || !text) return;
+      text.textContent = message ?? '';
+      alert.hidden = message === null;
+    }
+
+    private setBusy(busy: boolean) {
+      this.busy = busy;
+      const button = this.querySelector<HTMLButtonElement>('[data-cn-submit]');
+      if (!button) return;
+      button.dataset.label ??= button.textContent ?? '';
+      button.disabled = busy;
+      button.textContent = busy ? (button.dataset.busyLabel ?? '') : button.dataset.label;
+    }
+
+    private showSent(email: string) {
+      const panel = this.querySelector<HTMLElement>('[data-cn-sent]');
+      const address = this.querySelector('[data-cn-sent-email]');
+      if (!panel || !address) return;
+      address.textContent = email;
+      this.form.hidden = true;
+      panel.hidden = false;
+      this.querySelector<HTMLElement>('[data-cn-sent-title]')?.focus();
+      panel.scrollIntoView({ block: 'center' });
+    }
+
+    private showForm() {
+      const panel = this.querySelector<HTMLElement>('[data-cn-sent]');
+      if (panel) panel.hidden = true;
+      this.form.hidden = false;
+      this.form.querySelector<HTMLInputElement>('input[name="email"]')?.focus();
+    }
+
+    private async submit() {
+      if (this.busy) return;
+      this.showAlert(null);
+
+      // Only "is it filled in" is checked here; the rules live on the server (worker/signup/validate.ts).
+      const missing: Record<string, string> = {};
+      for (const control of this.controls()) {
+        if (control.validity.valueMissing)
+          missing[control.name] = control.name === 'terms' ? MESSAGES.terms : MESSAGES.missing;
+      }
+      if (Object.keys(missing).length > 0) return this.showErrors(missing);
+
+      const data = new FormData(this.form);
+      const body = { ...Object.fromEntries(data), terms: data.get('terms') === 'on' };
+
+      this.setBusy(true);
+      let status = 0;
+      let result: { ok?: boolean; fields?: Record<string, string> } | null = null;
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        status = response.status;
+        result = await response.json().catch(() => null);
+      } catch {
+        // No connection: handled below as a failure.
+      }
+      this.setBusy(false);
+
+      if (status === 200 && result?.ok) return this.showSent(String(data.get('email') ?? '').trim());
+      if (status === 422 && result?.fields) return this.showErrors(result.fields);
+      this.showAlert(status === 503 ? MESSAGES.unavailable : status === 429 ? MESSAGES.busy : MESSAGES.failed);
+    }
+  }
+
+  if (!customElements.get('cn-signup')) customElements.define('cn-signup', CnSignup);
+</script>

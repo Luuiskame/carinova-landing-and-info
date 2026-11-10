@@ -1,0 +1,42 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Restrictions from '~/components/carinova/Restrictions.astro';
+
+import { CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const metadata = {
+  title: 'Artículos prohibidos',
+  description:
+    'Lo que Carinova no transporta de Estados Unidos a Nicaragua y los productos que no pueden viajar por vía aérea. Revísalo antes de comprar.',
+};
+---
+
+<Layout metadata={metadata}>
+  <HeroText
+    tagline="Antes de comprar"
+    title="Artículos prohibidos"
+    subtitle="Hay productos que no transportamos y otros que no pueden viajar en avión. Revisa la lista antes de hacer tu compra."
+  />
+
+  <section class="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6 md:pb-16">
+    <Restrictions />
+  </section>
+
+  <CallToAction
+    isDark
+    title="¿No estás seguro de un producto?"
+    subtitle="Pregúntanos antes de comprarlo y te decimos si podemos traerlo."
+    actions={[
+      {
+        variant: 'primary',
+        text: 'Preguntar por WhatsApp',
+        icon: 'tabler:brand-whatsapp',
+        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.restricted),
+        target: '_blank',
+      },
+    ]}
+  />
+</Layout>

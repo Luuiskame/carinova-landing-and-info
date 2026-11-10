@@ -19,14 +19,14 @@ import { getPermalink } from '~/utils/permalinks';
 import { whatsappLink } from '~/utils/whatsapp';
 import logoImage from '~/assets/favicons/apple-touch-icon.png';
 
+const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+const hasReviews = REVIEWS.length > 0;
+
 const metadata = {
-  title: 'Carinova — Courier de EE. UU. a Nicaragua | Managua y Estelí',
+  title: `Carinova — Courier de EE. UU. a Nicaragua | ${cities}`,
   ignoreTitleTemplate: true,
   description: METADATA?.description,
 };
-
-const cities = BRANCHES.map((branch) => branch.city).join(' y ');
-const hasReviews = REVIEWS.length > 0;
 
 // Structured data for the site and the company, built from src/config.yaml and src/data/carinova.ts.
 const organizationId = `${SITE?.site}/#organization`;
@@ -139,16 +139,15 @@ const structuredData = [
   <CallToAction
     isDark
     title="¿Listo para tu primera compra en Estados Unidos?"
-    subtitle="Escríbenos y te ayudamos a abrir tu casillero hoy mismo."
+    subtitle="Abre tu casillero en línea o escríbenos y te ayudamos."
     actions={[
+      { variant: 'primary', text: 'Abrir mi casillero', href: getPermalink('/registro') },
       {
-        variant: 'primary',
         text: 'Escribir por WhatsApp',
         icon: 'tabler:brand-whatsapp',
         href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.closing),
         target: '_blank',
       },
-      { text: 'Calcular mi envío', href: '#cotizar' },
     ]}
   />
 </Layout>

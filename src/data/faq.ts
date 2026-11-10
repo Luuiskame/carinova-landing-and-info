@@ -5,7 +5,7 @@
  *
  * Draft answers marked TODO describe usual courier practice and must be confirmed by Carinova.
  */
-import { BRANCHES, RATES } from '~/data/carinova';
+import { BRANCHES, RATES, RESTRICTED_ITEMS } from '~/data/carinova';
 import { formatUSD } from '~/utils/rates';
 import { getPermalink } from '~/utils/permalinks';
 
@@ -24,6 +24,8 @@ export interface FaqGroup {
 const [air, sea] = RATES.services;
 const cities = BRANCHES.map((branch) => branch.city).join(' y ');
 const link = (href: string, text: string) => `<a class="text-link underline" href="${href}">${text}</a>`;
+/** "Armas, Drones" → "armas; drones": the items carry commas of their own. */
+const inline = (items: Array<string>) => items.map((item) => item.charAt(0).toLowerCase() + item.slice(1)).join('; ');
 
 export const FAQ_GROUPS: Array<FaqGroup> = [
   {
@@ -37,10 +39,13 @@ export const FAQ_GROUPS: Array<FaqGroup> = [
         featured: true,
       },
       {
+        title: '¿Cómo abro mi casillero?',
+        description: `${link(getPermalink('/registro'), 'Regístrate en línea')} con tus datos y confirma tu correo con el enlace que te enviamos. Al confirmar recibes tu número de cliente y tu dirección en Miami, en pantalla y por correo. Si prefieres, escríbenos por WhatsApp y te ayudamos.`,
+      },
+      {
         // TODO: confirm that opening a mailbox is free.
         title: '¿Cuánto cuesta abrir mi casillero?',
-        description:
-          'Abrir tu casillero es gratis: solo pagas el envío de cada paquete según su peso. Escríbenos por WhatsApp y te damos tu dirección.',
+        description: `Abrir tu casillero es gratis: solo pagas el envío de cada paquete según su peso. ${link(getPermalink('/registro'), 'Ábrelo en línea')} y recibe tu dirección en Miami.`,
         featured: true,
       },
       {
@@ -49,10 +54,9 @@ export const FAQ_GROUPS: Array<FaqGroup> = [
           'En cualquier tienda en línea que envíe dentro de Estados Unidos: Amazon, Shein, Temu, eBay, Walmart, Target y muchas más.',
       },
       {
-        // TODO: confirm the address format (customer code?).
         title: '¿Qué pongo como dirección de envío?',
         description:
-          'Tu nombre completo, tu código de cliente Carinova y la dirección de Miami que te damos al abrir tu casillero. Así identificamos tu paquete apenas llega.',
+          'La dirección de Miami que recibes al abrir tu casillero. Escribe el nombre y el apellido exactamente como te los enviamos: así identificamos tu paquete apenas llega.',
       },
     ],
   },
@@ -108,10 +112,8 @@ export const FAQ_GROUPS: Array<FaqGroup> = [
         featured: true,
       },
       {
-        // TODO: confirm the full list with Carinova.
         title: '¿Qué artículos no puedo enviar?',
-        description:
-          'No transportamos armas, municiones ni explosivos; líquidos inflamables ni químicos peligrosos; drogas o sustancias controladas; dinero en efectivo; animales vivos ni alimentos perecederos. Si no estás seguro de un producto, pregúntanos antes de comprarlo.',
+        description: `No transportamos: ${inline(RESTRICTED_ITEMS.prohibited.items)}. Además, no pueden viajar por vía aérea: ${inline(RESTRICTED_ITEMS.noAir.items)}. ${link(getPermalink('/articulos-prohibidos'), 'Ver la lista de artículos prohibidos')}. Si no estás seguro de un producto, pregúntanos antes de comprarlo.`,
         featured: true,
       },
     ],

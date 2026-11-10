@@ -16,6 +16,7 @@ import type { AstroIntegration } from 'astro';
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin } from './src/utils/frontmatter';
+import { devApi } from './worker/dev-plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -60,7 +61,8 @@ export default defineConfig({
   ],
 
   integrations: [
-    sitemap(),
+    // The page a confirmation link opens is of no use to search engines.
+    sitemap({ filter: (page) => !page.includes('/registro/confirmar') }),
     mdx(),
     icon({
       // Local SVG icons (used as <Icon name="file-name" />) live next to the other assets.
@@ -130,7 +132,9 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    // devApi: the sign-up endpoints (/api/*) during `astro dev`. In production they are the
+    // Cloudflare Worker in worker/index.ts; the pages stay static either way.
+    plugins: [tailwindcss(), devApi()],
     resolve: {
       alias: {
         '~': path.resolve(__dirname, './src'),

@@ -1,9 +1,10 @@
 ---
-// Home hero: the promise, the main WhatsApp button and the quote calculator side by side.
+// Home hero: the promise, the sign-up and WhatsApp buttons, and the quote calculator side by side.
 // Only the text column is `.dark` (white text on navy); the calculator card keeps light colours.
 import { Icon } from 'astro-icon/components';
 import ShippingCalculator from '~/components/carinova/ShippingCalculator.astro';
 import { BRANCHES, CONTACT, RATES, WA_MESSAGES } from '~/data/carinova';
+import { getPermalink } from '~/utils/permalinks';
 import { formatUSD } from '~/utils/rates';
 import { whatsappLink } from '~/utils/whatsapp';
 
@@ -44,8 +45,9 @@ const lowestRate = formatUSD(Math.min(...RATES.services.map((service) => service
       <div
         class="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:justify-start"
       >
+        <a class="btn-primary" href={getPermalink('/registro')}>Abrir mi casillero</a>
         <a
-          class="btn-primary"
+          class="btn"
           href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.hero)}
           target="_blank"
           rel="noopener noreferrer"
@@ -53,7 +55,6 @@ const lowestRate = formatUSD(Math.min(...RATES.services.map((service) => service
           <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
           Cotizar por WhatsApp
         </a>
-        <a class="btn" href="#tarifas">Ver tarifas</a>
       </div>
 
       <ul class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted lg:justify-start">

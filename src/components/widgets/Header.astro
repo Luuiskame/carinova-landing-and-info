@@ -18,6 +18,8 @@ interface Link {
 
 interface MenuLink extends Link {
   links?: Array<MenuLink>;
+  /** Extra classes for the item, e.g. to hide it at the widths where it does not fit. */
+  class?: string;
 }
 
 export interface Props {
@@ -104,8 +106,8 @@ const persistKey = `header-${Array.from(
           class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto text-xl lg:text-[0.9375rem] tracking-[0.01rem] font-medium lg:justify-center"
         >
           {
-            links.map(({ text, href, links }) => (
-              <li class={links?.length ? 'dropdown' : ''}>
+            links.map(({ text, href, links, class: className }) => (
+              <li class:list={[{ dropdown: links?.length }, className]}>
                 {links?.length ? (
                   <>
                     <button
