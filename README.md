@@ -68,7 +68,7 @@ Opening the same link twice, or signing up again with the same e-mail, returns t
 
 ### Settings
 
-Locally they go in `.env` (copy `.env.example`; git ignores it). In production they are **secrets** of the Worker: `npx wrangler secret put <NAME>`, or Cloudflare dashboard → the Worker → Settings → Variables and Secrets → type "Secret".
+Locally they go in `.env` (copy `.env.example`; git ignores it). In production they are **secrets** of the Worker: `npx wrangler secret put <NAME>` for each one, `npx wrangler secret bulk .env` to upload every line of your `.env` at once, or Cloudflare dashboard → the Worker → Settings → Variables and Secrets → type "Secret".
 
 | Name                  | Required | Value                                                                                                                                                                       |
 | --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
