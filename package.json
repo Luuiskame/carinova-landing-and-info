@@ -1,7 +1,7 @@
 {
   "name": "carinova-web",
   "version": "0.1.0",
-  "description": "Carinova courier website (Managua and Estelí, Nicaragua). Built on the AstroWind template (Astro 7 + Tailwind CSS v4).",
+  "description": "Carinova courier website (Managua and Bluefields, Nicaragua). Built on the AstroWind template (Astro 7 + Tailwind CSS v4).",
   "type": "module",
   "private": true,
   "engines": {
@@ -11,8 +11,9 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
+    "test": "node --test \"worker/**/*.test.ts\"",
     "astro": "astro",
     "check": "npm run check:astro && npm run check:eslint && npm run check:prettier",
     "check:astro": "astro check",
@@ -28,6 +29,7 @@
     "@astro-community/astro-embed-youtube": "^0.5.10",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
+    "@neondatabase/serverless": "^1.2.0",
     "astro": "^7.3.1",
     "astro-icon": "^1.1.5",
     "astro-seo": "^1.2.0",

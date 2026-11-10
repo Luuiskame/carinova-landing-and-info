@@ -33,6 +33,9 @@ jobs:
       - name: Run checks
         run: npm run check
 
+      - name: Run tests
+        run: npm test
+
   build:
     name: Build
     needs: check

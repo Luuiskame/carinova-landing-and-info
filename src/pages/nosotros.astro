@@ -7,6 +7,7 @@ import CallToAction from '~/components/widgets/CallToAction.astro';
 import Branches from '~/components/carinova/Branches.astro';
 
 import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { getPermalink } from '~/utils/permalinks';
 import { whatsappLink } from '~/utils/whatsapp';
 
 const cities = BRANCHES.map((branch) => branch.city).join(' y ');
@@ -80,13 +81,13 @@ const metadata = {
   <CallToAction
     isDark
     title="Hagamos tu primer envío"
-    subtitle="Escríbenos y te ayudamos a abrir tu casillero."
+    subtitle="Abre tu casillero en línea o escríbenos y te ayudamos."
     actions={[
+      { variant: 'primary', text: 'Abrir mi casillero', href: getPermalink('/registro') },
       {
-        variant: 'primary',
         text: 'Escribir por WhatsApp',
         icon: 'tabler:brand-whatsapp',
-        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero),
+        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.header),
         target: '_blank',
       },
     ]}

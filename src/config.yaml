@@ -1,8 +1,7 @@
 site:
   name: Carinova
-  # TODO: final domain. Used for canonical URLs, the sitemap and share images.
-  # `.example` is a reserved TLD, so preview builds never point at someone else's site.
-  site: 'https://carinova.example'
+  # Used for canonical URLs, the sitemap and share images.
+  site: 'https://carinovanic.com'
   base: '/'
   trailingSlash: false
 
@@ -11,7 +10,7 @@ metadata:
   title:
     default: Carinova — Courier de EE. UU. a Nicaragua
     template: '%s | Carinova'
-  description: 'Compra en Estados Unidos y recibe en Managua o Estelí. Envíos aéreos y marítimos con precios claros por libra. Cotiza al instante por WhatsApp.'
+  description: 'Compra en Estados Unidos y recibe en Managua o Bluefields. Envíos aéreos y marítimos con precios claros por libra. Abre tu casillero en línea.'
   robots:
     # Preview: keep search engines out until the placeholder content is replaced.
     # Set both to true at launch (and SITE_STATUS.isPreview to false in src/data/carinova.ts).

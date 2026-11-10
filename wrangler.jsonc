@@ -1,18 +1,28 @@
-// Cloudflare Workers configuration (only used if the site is hosted on Cloudflare;
-// Netlify uses netlify.toml). The site is fully static, so the Worker only serves
-// the `dist/` folder as assets; no adapter is needed.
+// Cloudflare Workers configuration. The site is static: `astro build` writes it to dist/ and
+// Cloudflare serves those files directly. The Worker script (worker/index.ts) only adds the
+// sign-up API under /api/; no Astro adapter is involved.
 // Docs: https://developers.cloudflare.com/workers/static-assets/
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "carinova-web",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
+    // Lets the Worker hand requests back to the asset server (env.ASSETS).
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
     // Astro writes pages as `nosotros/index.html`, but links, canonical URLs and the
     // sitemap use `/nosotros` (trailingSlash: false). The default "auto-trailing-slash"
     // would 307-redirect every page to `/nosotros/`; this serves `/nosotros` directly
     // and redirects `/nosotros/` and `/nosotros/index.html` to it.
     "html_handling": "drop-trailing-slash",
+    // Everything else is tried as a file first, so pages and assets never run the Worker.
+    "run_worker_first": ["/api/*"],
   },
+  // Keeps the Worker's logs (why a sign-up failed, a missing secret) in the Cloudflare dashboard.
+  "observability": { "enabled": true },
+  // Secrets are not listed here. Set them on the Worker (dashboard, or `npx wrangler secret put <NAME>`):
+  // RESEND_API_KEY, EMAIL_FROM, DATABASE_URL, SIGNUP_TOKEN_SECRET and, optionally, SIGNUP_NOTIFY_TO.
+  // For local runs they are read from `.env` (see `.env.example`).
 }

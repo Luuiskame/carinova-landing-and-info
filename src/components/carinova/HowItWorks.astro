@@ -1,19 +1,19 @@
 ---
-// "Cómo funciona": four numbered steps and the mailbox call to action.
+// "Cómo funciona": four numbered steps and the sign-up call to action.
 import { Icon } from 'astro-icon/components';
 import Headline from '~/components/ui/Headline.astro';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
-import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { whatsappLink } from '~/utils/whatsapp';
+import { BRANCHES } from '~/data/carinova';
+import { getPermalink } from '~/utils/permalinks';
 
 const cities = BRANCHES.map((branch) => branch.city).join(' o ');
 
-// TODO: confirm the process with Carinova (mailbox in Miami, notifications, pickup only?).
+// TODO: confirm the process with Carinova (notifications, pickup only?).
 const steps = [
   {
     icon: 'tabler:map-pin-share',
     title: 'Abre tu casillero',
-    description: 'Escríbenos por WhatsApp y te damos tu dirección en Miami, a tu nombre.',
+    description: 'Regístrate en línea, confirma tu correo y recibe tu dirección en Miami.',
   },
   {
     icon: 'tabler:shopping-cart',
@@ -56,14 +56,6 @@ const steps = [
     }
   </ol>
   <div class="mt-10 text-center">
-    <a
-      class="btn-primary"
-      href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero)}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
-      Abrir mi casillero
-    </a>
+    <a class="btn-primary" href={getPermalink('/registro')}>Abrir mi casillero</a>
   </div>
 </WidgetWrapper>

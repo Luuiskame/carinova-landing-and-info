@@ -1,0 +1,41 @@
+---
+// What Carinova does not carry: the two lists of its "Prohibido / No ingresa vía aérea" graphic
+// (RESTRICTED_ITEMS). Used on /articulos-prohibidos and next to the Miami address after sign-up.
+import { Icon } from 'astro-icon/components';
+import { RESTRICTED_ITEMS } from '~/data/carinova';
+
+export interface Props {
+  /** Heading of each list: h2 right under a page title, h3 inside a section that has its own h2. */
+  headingTag?: 'h2' | 'h3';
+}
+
+const { headingTag: Heading = 'h2' } = Astro.props;
+const { prohibited, noAir } = RESTRICTED_ITEMS;
+
+const lists = [
+  { ...prohibited, icon: 'tabler:ban', itemIcon: 'tabler:x', tone: 'text-red-800', ring: 'ring-red-200' },
+  { ...noAir, icon: 'tabler:plane-off', itemIcon: 'tabler:plane-off', tone: 'text-primary', ring: 'ring-blue-200' },
+];
+---
+
+<div class="grid gap-6 text-left md:grid-cols-2">
+  {
+    lists.map((list) => (
+      <section class:list={['rounded-2xl bg-white p-6 shadow-sm ring-1 sm:p-7', list.ring]}>
+        <Heading class:list={['flex items-center gap-2 font-heading text-xl font-bold', list.tone]}>
+          <Icon name={list.icon} class="h-6 w-6 shrink-0" />
+          {list.title}
+        </Heading>
+        <p class="mt-2 text-sm text-muted">{list.summary}</p>
+        <ul class="mt-4 space-y-2.5">
+          {list.items.map((item) => (
+            <li class="flex gap-2.5">
+              <Icon name={list.itemIcon} class:list={['mt-0.5 h-5 w-5 shrink-0', list.tone]} />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</div>

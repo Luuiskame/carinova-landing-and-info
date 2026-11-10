@@ -1,6 +1,6 @@
 # Carinova Web — Agent Instructions
 
-This repository is the website of Carinova, a courier from the United States to Nicaragua (Managua and Estelí). It is built on the AstroWind template; the template reference below still applies, and the Carinova rules here take precedence.
+This repository is the website of Carinova, a courier from the United States to Nicaragua (Managua and Bluefields). The pages are built on the AstroWind template; the template reference below still applies, and the Carinova rules here take precedence. The sign-up backend is a small Cloudflare Worker in `worker/` (README → "Sign-up backend").
 
 ## Carinova rules
 
@@ -9,10 +9,17 @@ This repository is the website of Carinova, a courier from the United States to 
 - **Business data** lives in `src/data/carinova.ts` (contact, branches, hours, rates, stores, reviews, WhatsApp messages) and `src/data/faq.ts`. Do not hard-code prices, numbers or addresses in pages or components.
 - **Placeholders:** values marked `TODO` are not confirmed by Carinova. Keep `SITE_STATUS.isPreview` true and `metadata.robots` set to noindex in `src/config.yaml` until they are replaced.
 - **No invented proof:** reviews, statistics and claims must be real. The reviews section hides itself while `REVIEWS` is empty.
-- **WhatsApp:** every call to action uses `whatsappLink()` (`src/utils/whatsapp.ts`) with its own message from `WA_MESSAGES`, so leads can be traced to the button.
+- **Calls to action:** the main one is "Abrir mi casillero" (`/registro`); WhatsApp is the second path and the fallback when sign-up fails. Every WhatsApp link uses `whatsappLink()` (`src/utils/whatsapp.ts`) with its own message from `WA_MESSAGES`, so leads can be traced to the button.
 - **Colours:** orange buttons (`btn-primary`, `cta` tokens) use navy text, because white on the logo orange fails contrast. Navy sections use the `.dark` class; colour tokens are `@theme inline` so that works per section.
+- **Sign-up backend (`worker/`):** the pages stay static and there is no Astro adapter; `/api/*` is a hand-written Worker (`worker/index.ts`) deployed with the site, and `worker/dev-plugin.ts` serves the same code inside `astro dev`. Keep it that way unless the site needs server-rendered pages.
+  - Code under `worker/`, and the files it imports from `src/` (`src/data/carinova.ts`, `src/data/signup.ts`, `src/utils/whatsapp.ts`), must run on Workers and on plain Node: relative imports with the `.ts` extension, no `~/` alias, no `astro:*` modules, no Node-only APIs outside `dev-plugin.ts` and the tests.
+  - The form's options and the server's validation both read `src/data/signup.ts`. Validation rules live in `worker/signup/validate.ts` only; the form just checks for empty fields.
+  - Nothing is stored before the e-mail is confirmed (the link carries the encrypted form). Customers are created only by `POST /api/signup/confirm`; the database assigns the number (`db/schema.sql`).
+  - Secrets (`RESEND_API_KEY`, `EMAIL_FROM`, `DATABASE_URL`, `SIGNUP_TOKEN_SECRET`, `SIGNUP_NOTIFY_TO`) live in `.env` locally and as Worker secrets in production. Never commit them, print them or put them in `wrangler.jsonc`.
+  - Do not log customers' personal data.
+  - The developer's `.env` holds the real Resend key and the real database, so a sign-up against `npm run dev` or `npm run preview` sends real e-mail and creates a real customer. Automated or browser tests that submit the form must run against the stand-ins: start `astro dev` with `RESEND_API_KEY`, `EMAIL_FROM`, `DATABASE_URL` and `SIGNUP_TOKEN_SECRET` set to empty in its environment, and check that it prints "Sign-up API in development mode". Never submit made-up addresses to the real mailer (they bounce and hurt the sender's reputation): for a real send use `delivered@resend.dev`, then delete the test row and restart the numbering (README → "Trying it locally").
 - **Node:** use Node ≥ 22.22.3 and install with `npm install --ignore-scripts`.
-- **Verify:** `npm run build` and `npm run check`, then look at the pages at 412 px and 1280 px wide (the site is light-only; there is no dark mode).
+- **Verify:** `npm run build`, `npm run check` and `npm test`, then look at the pages at 412 px and 1280 px wide (the site is light-only; there is no dark mode). For anything that touches routing or the Worker, also run `npm run preview` (the real Cloudflare runtime).
 - **Hosting:** Cloudflare Workers, static assets only (`wrangler.jsonc`; see Hosting notes in the log). `npm run deploy` builds and uploads. To check Cloudflare's routing, headers or 404 handling, run `npx wrangler dev` after a build; `astro preview` does not reproduce them. `.wrangler/` is local state and stays out of git.
 
 # AstroWind template reference

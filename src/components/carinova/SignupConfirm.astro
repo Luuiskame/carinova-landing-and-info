@@ -1,0 +1,242 @@
+---
+// What a confirmation link opens (/registro/confirmar?token=…). The page is static: the script
+// reads the token from the address, and the button posts it to /api/signup/confirm, which creates
+// the customer (worker/api.ts). Confirming takes a click rather than just opening the page,
+// because e-mail scanners open links on their own.
+import { Icon } from 'astro-icon/components';
+import Restrictions from '~/components/carinova/Restrictions.astro';
+import { CONTACT, MIAMI_ADDRESS, WA_MESSAGES, miamiAddressRows } from '~/data/carinova';
+import { CONFIRM_LINK_HOURS } from '~/data/signup';
+import { getPermalink } from '~/utils/permalinks';
+import { whatsappLink } from '~/utils/whatsapp';
+
+// The two name rows depend on the customer: the script fills them in.
+const rows = miamiAddressRows('', '');
+const personal = ['firstName', 'lastName'];
+
+const signupUrl = getPermalink('/registro');
+const helpUrl = whatsappLink(CONTACT.whatsapp, WA_MESSAGES.signupHelp);
+
+const messageClass = 'mx-auto max-w-xl px-4 py-16 text-center md:py-24';
+const titleClass = 'mt-5 font-heading text-3xl font-bold text-heading outline-none md:text-4xl';
+const textClass = 'mt-4 text-lg text-muted';
+---
+
+<cn-confirm class="block">
+  <section data-cn-state="ready" class={messageClass}>
+    <Icon name="tabler:mail-check" class="mx-auto h-14 w-14 text-primary" />
+    <h1 class={titleClass} tabindex="-1">Confirma tu correo</h1>
+    <p class={textClass}>Un paso más: confirma tu correo para abrir tu casillero y ver tu dirección en Miami.</p>
+    <button
+      type="button"
+      class="btn-primary mt-8 w-full sm:w-auto"
+      data-cn-confirm
+      data-busy-label="Abriendo tu casillero…"
+    >
+      Confirmar y abrir mi casillero
+    </button>
+    <noscript>
+      <p class="mt-6 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">
+        Para confirmar tu correo necesitas activar JavaScript en tu navegador.
+      </p>
+    </noscript>
+  </section>
+
+  <section data-cn-state="done" class="mx-auto max-w-3xl px-4 py-12 md:py-16" hidden>
+    <div class="text-center">
+      <Icon name="tabler:circle-check" class="mx-auto h-14 w-14 text-green-700" />
+      <h1 class={titleClass} tabindex="-1" data-cn-done-title>¡Tu casillero está listo!</h1>
+      <p class={textClass} data-cn-done-intro>
+        Este es tu número de cliente. Guárdalo: con él identificamos tu cuenta.
+      </p>
+      <p
+        class="mt-6 inline-block select-all rounded-2xl bg-[#011028] px-7 py-3 font-heading text-4xl font-extrabold tracking-wide text-white"
+        data-cn-code
+      >
+      </p>
+      <p class="mt-4 text-sm text-muted" data-cn-emailed>También te enviamos estos datos por correo.</p>
+    </div>
+
+    <div class="mt-10 rounded-2xl bg-white p-6 text-left shadow-lg ring-1 ring-slate-200 sm:p-8">
+      <h2 class="font-heading text-2xl font-bold text-heading">Tu dirección en Miami</h2>
+      <p class="mt-1 text-muted">Úsala como dirección de envío cuando compres en tiendas de Estados Unidos.</p>
+      <dl class="mt-5 divide-y divide-slate-100">
+        {
+          rows.map((row) => (
+            <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+              <dt class="text-sm text-muted">{row.label}</dt>
+              <dd
+                class="select-all font-semibold text-heading sm:text-right"
+                data-cn-fill={personal.includes(row.id) ? row.id : undefined}
+              >
+                {personal.includes(row.id) ? '' : row.value}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <ul class="mt-5 space-y-2 text-sm">
+        {
+          MIAMI_ADDRESS.notes.map((note) => (
+            <li class="flex gap-2">
+              <Icon name="tabler:info-circle" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <span>{note}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="mt-12">
+      <h2 class="text-center font-heading text-2xl font-bold text-heading">Antes de comprar</h2>
+      <p class="mt-2 text-center text-muted">Revisa lo que no podemos traer.</p>
+      <div class="mt-6">
+        <Restrictions headingTag="h3" />
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+      <a
+        class="btn-primary"
+        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero)}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-cn-whatsapp
+      >
+        <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+        Escribir por WhatsApp
+      </a>
+      <a class="btn" href={getPermalink('/#tarifas')}>Ver tarifas</a>
+    </div>
+  </section>
+
+  <section data-cn-state="invalid" class={messageClass} hidden>
+    <Icon name="tabler:link-off" class="mx-auto h-14 w-14 text-muted" />
+    <h1 class={titleClass} tabindex="-1">Este enlace no es válido</h1>
+    <p class={textClass}>
+      Puede que esté incompleto. Ábrelo otra vez desde el correo que te enviamos o regístrate de nuevo.
+    </p>
+    <a class="btn-primary mt-8 w-full sm:w-auto" href={signupUrl}>Ir al registro</a>
+  </section>
+
+  <section data-cn-state="expired" class={messageClass} hidden>
+    <Icon name="tabler:clock-off" class="mx-auto h-14 w-14 text-muted" />
+    <h1 class={titleClass} tabindex="-1">Este enlace ya venció</h1>
+    <p class={textClass}>
+      Los enlaces de confirmación duran {CONFIRM_LINK_HOURS} horas. Regístrate de nuevo y te enviamos otro.
+    </p>
+    <a class="btn-primary mt-8 w-full sm:w-auto" href={signupUrl}>Registrarme de nuevo</a>
+  </section>
+
+  <section data-cn-state="error" class={messageClass} hidden>
+    <Icon name="tabler:alert-triangle" class="mx-auto h-14 w-14 text-secondary" />
+    <h1 class={titleClass} tabindex="-1">No pudimos abrir tu casillero</h1>
+    <p class={textClass}>
+      El problema es nuestro, no tuyo. Inténtalo de nuevo y, si sigue fallando, escríbenos por WhatsApp.
+    </p>
+    <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+      <button type="button" class="btn-primary" data-cn-confirm data-busy-label="Intentando…">Intentar de nuevo</button>
+      <a class="btn" href={helpUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+        Escribir por WhatsApp
+      </a>
+    </div>
+  </section>
+</cn-confirm>
+
+<script>
+  import { CONTACT, MIAMI_ADDRESS, WA_MESSAGES } from '~/data/carinova';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  type State = 'ready' | 'done' | 'invalid' | 'expired' | 'error';
+
+  interface Customer {
+    code: string;
+    firstName: string;
+    lastName: string;
+  }
+
+  class CnConfirm extends HTMLElement {
+    private token = '';
+    private busy = false;
+
+    connectedCallback() {
+      this.token = new URLSearchParams(window.location.search).get('token') ?? '';
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-cn-confirm]')) {
+        button.addEventListener('click', () => void this.confirm());
+      }
+      if (!this.token) this.show('invalid', false);
+    }
+
+    private show(state: State, moveFocus = true) {
+      for (const section of this.querySelectorAll<HTMLElement>('[data-cn-state]')) {
+        section.hidden = section.dataset.cnState !== state;
+      }
+      if (!moveFocus) return;
+      window.scrollTo({ top: 0 });
+      this.querySelector<HTMLElement>(`[data-cn-state="${state}"] h1`)?.focus({ preventScroll: true });
+    }
+
+    private setText(selector: string, text: string) {
+      const element = this.querySelector(selector);
+      if (element) element.textContent = text;
+    }
+
+    private setBusy(busy: boolean) {
+      this.busy = busy;
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-cn-confirm]')) {
+        button.dataset.label ??= button.textContent ?? '';
+        button.disabled = busy;
+        button.textContent = busy ? (button.dataset.busyLabel ?? '') : button.dataset.label;
+      }
+    }
+
+    private showCustomer(customer: Customer, isNew: boolean) {
+      this.setText('[data-cn-code]', customer.code);
+      this.setText('[data-cn-fill="firstName"]', MIAMI_ADDRESS.firstName(customer.firstName));
+      this.setText('[data-cn-fill="lastName"]', MIAMI_ADDRESS.lastName(customer.lastName));
+
+      if (!isNew) {
+        this.setText('[data-cn-done-title]', 'Ya tienes un casillero');
+        this.setText(
+          '[data-cn-done-intro]',
+          'Este correo ya tiene una cuenta en Carinova. Este es tu número de cliente:'
+        );
+      }
+      const emailed = this.querySelector<HTMLElement>('[data-cn-emailed]');
+      if (emailed) emailed.hidden = !isNew;
+
+      const whatsapp = this.querySelector<HTMLAnchorElement>('[data-cn-whatsapp]');
+      if (whatsapp) whatsapp.href = whatsappLink(CONTACT.whatsapp, WA_MESSAGES.customer(customer.code));
+
+      document.title = `Tu casillero ${customer.code} | Carinova`;
+      this.show('done');
+    }
+
+    private async confirm() {
+      if (this.busy) return;
+      this.setBusy(true);
+
+      let status = 0;
+      let result: { ok?: boolean; isNew?: boolean; customer?: Customer } | null = null;
+      try {
+        const response = await fetch('/api/signup/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: this.token }),
+        });
+        status = response.status;
+        result = await response.json().catch(() => null);
+      } catch {
+        // No connection: shown as an error the visitor can retry.
+      }
+      this.setBusy(false);
+
+      if (status === 200 && result?.ok && result.customer)
+        return this.showCustomer(result.customer, result.isNew === true);
+      this.show(status === 410 ? 'expired' : status === 400 ? 'invalid' : 'error');
+    }
+  }
+
+  if (!customElements.get('cn-confirm')) customElements.define('cn-confirm', CnConfirm);
+</script>

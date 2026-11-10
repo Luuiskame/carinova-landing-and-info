@@ -1,0 +1,78 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import SignupForm from '~/components/carinova/SignupForm.astro';
+
+import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { whatsappLink } from '~/utils/whatsapp';
+
+const cities = BRANCHES.map((branch) => branch.city).join(' o ');
+
+const metadata = {
+  title: 'Abre tu casillero',
+  description: `Regístrate en línea y recibe tu dirección en Miami para comprar en tiendas de Estados Unidos y retirar tus paquetes en ${cities}.`,
+};
+
+const steps = [
+  {
+    title: 'Confirma tu correo',
+    description: 'Te enviamos un enlace. Ábrelo para activar tu cuenta.',
+  },
+  {
+    title: 'Recibe tu número de cliente y tu dirección en Miami',
+    description: 'Los ves en pantalla al confirmar y también te llegan por correo.',
+  },
+  {
+    title: 'Compra y nosotros lo traemos',
+    description: `Usa tu dirección de Miami en la tienda y retira tu paquete en ${cities}.`,
+  },
+];
+---
+
+<Layout metadata={metadata}>
+  <HeroText
+    tagline="Casillero"
+    title="Abre tu casillero"
+    subtitle="Regístrate en línea y recibe tu dirección en Miami para comprar en cualquier tienda de Estados Unidos."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 md:pb-20">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
+      <SignupForm />
+
+      <aside class="lg:pt-2">
+        <h2 class="font-heading text-xl font-bold text-heading">¿Qué pasa después?</h2>
+        <ol class="mt-5 space-y-5">
+          {
+            steps.map((step, index) => (
+              <li class="flex gap-4">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading font-bold text-white">
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 class="font-semibold text-heading">{step.title}</h3>
+                  <p class="mt-1 text-sm text-muted">{step.description}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+          <h2 class="font-heading text-lg font-bold text-heading">¿Prefieres que te ayudemos?</h2>
+          <p class="mt-1 text-sm text-muted">Escríbenos y abrimos tu casillero por WhatsApp.</p>
+          <a
+            class="btn mt-4 w-full"
+            href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
+            Escribir por WhatsApp
+          </a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Layout>
