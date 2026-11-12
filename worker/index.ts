@@ -2,16 +2,17 @@
  * Cloudflare Worker of the site (see wrangler.jsonc).
  *
  * The pages are static files in dist/, which Cloudflare serves without running this code. The
- * Worker runs for /api/* (the sign-up endpoints, api.ts) and for requests that match no file,
- * which it hands back to the asset server so they get the 404 page.
+ * Worker runs for /api/* (sign-up, sign-in, the customer's account and the form for companies:
+ * api.ts) and for requests that match no file, which it hands back to the asset server so they get
+ * the 404 page.
  */
 import { handleApi, type Deps } from './api.ts';
-import { resendMailer } from './signup/mailer.ts';
-import { neonStore } from './signup/store.ts';
+import { resendMailer } from './mailer.ts';
+import { neonStore } from './store.ts';
 
 /**
  * Bindings. The secrets are optional in the type because a deploy can lack them; the API then
- * answers 503 and the form offers WhatsApp instead. Names and values: README → "Sign-up backend".
+ * answers 503 and the forms offer WhatsApp instead. Names and values: README → "Backend".
  */
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -20,6 +21,7 @@ interface Env {
   DATABASE_URL?: string;
   SIGNUP_TOKEN_SECRET?: string;
   SIGNUP_NOTIFY_TO?: string;
+  OWNER_EMAIL?: string;
 }
 
 interface WorkerContext {
@@ -31,6 +33,7 @@ const depsFromEnv = (env: Env, ctx: WorkerContext): Deps => ({
   mailer: env.RESEND_API_KEY && env.EMAIL_FROM ? resendMailer(env.RESEND_API_KEY, env.EMAIL_FROM) : undefined,
   store: env.DATABASE_URL ? neonStore(env.DATABASE_URL) : undefined,
   notifyTo: env.SIGNUP_NOTIFY_TO || undefined,
+  ownerEmail: env.OWNER_EMAIL || undefined,
   waitUntil: (work) => ctx.waitUntil(work),
 });
 

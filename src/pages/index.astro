@@ -1,34 +1,85 @@
 ---
+// Inicio: explains the promise and leads to the calls to action. One short section per section of the
+// site, in the order of the customer's journey (docs/INFORMATION-ARCHITECTURE.md → "Inicio"); the
+// details live on each section's own page. Like every page, it renders in Spanish at its own
+// address and in English under /en (src/i18n).
 import Layout from '~/layouts/PageLayout.astro';
 
 import HomeHero from '~/components/carinova/HomeHero.astro';
 import Stores from '~/components/carinova/Stores.astro';
 import HowItWorks from '~/components/carinova/HowItWorks.astro';
-import Rates from '~/components/carinova/Rates.astro';
+import ServiceMatrix from '~/components/carinova/ServiceMatrix.astro';
+import AccountSummary from '~/components/carinova/AccountSummary.astro';
 import Branches from '~/components/carinova/Branches.astro';
-import Features2 from '~/components/widgets/Features2.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import Testimonials from '~/components/widgets/Testimonials.astro';
 import FAQs from '~/components/widgets/FAQs.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 
-import { SITE, METADATA, I18N } from 'astrowind:config';
-import { BRANCHES, CONTACT, REVIEWS, SOCIAL_LINKS, WA_MESSAGES } from '~/data/carinova';
-import { FEATURED_FAQS } from '~/data/faq';
-import { getPermalink } from '~/utils/permalinks';
-import { whatsappLink } from '~/utils/whatsapp';
+import { SITE } from 'astrowind:config';
+import { CONTACT, REVIEWS, SOCIAL_LINKS } from '~/data/carinova';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { ACTIVE_LOCALES } from '~/i18n/locales';
+import { formatUSD } from '~/utils/rates';
 import logoImage from '~/assets/favicons/apple-touch-icon.png';
 
-const cities = BRANCHES.map((branch) => branch.city).join(' y ');
-const hasReviews = REVIEWS.length > 0;
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, FEATURED_FAQS, RATES, WA_MESSAGES } = data;
 
-const metadata = {
-  title: `Carinova — Courier de EE. UU. a Nicaragua | ${cities}`,
-  ignoreTitleTemplate: true,
-  description: METADATA?.description,
-};
+const cityNames = BRANCHES.map((branch) => branch.city);
+const hasReviews = REVIEWS.length > 0;
+const { air, sea } = RATES;
+
+const t = {
+  es: {
+    title: 'Carinova — Compras y encomiendas de EE. UU. a Nicaragua',
+    description: `Traemos tus compras y encomiendas de Estados Unidos a ${cityNames.join(' y ')}. Aéreo en ${air.transit}, marítimo desde ${formatUSD(sea.pricePerLb)} la libra. Abrí tu casillero en línea.`,
+    reviews: { tagline: 'Reseñas', title: 'Lo que dicen nuestros clientes', source: 'Reseña de Google' },
+    branches: {
+      tagline: 'Sucursales',
+      title: `Retirá en ${cityNames.join(' y ')}`,
+      subtitle: 'Tocá tu sucursal para ver la dirección y cómo llegar.',
+    },
+    faq: {
+      tagline: 'Ayuda',
+      title: 'Lo que más nos preguntan',
+      all: 'Ver todas las preguntas frecuentes',
+      other: '¿No encontraste tu respuesta?',
+    },
+    closing: {
+      title: '¿Listo para traer tu primera compra?',
+      subtitle: 'Abrí tu casillero en línea o cotizá tu envío en segundos.',
+      lead: '¿Preferís que te ayudemos?',
+    },
+  },
+  en: {
+    title: 'Carinova — Purchases and packages from the US to Nicaragua',
+    description: `We bring your purchases and packages from the United States to ${cityNames.join(' and ')}. By air in ${air.transit}, by sea from ${formatUSD(sea.pricePerLb)} per pound. Open your mailbox online.`,
+    reviews: { tagline: 'Reviews', title: 'What our customers say', source: 'Google review' },
+    branches: {
+      tagline: 'Branches',
+      title: `Pick up in ${cityNames.join(' and ')}`,
+      subtitle: 'Tap your branch to see the address and how to get there.',
+    },
+    faq: {
+      tagline: 'Help',
+      title: 'What people ask us most',
+      all: 'See all frequently asked questions',
+      other: 'Did you not find your answer?',
+    },
+    closing: {
+      title: 'Ready to bring your first purchase?',
+      subtitle: 'Open your mailbox online or get a quote for your shipment in seconds.',
+      lead: 'Would you rather we help you?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.title, ignoreTitleTemplate: true, description: t.description };
 
 // Structured data for the site and the company, built from src/config.yaml and src/data/carinova.ts.
+// The same company and site in both languages: only the languages the site is published in change.
 const organizationId = `${SITE?.site}/#organization`;
 const structuredData = [
   {
@@ -37,7 +88,8 @@ const structuredData = [
     '@id': `${SITE?.site}/#website`,
     name: SITE?.name,
     url: SITE?.site,
-    inLanguage: I18N?.language,
+    inLanguage:
+      ACTIVE_LOCALES.length > 1 ? ACTIVE_LOCALES.map((item) => LOCALE_INFO[item].htmlLang) : LOCALE_INFO.es.htmlLang,
     publisher: { '@id': organizationId },
   },
   {
@@ -47,6 +99,15 @@ const structuredData = [
     name: SITE?.name,
     url: SITE?.site,
     logo: new URL(logoImage.src, SITE?.site).toString(),
+    description: t.description,
+    areaServed: { '@type': 'Country', name: 'Nicaragua' },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      telephone: `+${CONTACT.whatsapp}`,
+      ...(CONTACT.email ? { email: CONTACT.email } : {}),
+      availableLanguage: 'Spanish',
+    },
     ...(SOCIAL_LINKS.length ? { sameAs: SOCIAL_LINKS.map((link) => link.href) } : {}),
   },
 ];
@@ -61,63 +122,20 @@ const structuredData = [
 
   <HowItWorks />
 
-  <Rates />
+  <ServiceMatrix />
 
-  <Features2
-    id="por-que-carinova"
-    tagline="Por qué Carinova"
-    title="Envíos sin complicaciones"
-    subtitle="Lo que necesitas para comprar en Estados Unidos con confianza."
-    columns={3}
-    items={[
-      {
-        title: 'Precios claros',
-        description: 'Tarifas publicadas por libra y una calculadora para saber el costo antes de comprar.',
-        icon: 'tabler:receipt-2',
-      },
-      {
-        title: 'Atención por WhatsApp',
-        description: 'Te responde nuestro equipo en Nicaragua, por el canal que ya usas todos los días.',
-        icon: 'tabler:brand-whatsapp',
-      },
-      {
-        title: 'Aéreo o marítimo',
-        description: 'Rapidez para lo urgente, el mejor precio por libra para las compras grandes.',
-        icon: 'tabler:plane',
-      },
-      {
-        title: `Sucursales en ${cities}`,
-        description: 'Retira tu paquete en la sucursal que te quede más cerca.',
-        icon: 'tabler:building-store',
-      },
-      {
-        title: 'Cualquier tienda',
-        description: 'Si la tienda envía dentro de Estados Unidos, tu compra puede llegar a tu casillero.',
-        icon: 'tabler:shopping-bag',
-      },
-      {
-        // TODO: confirm the notifications Carinova sends.
-        title: 'Te avisamos en cada paso',
-        description: 'Cuando tu paquete llega a Miami, cuando viaja y cuando está listo para retirar.',
-        icon: 'tabler:bell-ringing',
-      },
-    ]}
-  >
-    <Fragment slot="bg">
-      <div class="absolute inset-0 bg-slate-50"></div>
-    </Fragment>
-  </Features2>
+  <AccountSummary />
 
   {
     hasReviews && (
       <Testimonials
         id="resenas"
-        tagline="Reseñas"
-        title="Lo que dicen nuestros clientes"
+        tagline={t.reviews.tagline}
+        title={t.reviews.title}
         testimonials={REVIEWS.map((review) => ({
           testimonial: review.text,
           name: review.name,
-          job: review.source ?? 'Reseña de Google',
+          job: review.source ?? t.reviews.source,
           rating: review.rating,
         }))}
       />
@@ -125,29 +143,33 @@ const structuredData = [
   }
 
   <!-- Section backgrounds alternate white / grey whether or not the reviews section is shown. -->
-  <Branches soft={hasReviews} />
-
-  <FAQs
-    id="preguntas"
-    tagline="Preguntas frecuentes"
-    title="Lo que más nos preguntan"
-    subtitle={`¿Tienes otra duda? <a class="text-link underline" href="${getPermalink('/preguntas-frecuentes')}">Ver todas las preguntas</a>`}
-    items={FEATURED_FAQS}
-    bg={hasReviews ? undefined : '<div class="absolute inset-0 bg-slate-50"></div>'}
+  <Branches
+    compact
+    soft={hasReviews}
+    tagline={t.branches.tagline}
+    title={t.branches.title}
+    subtitle={t.branches.subtitle}
   />
 
-  <CallToAction
-    isDark
-    title="¿Listo para tu primera compra en Estados Unidos?"
-    subtitle="Abre tu casillero en línea o escríbenos y te ayudamos."
-    actions={[
-      { variant: 'primary', text: 'Abrir mi casillero', href: getPermalink('/registro') },
-      {
-        text: 'Escribir por WhatsApp',
-        icon: 'tabler:brand-whatsapp',
-        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.closing),
-        target: '_blank',
-      },
-    ]}
+  <div class:list={[{ 'bg-slate-50': !hasReviews }]}>
+    <FAQs
+      id="preguntas"
+      tagline={t.faq.tagline}
+      title={t.faq.title}
+      subtitle={`<a class="text-link underline" href="${href('/preguntas-frecuentes')}">${t.faq.all}</a>`}
+      items={FEATURED_FAQS}
+      classes={{ container: 'pb-2 md:pb-4 lg:pb-4' }}
+    />
+    <p class="flex flex-wrap items-center justify-center gap-x-1.5 px-4 pb-14 text-muted md:pb-20">
+      <span>{t.faq.other}</span>
+      <WhatsAppHelp message={WA_MESSAGES.homeFaq} />
+    </p>
+  </div>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.homeClosing}
+    whatsappLead={t.closing.lead}
   />
 </Layout>

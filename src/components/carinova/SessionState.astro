@@ -1,0 +1,25 @@
+---
+// Marks the page as seen by a visitor or by a customer who is signed in: data-session="out" | "in"
+// on <html>. The pages are static files, the same for everyone, so both versions of what depends on
+// it are in the page and CSS shows one (tailwind.css): data-auth="out" for visitors ("Abrir mi
+// casillero", "Ingresar"), data-auth="in" for customers ("Mi casillero").
+//
+// It runs inline in the <head>, before the first paint, so nothing flickers. It only reads the flag
+// cookie (src/data/account.ts), which says a session exists and nothing else; what a customer can
+// see is decided by the Worker with the session cookie, which scripts cannot read. Without
+// JavaScript the page stays as a visitor sees it.
+import { SESSION_FLAG_COOKIE } from '~/data/account';
+---
+
+<script is:inline define:vars={{ flag: SESSION_FLAG_COOKIE }}>
+  function applySession() {
+    const signedIn = document.cookie.split('; ').indexOf(flag + '=1') !== -1;
+    document.documentElement.setAttribute('data-session', signedIn ? 'in' : 'out');
+  }
+
+  applySession();
+
+  // Client-side navigations replace the attributes of <html>: set it again on each one
+  // (`document` persists across them, so the listener is registered once).
+  document.addEventListener('astro:after-swap', applySession);
+</script>

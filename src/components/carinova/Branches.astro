@@ -1,11 +1,13 @@
 ---
-// Branch cards: address, hours, WhatsApp of the branch and "Cómo llegar" (when there is a Maps link).
-// Each card has the branch id as anchor (/sucursales#bluefields).
+// Pickup branches. Full cards (/sucursales): address, opening hours, "Cómo llegar" when there is a
+// Maps link, and a WhatsApp link with the branch's own message. Compact cards (home page, Nosotros):
+// city and hours, linking to the full card. Each full card has the branch id as anchor
+// (/sucursales#bluefields).
 import { Icon } from 'astro-icon/components';
 import Headline from '~/components/ui/Headline.astro';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
-import { BRANCHES, WA_MESSAGES } from '~/data/carinova';
-import { whatsappLink } from '~/utils/whatsapp';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
 
 export interface Props {
   id?: string;
@@ -14,15 +16,30 @@ export interface Props {
   subtitle?: string;
   /** Light grey section background; turn off when the previous section already has it. */
   soft?: boolean;
+  /** City and hours only, linking to /sucursales. */
+  compact?: boolean;
 }
 
-const {
-  id = 'sucursales',
-  tagline = 'Sucursales',
-  title = `Retira en ${BRANCHES.map((branch) => branch.city).join(' o ')}`,
-  subtitle,
-  soft = true,
-} = Astro.props;
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, WA_MESSAGES, formatHours } = data;
+const cities = BRANCHES.map((branch) => branch.city);
+
+const t = {
+  es: {
+    tagline: 'Sucursales',
+    title: `Retirá en ${cities.join(' o ')}`,
+    directions: 'Cómo llegar',
+    branch: (city: string) => `(sucursal ${city})`,
+  },
+  en: {
+    tagline: 'Branches',
+    title: `Pick up in ${cities.join(' or ')}`,
+    directions: 'Directions',
+    branch: (city: string) => `(${city} branch)`,
+  },
+}[locale];
+
+const { id = 'sucursales', tagline = t.tagline, title = t.title, subtitle, soft = true, compact = false } = Astro.props;
 
 // Card titles sit under the section title (h2) when there is one, otherwise right under the page h1.
 const CardHeading = title || subtitle || tagline ? 'h3' : 'h2';
@@ -36,49 +53,69 @@ const CardHeading = title || subtitle || tagline ? 'h3' : 'h2';
   <Headline tagline={tagline} title={title} subtitle={subtitle} />
   <div class="grid gap-6 md:grid-cols-2">
     {
-      BRANCHES.map((branch) => (
-        <article
-          id={branch.id}
-          class="flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8"
-        >
-          <CardHeading class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
-            <Icon name="tabler:building-store" class="h-7 w-7 text-primary" />
-            {branch.city}
-          </CardHeading>
-          <p class="mt-4 flex gap-2">
-            <Icon name="tabler:map-pin" class="mt-0.5 h-5 w-5 shrink-0 text-muted" />
-            <span>
-              {branch.address}
-              {branch.reference && <span class="block text-sm text-muted">{branch.reference}</span>}
-            </span>
-          </p>
-          <dl class="mt-4 flex-1 text-sm">
-            {branch.hours.map((row) => (
-              <div class="flex justify-between gap-4 border-b border-slate-100 py-2 last:border-0">
-                <dt class="text-muted">{row.days}</dt>
-                <dd class="font-medium text-right">{row.time}</dd>
-              </div>
-            ))}
-          </dl>
-          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-            <a
-              class="btn-primary flex-1"
-              href={whatsappLink(branch.whatsapp, WA_MESSAGES.branch(branch.city))}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
-              WhatsApp {branch.city}
-            </a>
-            {branch.mapsUrl && (
-              <a class="btn flex-1" href={branch.mapsUrl} target="_blank" rel="noopener noreferrer">
-                <Icon name="tabler:directions" class="mr-2 h-5 w-5" />
-                Cómo llegar
-              </a>
-            )}
-          </div>
-        </article>
-      ))
+      BRANCHES.map((branch) =>
+        compact ? (
+          <a
+            href={href(`/sucursales#${branch.id}`)}
+            class="group flex items-center gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:ring-2 hover:ring-[#053A86]"
+          >
+            <Icon name="tabler:building-store" class="h-9 w-9 shrink-0 text-primary" />
+            <div class="min-w-0 flex-1">
+              <CardHeading class="font-heading text-xl font-bold text-heading">{branch.city}</CardHeading>
+              {branch.hours.map((row) => (
+                <p class="text-sm text-muted">{`${row.days}, ${formatHours(row)}`}</p>
+              ))}
+            </div>
+            <Icon
+              name="tabler:chevron-right"
+              class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#053A86]"
+            />
+          </a>
+        ) : (
+          <article
+            id={branch.id}
+            class="flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8"
+          >
+            <CardHeading class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+              <Icon name="tabler:building-store" class="h-7 w-7 text-primary" />
+              {branch.city}
+            </CardHeading>
+            <p class="mt-4 flex gap-2">
+              <Icon name="tabler:map-pin" class="mt-0.5 h-5 w-5 shrink-0 text-muted" />
+              <span>
+                {branch.address}
+                {branch.reference && <span class="block text-sm text-muted">{branch.reference}</span>}
+              </span>
+            </p>
+            <dl class="mt-4 flex-1 text-sm">
+              {branch.hours.map((row) => (
+                <div class="flex justify-between gap-4 border-b border-slate-100 py-2 last:border-0">
+                  <dt class="text-muted">{row.days}</dt>
+                  <dd class="text-right font-medium">{formatHours(row)}</dd>
+                </div>
+              ))}
+            </dl>
+            <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-1">
+              <WhatsAppHelp
+                message={WA_MESSAGES.branch(branch.city)}
+                phone={branch.whatsapp}
+                context={t.branch(branch.city)}
+              />
+              {branch.mapsUrl && (
+                <a
+                  class="inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4"
+                  href={branch.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="tabler:directions" class="h-5 w-5" />
+                  {t.directions}
+                </a>
+              )}
+            </div>
+          </article>
+        )
+      )
     }
   </div>
 </WidgetWrapper>

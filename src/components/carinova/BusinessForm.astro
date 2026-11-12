@@ -1,0 +1,389 @@
+---
+// The form for companies (/empresas): who they are and what they need. The script posts it to
+// /api/business, which validates it and e-mails it to Carinova's owner (OWNER_EMAIL); nothing is
+// stored. Its options and limits are in src/data/business.ts, read by the server's validation too
+// (worker/business/validate.ts). Like the sign-up form, it says which language it was filled in.
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { BUSINESS_EXAMPLES, BUSINESS_LIMITS, BUSINESS_VOLUMES } from '~/data/business';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { SIGNUP_COUNTRIES, WA_MESSAGES } = data;
+
+const [initial] = SIGNUP_COUNTRIES;
+
+const t = {
+  es: {
+    title: 'Contanos de tu empresa',
+    intro: 'Llená estos datos y te contactamos.',
+    noscript:
+      'Para enviar el formulario necesitás activar JavaScript en tu navegador. También podés escribirnos por WhatsApp.',
+    company: 'Nombre de la empresa',
+    contactName: 'Tu nombre',
+    email: 'Correo electrónico',
+    phone: 'Teléfono',
+    phoneHint: 'De preferencia, el número que usás en WhatsApp.',
+    country: 'País',
+    city: 'Ciudad',
+    volume: 'Volumen estimado',
+    optional: '(opcional)',
+    choose: 'Elegí uno',
+    message: '¿Qué necesita tu empresa?',
+    messageHint: 'Qué traés, de dónde y cada cuánto.',
+    honeypot: 'Dejá este campo vacío',
+    submit: 'Enviar solicitud',
+    sending: 'Enviando…',
+    sentTitle: 'Recibimos tu solicitud',
+    sentText: 'Gracias. Nuestro equipo la va a revisar y te va a contactar al correo o al teléfono que nos diste.',
+    home: 'Volver al inicio',
+    messages: {
+      missing: 'Completá este campo.',
+      unavailable: 'El formulario no está disponible en este momento. Escribinos por WhatsApp y te atendemos.',
+      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
+      failed: 'No pudimos enviar tu solicitud. Revisá tu conexión e intentalo de nuevo, o escribinos por WhatsApp.',
+      oneError: 'Hay un campo por corregir.',
+      manyErrors: 'Hay {count} campos por corregir.',
+    },
+  },
+  en: {
+    title: 'Tell us about your company',
+    intro: 'Fill in these details and we will contact you.',
+    noscript: 'To send the form you need to turn on JavaScript in your browser. You can also write to us on WhatsApp.',
+    company: 'Name of the company',
+    contactName: 'Your name',
+    email: 'E-mail',
+    phone: 'Phone',
+    phoneHint: 'Preferably the number you use on WhatsApp.',
+    country: 'Country',
+    city: 'City',
+    volume: 'Estimated volume',
+    optional: '(optional)',
+    choose: 'Choose one',
+    message: 'What does your company need?',
+    messageHint: 'What you bring, from where and how often.',
+    honeypot: 'Leave this field empty',
+    submit: 'Send request',
+    sending: 'Sending…',
+    sentTitle: 'We received your request',
+    sentText: 'Thank you. Our team will review it and contact you at the e-mail or the phone you gave us.',
+    home: 'Back to the home page',
+    messages: {
+      missing: 'Fill in this field.',
+      unavailable: 'The form is not available right now. Write to us on WhatsApp and we will look after you.',
+      busy: 'We received too many attempts in a row. Wait a minute and try again.',
+      failed: 'We could not send your request. Check your connection and try again, or write to us on WhatsApp.',
+      oneError: 'There is one field to correct.',
+      manyErrors: 'There are {count} fields to correct.',
+    },
+  },
+}[locale];
+
+const labelClass = 'block text-sm font-semibold text-slate-700';
+const inputClass =
+  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-[#011028] outline-none transition placeholder:text-slate-400 focus:border-[#053A86] aria-[invalid=true]:border-red-600';
+const hintClass = 'mt-1 text-xs text-slate-500';
+const errorClass = 'mt-1 text-sm font-medium text-red-700';
+const optionalClass = 'font-normal text-slate-500';
+---
+
+<cn-business class="block" data-messages={JSON.stringify(t.messages)}>
+  <!-- method="dialog": without the script, submitting does nothing (see SignupForm.astro). -->
+  <form
+    method="dialog"
+    novalidate
+    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+  >
+    <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.title}</h2>
+    <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
+
+    <noscript>
+      <p class="mt-4 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">{t.noscript}</p>
+    </noscript>
+
+    <input type="hidden" name="lang" value={locale} />
+
+    <div class="mt-6 grid gap-x-4 gap-y-5 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="cn-biz-company" class={labelClass}>{t.company}</label>
+        <input
+          id="cn-biz-company"
+          name="company"
+          type="text"
+          autocomplete="organization"
+          required
+          maxlength={BUSINESS_LIMITS.company}
+          placeholder={BUSINESS_EXAMPLES.company}
+          class={inputClass}
+          aria-describedby="cn-biz-company-error"
+        />
+        <p id="cn-biz-company-error" class={errorClass} hidden></p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="cn-biz-contactName" class={labelClass}>{t.contactName}</label>
+        <input
+          id="cn-biz-contactName"
+          name="contactName"
+          type="text"
+          autocomplete="name"
+          required
+          maxlength={BUSINESS_LIMITS.contactName}
+          placeholder={BUSINESS_EXAMPLES.contactName}
+          class={inputClass}
+          aria-describedby="cn-biz-contactName-error"
+        />
+        <p id="cn-biz-contactName-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-biz-email" class={labelClass}>{t.email}</label>
+        <input
+          id="cn-biz-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+          maxlength="254"
+          placeholder={BUSINESS_EXAMPLES.email}
+          class={inputClass}
+          aria-describedby="cn-biz-email-error"
+        />
+        <p id="cn-biz-email-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-biz-phone" class={labelClass}>{t.phone}</label>
+        <input
+          id="cn-biz-phone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          required
+          maxlength="30"
+          placeholder={initial.examples.phone}
+          class={inputClass}
+          aria-describedby="cn-biz-phone-hint cn-biz-phone-error"
+        />
+        <p id="cn-biz-phone-hint" class={hintClass}>{t.phoneHint}</p>
+        <p id="cn-biz-phone-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-biz-country" class={labelClass}>{t.country}</label>
+        <select
+          id="cn-biz-country"
+          name="country"
+          autocomplete="country"
+          required
+          class={inputClass}
+          aria-describedby="cn-biz-country-error"
+        >
+          {
+            SIGNUP_COUNTRIES.map((country) => (
+              <option value={country.code} data-phone={country.examples.phone} data-city={country.examples.city}>
+                {country.name}
+              </option>
+            ))
+          }
+        </select>
+        <p id="cn-biz-country-error" class={errorClass} hidden></p>
+      </div>
+
+      <div>
+        <label for="cn-biz-city" class={labelClass}>{t.city}</label>
+        <input
+          id="cn-biz-city"
+          name="city"
+          type="text"
+          autocomplete="address-level2"
+          required
+          maxlength={BUSINESS_LIMITS.city}
+          placeholder={initial.examples.city}
+          class={inputClass}
+          aria-describedby="cn-biz-city-error"
+        />
+        <p id="cn-biz-city-error" class={errorClass} hidden></p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="cn-biz-volume" class={labelClass}>
+          {t.volume}{' '}
+          <span class={optionalClass}>{t.optional}</span>
+        </label>
+        <select id="cn-biz-volume" name="volume" class={inputClass} aria-describedby="cn-biz-volume-error">
+          <option value="">{t.choose}</option>
+          {BUSINESS_VOLUMES.map((volume) => <option value={volume.id}>{volume[locale]}</option>)}
+        </select>
+        <p id="cn-biz-volume-error" class={errorClass} hidden></p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="cn-biz-message" class={labelClass}>{t.message}</label>
+        <textarea
+          id="cn-biz-message"
+          name="message"
+          rows="5"
+          required
+          maxlength={BUSINESS_LIMITS.message}
+          class={inputClass}
+          aria-describedby="cn-biz-message-hint cn-biz-message-error"></textarea>
+        <p id="cn-biz-message-hint" class={hintClass}>{t.messageHint}</p>
+        <p id="cn-biz-message-error" class={errorClass} hidden></p>
+      </div>
+
+      <!-- Honeypot: people never see or reach this field; whatever fills it is not a person. -->
+      <div class="hidden" aria-hidden="true">
+        <label for="cn-biz-contact-time">{t.honeypot}</label>
+        <input id="cn-biz-contact-time" name="contact_time" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+    </div>
+
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+      role="alert"
+      data-cn-alert
+      hidden
+    >
+      <p data-cn-alert-text></p>
+      <WhatsAppHelp class="mt-1" message={WA_MESSAGES.businessHelp} />
+    </div>
+    <p class="sr-only" aria-live="polite" data-cn-status></p>
+
+    <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label={t.sending}>
+      {t.submit}
+    </button>
+    {
+      locale === 'en' ? (
+        <p class="mt-3 text-center text-xs text-slate-500">
+          When you send it, we use these details to contact you, as our{' '}
+          <a class="font-medium text-link underline" href={href('/privacidad')} target="_blank" rel="noopener">
+            Privacy policy
+          </a>{' '}
+          explains.
+        </p>
+      ) : (
+        <p class="mt-3 text-center text-xs text-slate-500">
+          Al enviar, usamos estos datos para contactarte, como explica nuestra{' '}
+          <a class="font-medium text-link underline" href={href('/privacidad')} target="_blank" rel="noopener">
+            Política de privacidad
+          </a>
+          .
+        </p>
+      )
+    }
+  </form>
+
+  <div
+    class="rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    data-cn-sent
+    hidden
+  >
+    <Icon name="tabler:circle-check" class="h-12 w-12 text-green-700" />
+    <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-sent-title>
+      {t.sentTitle}
+    </h2>
+    <p class="mt-3">{t.sentText}</p>
+    <a
+      class="mt-6 inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
+      href={href('/')}
+    >
+      {t.home}
+    </a>
+  </div>
+</cn-business>
+
+<script>
+  import { clearError, missingFields, postJson, setBusy, showErrors, type Control } from '~/utils/forms';
+  import { fill } from '~/utils/template';
+
+  /** The sentences of the page's language (see `messages` above). */
+  type Messages = Record<'missing' | 'unavailable' | 'busy' | 'failed' | 'oneError' | 'manyErrors', string>;
+
+  class CnBusiness extends HTMLElement {
+    private form!: HTMLFormElement;
+    private messages!: Messages;
+    private busy = false;
+
+    connectedCallback() {
+      const form = this.querySelector('form');
+      if (!form) return;
+      this.form = form;
+      this.messages = JSON.parse(this.dataset.messages ?? '{}');
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void this.submit();
+      });
+      form.addEventListener('input', (event) => clearError(event.target as Control));
+      form.addEventListener('change', (event) => {
+        const control = event.target as Control;
+        if (control.name === 'country') this.applyCountry();
+        clearError(control);
+      });
+      this.applyCountry();
+    }
+
+    /** The examples of the phone and the city follow the country. */
+    private applyCountry() {
+      const option = this.form.querySelector<HTMLSelectElement>('select[name="country"]')?.selectedOptions[0];
+      if (!option) return;
+      for (const name of ['phone', 'city']) {
+        const input = this.form.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+        if (input) input.placeholder = option.dataset[name] ?? '';
+      }
+    }
+
+    private showErrors(fields: Record<string, string>) {
+      const count = showErrors(this.form, fields);
+      const status = this.querySelector('[data-cn-status]');
+      if (status) {
+        status.textContent = count === 1 ? this.messages.oneError : fill(this.messages.manyErrors, { count });
+      }
+    }
+
+    private showAlert(message: string | null) {
+      const alert = this.querySelector<HTMLElement>('[data-cn-alert]');
+      const text = this.querySelector('[data-cn-alert-text]');
+      if (!alert || !text) return;
+      text.textContent = message ?? '';
+      alert.hidden = message === null;
+    }
+
+    private showSent() {
+      const panel = this.querySelector<HTMLElement>('[data-cn-sent]');
+      if (!panel) return;
+      this.form.hidden = true;
+      panel.hidden = false;
+      this.querySelector<HTMLElement>('[data-cn-sent-title]')?.focus();
+      panel.scrollIntoView({ block: 'center' });
+    }
+
+    private async submit() {
+      if (this.busy) return;
+      this.showAlert(null);
+      const { messages } = this;
+
+      // Only "is it filled in" is checked here; the rules live on the server (worker/business/validate.ts).
+      const missing = missingFields(this.form, messages.missing);
+      if (Object.keys(missing).length > 0) return this.showErrors(missing);
+
+      const button = this.querySelector<HTMLButtonElement>('[data-cn-submit]');
+      this.busy = true;
+      setBusy(button, true);
+      const { status, result } = await postJson('/api/business', Object.fromEntries(new FormData(this.form)));
+      this.busy = false;
+      setBusy(button, false);
+
+      if (status === 200 && result?.ok) return this.showSent();
+      if (status === 422 && result?.fields) return this.showErrors(result.fields);
+      this.showAlert(status === 503 ? messages.unavailable : status === 429 ? messages.busy : messages.failed);
+    }
+  }
+
+  if (!customElements.get('cn-business')) customElements.define('cn-business', CnBusiness);
+</script>

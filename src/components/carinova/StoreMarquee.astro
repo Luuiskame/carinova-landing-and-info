@@ -1,0 +1,65 @@
+---
+// The websites customers buy from, drifting by in rows: each one drawn as a small browser window
+// with its address and its name. Two uses on the home hero:
+//
+// - `background` (default): rows that fill the hero behind its content. The hero lays a navy veil
+//   over them where its text is, so they are a texture there and plain to see beside it.
+// - `strip`: one row in the flow of the page, at full strength, with nothing on top of it.
+//
+// Decoration only (aria-hidden: the stores section right below the hero is the content), CSS only
+// (no script, nothing to download) and still for people who ask for less motion. The tiles are
+// styled in tailwind.css (.store-tile).
+//
+// Names and addresses, not logos: the stores' logos are trademarks of their owners.
+import { twMerge } from 'tailwind-merge';
+import { STORES } from '~/data/carinova';
+
+export interface Props {
+  variant?: 'background' | 'strip';
+  class?: string;
+}
+
+const { variant = 'background', class: className } = Astro.props;
+const isStrip = variant === 'strip';
+
+// Enough rows to cover the hero on a phone, where it is tallest. What does not fit is clipped.
+const ROWS = isStrip ? 1 : 8;
+
+// Each row starts at a different store, so the same name is not stacked in a column; the strip
+// starts in the middle of the list, so it does not repeat the row right above it.
+const rows = Array.from({ length: ROWS }, (_, row) => {
+  const start = isStrip ? Math.floor(STORES.length / 2) : (row * 5) % STORES.length;
+  return [...STORES.slice(start), ...STORES.slice(0, start)];
+});
+
+// Seconds for a row to travel its own length: slow enough to read a name as it passes.
+const duration = (row: number) => (isStrip ? 70 : 95 + (row % 3) * 15);
+---
+
+<div
+  class={twMerge(
+    'pointer-events-none overflow-hidden select-none',
+    isStrip ? '[mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]' : 'absolute inset-0',
+    className
+  )}
+  aria-hidden="true"
+>
+  <div class:list={[{ 'absolute inset-x-0 top-4 -rotate-2': !isStrip }]}>
+    {
+      rows.map((row, index) => (
+        <div
+          class="store-marquee-row"
+          data-reverse={index % 2 === 1 ? '' : undefined}
+          style={`--marquee-duration: ${duration(index)}s${isStrip ? '; margin-bottom: 0' : ''}`}
+        >
+          {/* The tiles twice: the row moves by half its width and starts again without a seam. */}
+          {[...row, ...row].map((store) => (
+            <span class="store-tile" data-domain={store.domain}>
+              {store.name}
+            </span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>

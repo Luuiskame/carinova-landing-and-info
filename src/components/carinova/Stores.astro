@@ -1,22 +1,254 @@
 ---
-// Strip of stores customers can buy from. Names only (no logos): most store logos are not
-// available under an open licence; real logo files can replace the names later.
+// The stores customers buy from (STORES). Touching a store shows its card: what it is, what people
+// buy there and a button that opens the store (its site in a new tab, or its app on a phone that has
+// it). Below the stores, the way to buy without a card: an assisted purchase, asked for on WhatsApp.
+//
+// Names only (no logos): the stores' logos are trademarks of their owners.
+//
+// Without JavaScript each store is a plain link to its site. The script turns the links into the
+// buttons of the card: there is one card in the page, and the script writes the chosen store into it
+// (each link carries its store as data), so twelve stores do not mean twelve cards to download.
+import { Icon } from 'astro-icon/components';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
-import { STORES } from '~/data/carinova';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA, SERVICES, STORES, WA_MESSAGES } = data;
+
+// What an assisted purchase costs and what its link says come from the service itself.
+const assisted = SERVICES.find((service) => service.id === 'compras-asistidas');
+
+const t = {
+  es: {
+    title: 'Comprá en tus tiendas favoritas de Estados Unidos',
+    hint: 'Tocá una tienda para ver qué vende y abrirla.',
+    more: 'y muchas más',
+    buys: 'Lo que más se compra',
+    opens: 'Se abre en una pestaña nueva o, en tu celular, en la app de la tienda si la tenés.',
+    checkout: 'Al pagar, usá tu dirección de Miami como dirección de envío.',
+    getAddress: 'Abrí tu casillero para recibirla',
+    seeAddress: 'Ver mi dirección de Miami',
+    restricted: 'Antes de comprar, revisá los artículos prohibidos',
+    assistTitle: '¿No tenés método de pago, como tarjeta? Nosotros te asistimos.',
+    assistText: 'Mandanos el enlace del producto por WhatsApp y lo compramos por vos.',
+    // For the script.
+    visit: 'Ir a {domain}',
+    close: 'Cerrar {name}',
+  },
+  en: {
+    title: 'Buy at your favorite stores in the United States',
+    hint: 'Tap a store to see what it sells and open it.',
+    more: 'and many more',
+    buys: 'What people buy most',
+    opens: 'It opens in a new tab or, on your phone, in the store’s app if you have it.',
+    checkout: 'At checkout, use your Miami address as the shipping address.',
+    getAddress: 'Open your mailbox to get it',
+    seeAddress: 'See my Miami address',
+    restricted: 'Before you buy, check the prohibited items',
+    assistTitle: 'No payment method, such as a card? We assist you.',
+    assistText: 'Send us the link to the product on WhatsApp and we buy it for you.',
+    visit: 'Go to {domain}',
+    close: 'Close {name}',
+  },
+}[locale];
+
+const textLinkClass = 'font-semibold text-link underline underline-offset-4';
 ---
 
 <WidgetWrapper id="tiendas" containerClass="max-w-6xl py-10 md:py-12 lg:py-12">
-  <h2 class="text-center text-sm font-semibold tracking-wider text-muted uppercase">
-    Compra en tus tiendas favoritas de Estados Unidos
-  </h2>
-  <ul class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
-    {
-      STORES.map((store) => (
-        <li class="rounded-full border border-slate-200 bg-white px-4 py-2 font-heading text-base font-bold text-slate-700 sm:text-lg">
-          {store}
+  <cn-stores class="block" data-text={JSON.stringify({ visit: t.visit, close: t.close })}>
+    <h2 class="text-center text-sm font-semibold tracking-wider text-muted uppercase">{t.title}</h2>
+    <p class="mt-2 text-center text-sm text-muted" data-cn-hint hidden>{t.hint}</p>
+
+    <ul class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
+      {
+        STORES.map(({ id, name, domain, url, about, categories }) => (
+          <li>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-cn-store={JSON.stringify({ id, name, domain, url, about, categories })}
+              class="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 py-2 font-heading text-base font-bold text-slate-700 transition hover:border-[#053A86] hover:text-[#053A86] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#053A86] aria-expanded:border-[#053A86] aria-expanded:bg-[#053A86] aria-expanded:text-white sm:text-lg"
+            >
+              {name}
+            </a>
+          </li>
+        ))
+      }
+      <li class="flex items-center px-2 py-2 text-base text-muted sm:text-lg">{t.more}</li>
+    </ul>
+
+    <article
+      id="cn-store-card"
+      data-cn-card
+      aria-labelledby="cn-store-name"
+      class="mx-auto mt-6 max-w-2xl scroll-mt-28 rounded-2xl bg-white p-6 text-left shadow-lg ring-1 ring-slate-200 sm:p-8"
+      hidden
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h3
+            id="cn-store-name"
+            class="font-heading text-2xl font-extrabold text-heading outline-none"
+            tabindex="-1"
+            data-cn-name
+          >
+          </h3>
+          <p class="mt-0.5 flex items-center gap-1.5 text-sm text-muted">
+            <Icon name="tabler:world" class="h-4 w-4 shrink-0" />
+            <span data-cn-domain></span>
+          </p>
+        </div>
+        <button
+          type="button"
+          data-cn-close
+          class="-mt-1 -mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-[#011028] focus-visible:outline-2 focus-visible:outline-[#053A86]"
+        >
+          <Icon name="tabler:x" class="h-5 w-5" />
+        </button>
+      </div>
+
+      <p class="mt-4 text-lg" data-cn-about></p>
+
+      <p class="mt-4 text-xs font-semibold tracking-wide text-slate-600 uppercase">{t.buys}</p>
+      <ul class="mt-2 flex flex-wrap gap-2" data-cn-categories></ul>
+
+      <a class="btn mt-6 w-full gap-2 sm:w-auto" target="_blank" rel="noopener noreferrer" data-cn-visit>
+        <span data-cn-visit-text></span>
+        <Icon name="tabler:external-link" class="h-5 w-5 shrink-0" />
+      </a>
+      <p class="mt-2 text-xs text-slate-600">{t.opens}</p>
+
+      <ul class="mt-5 space-y-2 border-t border-slate-100 pt-5 text-sm">
+        <li class="flex gap-2">
+          <Icon name="tabler:map-pin" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <span>
+            {t.checkout}{' '}
+            <a class={textLinkClass} href={href(CTA.signup.path)} data-auth="out">{t.getAddress}</a>
+            <a class={textLinkClass} href={href(CTA.mailbox.path)} data-auth="in">{t.seeAddress}</a>
+          </span>
         </li>
-      ))
-    }
-    <li class="px-2 py-2 text-base text-muted sm:text-lg">y muchas más</li>
-  </ul>
+        <li class="flex gap-2">
+          <Icon name="tabler:ban" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <a class={textLinkClass} href={href('/articulos-prohibidos')}>{t.restricted}</a>
+        </li>
+      </ul>
+    </article>
+  </cn-stores>
+
+  {
+    assisted && (
+      <div
+        id="sin-tarjeta"
+        class="mx-auto mt-10 flex max-w-4xl scroll-mt-28 flex-col items-center gap-5 rounded-2xl bg-slate-50 p-6 text-center ring-1 ring-slate-200 sm:p-8 md:flex-row md:text-left"
+      >
+        <Icon name="tabler:credit-card-off" class="h-12 w-12 shrink-0 text-primary" />
+        <div class="min-w-0 flex-1">
+          <h3 class="font-heading text-xl font-bold text-balance text-heading sm:text-2xl">{t.assistTitle}</h3>
+          <p class="mt-2 text-muted">
+            {t.assistText} {assisted.facts[0]}
+          </p>
+        </div>
+        <WhatsAppHelp
+          variant="button"
+          class="w-full shrink-0 sm:w-auto"
+          message={WA_MESSAGES.storesAssist}
+          text={assisted.whatsappText}
+        />
+      </div>
+    )
+  }
 </WidgetWrapper>
+
+<script>
+  import { fill } from '~/utils/template';
+
+  /** What each store link carries (STORES in src/data/carinova.ts). */
+  interface Store {
+    id: string;
+    name: string;
+    domain: string;
+    url: string;
+    about: string;
+    categories: Array<string>;
+  }
+
+  // Turns the store links into the buttons of the card. Touching a store writes it into the card and
+  // shows it; touching it again, or the close button, hides the card. With Ctrl, ⌘, Shift or Alt the
+  // link still opens the store, as links do.
+  class CnStores extends HTMLElement {
+    connectedCallback() {
+      const links = Array.from(this.querySelectorAll<HTMLAnchorElement>('[data-cn-store]'));
+      const card = this.querySelector<HTMLElement>('[data-cn-card]');
+      const hint = this.querySelector<HTMLElement>('[data-cn-hint]');
+      if (!card || links.length === 0) return;
+
+      const text = JSON.parse(this.dataset.text ?? '{}') as { visit: string; close: string };
+      const storeOf = (link: HTMLAnchorElement): Store => JSON.parse(link.dataset.cnStore ?? '{}');
+      const set = (selector: string, value: string) => {
+        const element = card.querySelector(selector);
+        if (element) element.textContent = value;
+      };
+      let open: HTMLAnchorElement | null = null;
+
+      const show = (link: HTMLAnchorElement | null) => {
+        open = link;
+        for (const item of links) item.setAttribute('aria-expanded', String(item === link));
+        card.hidden = link === null;
+        if (!link) return;
+
+        const store = storeOf(link);
+        set('[data-cn-name]', store.name);
+        set('[data-cn-domain]', store.domain);
+        set('[data-cn-about]', store.about);
+        set('[data-cn-visit-text]', fill(text.visit, { domain: store.domain }));
+        card.querySelector('[data-cn-visit]')?.setAttribute('href', store.url);
+        card.querySelector('[data-cn-close]')?.setAttribute('aria-label', fill(text.close, { name: store.name }));
+        card.querySelector('[data-cn-categories]')?.replaceChildren(
+          ...store.categories.map((category) =>
+            Object.assign(document.createElement('li'), {
+              className: 'rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800',
+              textContent: category,
+            })
+          )
+        );
+
+        // On a phone the card opens below several rows of stores: bring it into view, and move the
+        // focus to the store's name so a screen reader reads the card next.
+        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        card.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
+        card.querySelector<HTMLElement>('[data-cn-name]')?.focus({ preventScroll: true });
+      };
+
+      for (const link of links) {
+        link.setAttribute('role', 'button');
+        link.setAttribute('aria-expanded', 'false');
+        link.setAttribute('aria-controls', card.id);
+
+        link.addEventListener('click', (event) => {
+          if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          show(open === link ? null : link);
+        });
+        // Buttons answer to the space bar too; links only to Enter.
+        link.addEventListener('keydown', (event) => {
+          if (event.key !== ' ') return;
+          event.preventDefault();
+          link.click();
+        });
+      }
+
+      card.querySelector('[data-cn-close]')?.addEventListener('click', () => {
+        const last = open;
+        show(null);
+        last?.focus();
+      });
+
+      if (hint) hint.hidden = false;
+    }
+  }
+
+  if (!customElements.get('cn-stores')) customElements.define('cn-stores', CnStores);
+</script>

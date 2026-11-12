@@ -1,0 +1,25 @@
+---
+// Last section of a page: a navy band with the page's closing question and its calls to action.
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+
+export interface Props {
+  id?: string;
+  title: string;
+  subtitle?: string;
+  /** This page's WhatsApp message (WA_MESSAGES). */
+  whatsapp: string;
+  whatsappLead?: string;
+  signup?: boolean;
+  quote?: boolean;
+  quotePath?: string;
+}
+
+const { id, title, subtitle, ...actions } = Astro.props;
+---
+
+<WidgetWrapper id={id} isDark containerClass="max-w-4xl text-center">
+  <h2 class="font-heading text-3xl font-bold tracking-tight text-balance text-heading md:text-4xl">{title}</h2>
+  {subtitle && <p class="mx-auto mt-4 max-w-2xl text-lg text-pretty text-muted md:text-xl">{subtitle}</p>}
+  <CtaGroup class="mt-8" {...actions} />
+</WidgetWrapper>

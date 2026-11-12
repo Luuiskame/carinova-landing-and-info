@@ -4,9 +4,10 @@ import { SEO } from 'astro-seo';
 
 import type { SEOProps } from 'astro-seo';
 
-import { SITE, METADATA, I18N } from 'astrowind:config';
+import { SITE, METADATA } from 'astrowind:config';
+import { LOCALE_INFO, alternatesOf, i18n } from '~/i18n';
 import type { MetaData, MetaDataOpenGraph } from '~/types';
-import { getCanonical } from '~/utils/permalinks';
+import { getCanonical, getPermalink } from '~/utils/permalinks';
 
 import { adaptOpenGraphImages } from '~/utils/images';
 
@@ -24,16 +25,31 @@ const {
   twitter = {},
 } = Astro.props;
 
+// Carinova: the page's language comes from its address (src/i18n). Each language's page is its own
+// canonical address, and the two point at each other with hreflang (Spanish is x-default), so the
+// English pages never take the place of the Spanish ones in search results.
+const { locale } = i18n(Astro);
+const alternates = alternatesOf(Astro.url.pathname);
+
+// The site-wide defaults of src/config.yaml are Spanish; this is what they say in English.
+const defaults =
+  locale === 'en'
+    ? {
+        title: 'Carinova — Purchases and packages from the US to Nicaragua',
+        description:
+          'We bring your purchases and packages from the United States to Nicaragua, by air or by sea. Open your mailbox online and pick up in Managua or Bluefields.',
+      }
+    : { title: METADATA?.title?.default || '', description: METADATA?.description };
+
 const mergedOg: MetaDataOpenGraph = merge(
   {
     url: canonical,
     siteName: SITE?.name,
     images: [],
-    locale: I18N?.language || 'en',
     type: 'website',
   },
   METADATA?.openGraph,
-  { url: canonical, ...openGraph }
+  { url: canonical, locale: LOCALE_INFO[locale].ogLocale, ...openGraph }
 );
 
 const adaptedOg = await adaptOpenGraphImages(mergedOg, Astro.site);
@@ -48,21 +64,29 @@ function buildOpenGraph(og: MetaDataOpenGraph): SEOProps['openGraph'] | undefine
 
   return {
     basic: {
-      title: title || METADATA?.title?.default || '',
+      title: title || defaults.title,
       type: og.type || 'website',
       image: imageUrl,
       url: og.url,
     },
     optional: {
-      description: description || METADATA?.description,
+      description: description || defaults.description,
       locale: og.locale,
+      // The other language of this page, when it has one.
+      ...(alternates.length
+        ? {
+            localeAlternate: Object.values(LOCALE_INFO)
+              .map((info) => info.ogLocale)
+              .filter((ogLocale) => ogLocale !== og.locale),
+          }
+        : {}),
       siteName: og.siteName,
     },
     image: {
       url: imageUrl,
       width: firstImage?.width,
       height: firstImage?.height,
-      alt: title || METADATA?.title?.default || '',
+      alt: title || defaults.title,
     },
     ...(og.type === 'article' && og.article ? { article: og.article } : {}),
   };
@@ -89,9 +113,17 @@ const mergedTwitter = merge(
 );
 
 const seoProps: SEOProps = {
-  title: title || METADATA?.title?.default || '',
+  title: title || defaults.title,
   titleTemplate: ignoreTitleTemplate ? '%s' : METADATA?.title?.template || '%s',
   canonical: canonical,
+  ...(alternates.length
+    ? {
+        languageAlternates: alternates.map(({ hreflang, path }) => ({
+          hrefLang: hreflang,
+          href: String(getCanonical(getPermalink(path))),
+        })),
+      }
+    : {}),
   noindex:
     typeof robots?.index !== 'undefined'
       ? !robots.index
@@ -104,7 +136,7 @@ const seoProps: SEOProps = {
       : typeof METADATA?.robots?.follow !== 'undefined'
         ? !METADATA.robots.follow
         : true,
-  description: description || METADATA?.description,
+  description: description || defaults.description,
   openGraph: buildOpenGraph(adaptedOg),
   twitter: mergedTwitter,
   surpressWarnings: true,

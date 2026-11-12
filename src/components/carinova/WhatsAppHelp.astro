@@ -1,0 +1,55 @@
+---
+// The third call to action: a link that opens WhatsApp with a message written for the place it is in
+// (WA_MESSAGES), so the team knows what the customer was looking at and which link they used.
+//
+// It is a text link everywhere but one place: under the stores, asking for an assisted purchase is
+// how people without a card buy, and there it is a button (`variant="button"`, Stores.astro).
+import type { HTMLAttributes } from 'astro/types';
+import { Icon } from 'astro-icon/components';
+import { twMerge } from 'tailwind-merge';
+import { CONTACT } from '~/data/carinova';
+import { i18n } from '~/i18n';
+import { whatsappLink } from '~/utils/whatsapp';
+
+export interface Props extends Omit<HTMLAttributes<'a'>, 'href' | 'target' | 'rel'> {
+  /** Prefilled message of this place, from WA_MESSAGES. */
+  message: string;
+  /** Link text: "Ayuda por WhatsApp", unless the link is how something is requested. */
+  text?: string;
+  /** Read after the text by screen readers when a page has several of these links, e.g. "(Managua)". */
+  context?: string;
+  /** Number to write to; Carinova's main number by default (a branch can have its own). */
+  phone?: string;
+  variant?: 'link' | 'button';
+}
+
+const { data } = i18n(Astro);
+const {
+  message,
+  text = data.CTA.help.text,
+  context,
+  phone = CONTACT.whatsapp,
+  variant = 'link',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const isButton = variant === 'button';
+---
+
+<a
+  href={whatsappLink(phone, message)}
+  target="_blank"
+  rel="noopener noreferrer"
+  class={twMerge(
+    isButton
+      ? 'btn-whatsapp'
+      : 'inline-flex min-h-11 items-center gap-2 font-semibold text-link underline decoration-1 underline-offset-4 transition hover:decoration-2',
+    className
+  )}
+  {...rest}
+>
+  <!-- #1DA851: WhatsApp green with 3:1 against white and navy. On the green button the icon is navy, like its text. -->
+  <Icon name="tabler:brand-whatsapp" class:list={['h-5 w-5 shrink-0', isButton ? '' : 'text-[#1DA851]']} />
+  <span>{text}{context && <span class="sr-only">{` ${context}`}</span>}</span>
+</a>

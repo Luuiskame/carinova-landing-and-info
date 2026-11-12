@@ -1,0 +1,141 @@
+---
+// Servicios: the six services on their three axes (SERVICE_AXES), one section per axis. Every shipment
+// is one choice on each axis: how it travels, who sends it to the casillero, how it is received.
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Headline from '~/components/ui/Headline.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { SERVICE_AXES, WA_MESSAGES, servicesOf } = data;
+
+const t = {
+  es: {
+    tagline: 'Servicios',
+    metaTitle: 'Servicios: aéreo, marítimo, encomiendas y compras asistidas',
+    description:
+      'Envíos aéreos y marítimos de Estados Unidos a Nicaragua, encomiendas, compras asistidas gratis y retiro en sucursal. Elegí cómo viaja tu paquete y cómo lo recibís.',
+    title: 'Todo para traer tus cosas de Estados Unidos',
+    subtitle: 'Cada envío combina tres decisiones: cómo viaja, quién lo manda a tu casillero y cómo lo recibís.',
+    kinds: 'Tipos de servicio',
+    closing: {
+      title: '¿No sabés qué te conviene?',
+      subtitle: 'Cotizá tu envío y compará aéreo con marítimo, o abrí tu casillero y empezá a comprar.',
+      lead: '¿Querés que te aconsejemos?',
+    },
+  },
+  en: {
+    tagline: 'Services',
+    metaTitle: 'Services: air, sea, packages and assisted purchases',
+    description:
+      'Air and sea shipping from the United States to Nicaragua, packages, free assisted purchases and branch pickup. Choose how your package travels and how you receive it.',
+    title: 'Everything to bring your things from the United States',
+    subtitle:
+      'Every shipment combines three decisions: how it travels, who sends it to your mailbox and how you receive it.',
+    kinds: 'Kinds of service',
+    closing: {
+      title: 'Not sure what suits you?',
+      subtitle: 'Get a quote and compare air with sea, or open your mailbox and start buying.',
+      lead: 'Would you like our advice?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.metaTitle, description: t.description };
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <nav aria-label={t.kinds} class="mx-auto max-w-4xl px-4 pb-4">
+    <ul class="flex flex-wrap justify-center gap-2">
+      {
+        SERVICE_AXES.map((axis) => (
+          <li>
+            <a
+              href={`#${axis.id}`}
+              class="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-4 text-sm font-medium transition hover:border-primary hover:text-primary"
+            >
+              {axis.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    SERVICE_AXES.map((axis, index) => (
+      <WidgetWrapper
+        id={axis.id}
+        containerClass="max-w-5xl"
+        bg={
+          index % 2 === 0 ? '<div class="absolute inset-0 bg-slate-50"></div>' : '<div class="absolute inset-0"></div>'
+        }
+      >
+        <Headline tagline={axis.name} title={axis.question} subtitle={axis.rule} />
+        <div class="grid gap-6 md:grid-cols-2">
+          {servicesOf(axis.id).map((service) => (
+            <article
+              id={service.id}
+              class:list={[
+                'flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 sm:p-8',
+                service.available ? 'shadow-sm ring-1 ring-slate-200' : 'border-2 border-dashed border-slate-300',
+              ]}
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+                  <Icon
+                    name={service.icon}
+                    class:list={['h-7 w-7', service.available ? 'text-primary' : 'text-slate-500']}
+                  />
+                  {service.name}
+                </h3>
+                {service.badge && <ServiceBadge kind={service.badge} />}
+              </div>
+              <p class="mt-3 text-lg text-muted">{service.description}</p>
+              {service.facts.length > 0 && (
+                <ul class="mt-5 space-y-2.5">
+                  {service.facts.map((fact) => (
+                    <li class="flex gap-2.5">
+                      <Icon name="tabler:circle-check-filled" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                      <span>{fact}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div class="mt-auto flex flex-wrap items-center gap-x-6 pt-6">
+                {service.link && (
+                  <a
+                    class="inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
+                    href={href(service.link.path)}
+                  >
+                    {service.link.text}
+                  </a>
+                )}
+                <WhatsAppHelp
+                  message={WA_MESSAGES.services[service.id]}
+                  text={service.whatsappText}
+                  context={service.whatsappText ? undefined : `(${service.name})`}
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      </WidgetWrapper>
+    ))
+  }
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.servicesClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

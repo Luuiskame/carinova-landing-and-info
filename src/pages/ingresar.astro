@@ -1,0 +1,112 @@
+---
+// Ingresar: where a customer signs in to their casillero, with their e-mail and a one-time code.
+// Part of "Mi cuenta". The form and its script are SigninForm.astro; what happens on the server is
+// worker/api.ts (login, verify).
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import SigninForm from '~/components/carinova/SigninForm.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+
+import { LOGIN_CODE_MINUTES, SESSION_DAYS } from '~/data/account';
+import { i18n } from '~/i18n';
+
+const { locale, data } = i18n(Astro);
+const { WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    tagline: 'Mi cuenta',
+    metaTitle: 'Ingresar a mi casillero',
+    description:
+      'Ingresá a tu casillero de Carinova con tu correo: te enviamos un código y entrás sin contraseña. Ahí están tu Carinova ID y tu dirección en Miami.',
+    title: 'Ingresá a tu casillero',
+    subtitle: 'Tu Carinova ID y tu dirección en Miami, siempre a mano.',
+    howTitle: 'Así funciona',
+    how: [
+      {
+        icon: 'tabler:mail',
+        title: 'Sin contraseña',
+        text: 'No hay nada que recordar ni que te puedan robar: cada vez que ingresás te mandamos un código nuevo a tu correo.',
+      },
+      {
+        icon: 'tabler:clock',
+        title: 'Un código para una vez',
+        text: `Sirve una sola vez y vence a los ${LOGIN_CODE_MINUTES} minutos.`,
+      },
+      {
+        icon: 'tabler:shield-lock',
+        title: 'Tu sesión, en este navegador',
+        text: `Quedás dentro ${SESSION_DAYS} días o hasta que cerrés sesión. En un dispositivo compartido, cerrala al terminar.`,
+      },
+    ],
+    helpTitle: '¿No podés ingresar?',
+    helpText: 'Escribinos con tu Carinova ID o con el correo de tu casillero.',
+  },
+  en: {
+    tagline: 'My account',
+    metaTitle: 'Sign in to my mailbox',
+    description:
+      'Sign in to your Carinova mailbox with your e-mail: we send you a code and you get in without a password. Your Carinova ID and your address in Miami are there.',
+    title: 'Sign in to your mailbox',
+    subtitle: 'Your Carinova ID and your address in Miami, always at hand.',
+    howTitle: 'How it works',
+    how: [
+      {
+        icon: 'tabler:mail',
+        title: 'No password',
+        text: 'There is nothing to remember and nothing to steal: every time you sign in we send a new code to your e-mail.',
+      },
+      {
+        icon: 'tabler:clock',
+        title: 'A code for one use',
+        text: `It works only once and expires after ${LOGIN_CODE_MINUTES} minutes.`,
+      },
+      {
+        icon: 'tabler:shield-lock',
+        title: 'Your session, on this browser',
+        text: `You stay signed in for ${SESSION_DAYS} days or until you sign out. On a shared device, sign out when you finish.`,
+      },
+    ],
+    helpTitle: 'Can you not sign in?',
+    helpText: 'Write to us with your Carinova ID or with the e-mail of your mailbox.',
+  },
+}[locale];
+
+const metadata = { title: t.metaTitle, description: t.description };
+---
+
+<Layout metadata={metadata} breadcrumb={t.title}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <section class="mx-auto max-w-5xl px-4 pt-6 pb-16 sm:px-6 md:pb-20">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
+      <SigninForm />
+
+      <aside class="lg:pt-2">
+        <h2 class="font-heading text-xl font-bold text-heading">{t.howTitle}</h2>
+        <ul class="mt-5 space-y-5">
+          {
+            t.how.map((item) => (
+              <li class="flex gap-4">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-primary">
+                  <Icon name={item.icon} class="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 class="font-semibold text-heading">{item.title}</h3>
+                  <p class="mt-1 text-sm text-muted">{item.text}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+          <h2 class="font-heading text-lg font-bold text-heading">{t.helpTitle}</h2>
+          <p class="mt-1 text-sm text-muted">{t.helpText}</p>
+          <WhatsAppHelp class="mt-2" message={WA_MESSAGES.signinHelp} />
+        </div>
+      </aside>
+    </div>
+  </section>
+</Layout>

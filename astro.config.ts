@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,6 +17,8 @@ import type { AstroIntegration } from 'astro';
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin } from './src/utils/frontmatter';
+import { ENGLISH_ENABLED, LOCALE_INFO } from './src/i18n/locales';
+import { ROUTES, alternatePath, type Route } from './src/i18n/routes';
 import { devApi } from './worker/dev-plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,6 +26,40 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const hasExternalScripts = false;
 const whenExternalScripts = (items: (() => AstroIntegration) | (() => AstroIntegration)[] = []) =>
   hasExternalScripts ? (Array.isArray(items) ? items.map((item) => item()) : [items()]) : [];
+
+// The English version (src/i18n/locales.ts → ENGLISH_ENABLED). Every English address renders the
+// same page file as its Spanish address (src/i18n/routes.ts); the page reads its language from the
+// address. While the switch is off, none of these routes exist.
+const ENGLISH_NOT_FOUND = '/en/404';
+const englishPages = (): AstroIntegration => ({
+  name: 'carinova-english-pages',
+  hooks: {
+    'astro:config:setup': ({ injectRoute }) => {
+      if (!ENGLISH_ENABLED) return;
+      for (const route of Object.values<Route>(ROUTES)) {
+        injectRoute({ pattern: route.en, entrypoint: `src/pages/${route.page}` });
+      }
+      injectRoute({ pattern: ENGLISH_NOT_FOUND, entrypoint: 'src/pages/404.astro' });
+    },
+    // Cloudflare answers an address that does not exist with the nearest 404.html up the folders
+    // (wrangler.jsonc → not_found_handling), so the English one has to be en/404.html. Astro writes
+    // every page but the root 404 as <page>/index.html: move it.
+    'astro:build:done': ({ dir }) => {
+      const built = new URL(`.${ENGLISH_NOT_FOUND}/index.html`, dir);
+      if (!fs.existsSync(built)) return;
+      fs.renameSync(built, new URL(`.${ENGLISH_NOT_FOUND}.html`, dir));
+      fs.rmdirSync(new URL(`.${ENGLISH_NOT_FOUND}/`, dir));
+    },
+  },
+});
+
+// Pages that search engines have no use for: what a confirmation link opens, the customer's own
+// page (both noindex) and the English 404 page.
+const PRIVATE_PAGES = [
+  ...[ROUTES.signupConfirm, ROUTES.mailbox].flatMap((route) => [route.es, route.en]),
+  ENGLISH_NOT_FOUND,
+];
+const pathOfUrl = (url: string) => new URL(url).pathname.replace(/\/+$/, '') || '/';
 
 export default defineConfig({
   output: 'static',
@@ -61,8 +98,30 @@ export default defineConfig({
   ],
 
   integrations: [
-    // The page a confirmation link opens is of no use to search engines.
-    sitemap({ filter: (page) => !page.includes('/registro/confirmar') }),
+    englishPages(),
+    sitemap({
+      filter: (page) => !PRIVATE_PAGES.includes(pathOfUrl(page)),
+      // With the English version on, every page lists its two languages (hreflang), Spanish as the
+      // default. The addresses differ per language (/cotizador, /en/quote), so the pairs come from
+      // src/i18n/routes.ts instead of the integration's own `i18n` option, which expects /en/cotizador.
+      serialize: (item) => {
+        if (!ENGLISH_ENABLED) return item;
+        const pathname = pathOfUrl(item.url);
+        const es = alternatePath(pathname, 'es');
+        const en = alternatePath(pathname, 'en');
+        if (!es || !en) return item;
+        const origin = new URL(item.url).origin;
+        const url = (path: string) => `${origin}${path === '/' ? '' : path}`;
+        return {
+          ...item,
+          links: [
+            { lang: LOCALE_INFO.es.htmlLang, url: url(es) },
+            { lang: LOCALE_INFO.en.htmlLang, url: url(en) },
+            { lang: 'x-default', url: url(es) },
+          ],
+        };
+      },
+    }),
     mdx(),
     icon({
       // Local SVG icons (used as <Icon name="file-name" />) live next to the other assets.
@@ -132,7 +191,7 @@ export default defineConfig({
   },
 
   vite: {
-    // devApi: the sign-up endpoints (/api/*) during `astro dev`. In production they are the
+    // devApi: the API (/api/*: sign-up, sign-in, companies) during `astro dev`. In production it is the
     // Cloudflare Worker in worker/index.ts; the pages stay static either way.
     plugins: [tailwindcss(), devApi()],
     resolve: {

@@ -13,7 +13,7 @@
     "build": "astro build",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
-    "test": "node --test \"worker/**/*.test.ts\"",
+    "test": "node --test \"worker/**/*.test.ts\" \"src/**/*.test.ts\"",
     "astro": "astro",
     "check": "npm run check:astro && npm run check:eslint && npm run check:prettier",
     "check:astro": "astro check",

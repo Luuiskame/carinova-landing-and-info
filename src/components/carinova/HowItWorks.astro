@@ -1,47 +1,36 @@
 ---
-// "Cómo funciona": four numbered steps and the sign-up call to action.
+// "Cómo comprar" on the home page: the four steps in one line each (PROCESS_STEPS), the sign-up
+// button and a link to the full page with worked examples.
 import { Icon } from 'astro-icon/components';
 import Headline from '~/components/ui/Headline.astro';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
-import { BRANCHES } from '~/data/carinova';
-import { getPermalink } from '~/utils/permalinks';
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import { i18n } from '~/i18n';
 
-const cities = BRANCHES.map((branch) => branch.city).join(' o ');
+const { locale, href, data } = i18n(Astro);
+const { PROCESS_STEPS } = data;
 
-// TODO: confirm the process with Carinova (notifications, pickup only?).
-const steps = [
-  {
-    icon: 'tabler:map-pin-share',
-    title: 'Abre tu casillero',
-    description: 'Regístrate en línea, confirma tu correo y recibe tu dirección en Miami.',
+const t = {
+  es: {
+    tagline: 'Cómo comprar',
+    title: `Tu compra en Estados Unidos, en ${PROCESS_STEPS.length} pasos`,
+    subtitle: 'Vos comprás; nosotros lo traemos.',
+    more: 'Ver el proceso con ejemplos por categoría',
   },
-  {
-    icon: 'tabler:shopping-cart',
-    title: 'Compra en línea',
-    description: 'Compra en Amazon, Shein, Temu o cualquier tienda y usa tu dirección de Miami para el envío.',
+  en: {
+    tagline: 'How to buy',
+    title: `Your purchase in the United States, in ${PROCESS_STEPS.length} steps`,
+    subtitle: 'You buy; we bring it.',
+    more: 'See the process with examples by category',
   },
-  {
-    icon: 'tabler:plane-departure',
-    title: 'Lo traemos a Nicaragua',
-    description: 'Recibimos tu paquete y lo enviamos por avión o por barco. Te avisamos en cada paso.',
-  },
-  {
-    icon: 'tabler:package',
-    title: 'Retíralo cerca de ti',
-    description: `Pasa por tu paquete a nuestra sucursal de ${cities}.`,
-  },
-];
+}[locale];
 ---
 
-<WidgetWrapper id="como-funciona" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
-  <Headline
-    tagline="Cómo funciona"
-    title="Tu compra en Estados Unidos, en 4 pasos"
-    subtitle="Tú compras, nosotros nos encargamos de traerlo."
-  />
+<WidgetWrapper id="como-comprar" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
+  <Headline tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
   <ol class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
     {
-      steps.map((step, index) => (
+      PROCESS_STEPS.map((step, index) => (
         <li class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#011028] font-heading text-lg font-bold text-white">
@@ -50,12 +39,13 @@ const steps = [
             <Icon name={step.icon} class="h-7 w-7 text-primary" />
           </div>
           <h3 class="mt-4 font-heading text-lg font-bold text-heading">{step.title}</h3>
-          <p class="mt-2 text-muted">{step.description}</p>
+          <p class="mt-2 text-muted">{step.summary}</p>
         </li>
       ))
     }
   </ol>
-  <div class="mt-10 text-center">
-    <a class="btn-primary" href={getPermalink('/registro')}>Abrir mi casillero</a>
+  <div class="mt-10 flex flex-col items-center gap-4">
+    <CtaGroup quote={false} />
+    <a class="font-semibold text-link underline underline-offset-4" href={href('/como-comprar')}>{t.more}</a>
   </div>
 </WidgetWrapper>

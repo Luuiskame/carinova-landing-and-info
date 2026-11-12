@@ -1,42 +1,58 @@
 ---
+// Artículos prohibidos: what Carinova does not carry and what cannot travel by air (RESTRICTED_ITEMS).
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import Restrictions from '~/components/carinova/Restrictions.astro';
 
-import { CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { whatsappLink } from '~/utils/whatsapp';
+import { i18n } from '~/i18n';
 
-const metadata = {
-  title: 'Artículos prohibidos',
-  description:
-    'Lo que Carinova no transporta de Estados Unidos a Nicaragua y los productos que no pueden viajar por vía aérea. Revísalo antes de comprar.',
-};
+const { locale, data } = i18n(Astro);
+const { WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    tagline: 'Antes de comprar',
+    title: 'Artículos prohibidos',
+    description:
+      'Lo que Carinova no transporta de Estados Unidos a Nicaragua y los productos que no pueden viajar por vía aérea. Revisalo antes de comprar.',
+    subtitle:
+      'Hay productos que no transportamos y otros que no pueden viajar en avión. Revisá la lista antes de hacer tu compra.',
+    closing: {
+      title: '¿No estás seguro de un producto?',
+      subtitle: 'Preguntanos antes de comprarlo y te decimos si podemos traerlo.',
+      lead: 'Mandanos el producto:',
+    },
+  },
+  en: {
+    tagline: 'Before you buy',
+    title: 'Prohibited items',
+    description:
+      'What Carinova does not carry from the United States to Nicaragua and the products that cannot travel by air. Check it before you buy.',
+    subtitle:
+      'There are products we do not carry and others that cannot travel by plane. Check the list before you buy.',
+    closing: {
+      title: 'Not sure about a product?',
+      subtitle: 'Ask us before you buy it and we will tell you if we can bring it.',
+      lead: 'Send us the product:',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.title, description: t.description };
 ---
 
-<Layout metadata={metadata}>
-  <HeroText
-    tagline="Antes de comprar"
-    title="Artículos prohibidos"
-    subtitle="Hay productos que no transportamos y otros que no pueden viajar en avión. Revisa la lista antes de hacer tu compra."
-  />
+<Layout metadata={metadata} breadcrumb={t.title}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <section class="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6 md:pb-16">
+  <section class="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6 md:pb-16">
     <Restrictions />
   </section>
 
-  <CallToAction
-    isDark
-    title="¿No estás seguro de un producto?"
-    subtitle="Pregúntanos antes de comprarlo y te decimos si podemos traerlo."
-    actions={[
-      {
-        variant: 'primary',
-        text: 'Preguntar por WhatsApp',
-        icon: 'tabler:brand-whatsapp',
-        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.restricted),
-        target: '_blank',
-      },
-    ]}
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.restricted}
+    whatsappLead={t.closing.lead}
   />
 </Layout>
