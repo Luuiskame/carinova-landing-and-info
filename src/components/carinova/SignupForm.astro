@@ -3,14 +3,100 @@
 // phone, address, apt/suite, city, state, postal code) plus the e-mail that gets confirmed.
 // The script posts it to /api/signup, which validates it and e-mails the confirmation link
 // (worker/api.ts); the options, the rules per country and the examples shown as placeholders come
-// from src/data/signup.ts.
+// from src/data/signup.ts. The form says which language it was filled in (`lang`), so the errors and
+// the e-mails come back in that language.
 import { Icon } from 'astro-icon/components';
-import { CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { CONFIRM_LINK_HOURS, SIGNUP_COUNTRIES, SIGNUP_NAME_EXAMPLES } from '~/data/signup';
-import { getPermalink } from '~/utils/permalinks';
-import { whatsappLink } from '~/utils/whatsapp';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { CONFIRM_LINK_HOURS, SIGNUP_NAME_EXAMPLES } from '~/data/signup';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
 
 const [initial] = SIGNUP_COUNTRIES;
+
+const t = {
+  es: {
+    signedIn: 'Ya tenés un casillero abierto en este navegador.',
+    title: 'Tus datos',
+    intro: 'Te toma un par de minutos.',
+    noscript:
+      'Para registrarte en línea necesitás activar JavaScript en tu navegador. También podés abrir tu casillero por WhatsApp.',
+    country: 'País',
+    firstName: 'Nombre',
+    lastName: 'Apellido',
+    email: 'Correo electrónico',
+    emailHint: 'Te enviaremos un enlace para confirmar tu cuenta.',
+    phone: 'Teléfono',
+    phoneHint: 'De preferencia, el número que usás en WhatsApp.',
+    address1: 'Dirección',
+    address2: 'Apto / Suite',
+    optional: '(opcional)',
+    city: 'Ciudad',
+    choose: 'Elegí uno',
+    postalCode: 'Código postal',
+    honeypot: 'Dejá este campo vacío',
+    sending: 'Enviando…',
+    afterSubmit: 'Al enviar, te mandamos un correo para confirmar tu cuenta.',
+    sentTitle: 'Revisá tu correo',
+    sentNotes: [
+      'Puede tardar un par de minutos en llegar.',
+      'Si no lo ves, revisá la carpeta de spam o correo no deseado.',
+      `El enlace vence en ${CONFIRM_LINK_HOURS} horas.`,
+    ],
+    edit: '¿Escribiste mal tu correo? Corregilo',
+    // For the script.
+    messages: {
+      missing: 'Completá este campo.',
+      terms: 'Para continuar, aceptá los términos y la política de privacidad.',
+      unavailable:
+        'El registro en línea no está disponible en este momento. Escribinos por WhatsApp y abrimos tu casillero.',
+      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
+      failed: 'No pudimos enviar tu registro. Revisá tu conexión e intentalo de nuevo, o escribinos por WhatsApp.',
+      oneError: 'Hay un campo por corregir.',
+      manyErrors: 'Hay {count} campos por corregir.',
+    },
+  },
+  en: {
+    signedIn: 'You already have a mailbox open on this browser.',
+    title: 'Your details',
+    intro: 'It takes a couple of minutes.',
+    noscript:
+      'To sign up online you need to turn on JavaScript in your browser. You can also open your mailbox through WhatsApp.',
+    country: 'Country',
+    firstName: 'First name',
+    lastName: 'Last name',
+    email: 'E-mail',
+    emailHint: 'We will send you a link to confirm your account.',
+    phone: 'Phone',
+    phoneHint: 'Preferably the number you use on WhatsApp.',
+    address1: 'Address',
+    address2: 'Apt / Suite',
+    optional: '(optional)',
+    city: 'City',
+    choose: 'Choose one',
+    postalCode: 'Postal code',
+    honeypot: 'Leave this field empty',
+    sending: 'Sending…',
+    afterSubmit: 'When you submit, we send you an e-mail to confirm your account.',
+    sentTitle: 'Check your e-mail',
+    sentNotes: [
+      'It can take a couple of minutes to arrive.',
+      'If you do not see it, check your spam or junk folder.',
+      `The link expires in ${CONFIRM_LINK_HOURS} hours.`,
+    ],
+    edit: 'Wrong e-mail? Correct it',
+    messages: {
+      missing: 'Fill in this field.',
+      terms: 'To continue, accept the terms and the privacy policy.',
+      unavailable: 'Online sign-up is not available right now. Write to us on WhatsApp and we will open your mailbox.',
+      busy: 'We received too many attempts in a row. Wait a minute and try again.',
+      failed: 'We could not send your sign-up. Check your connection and try again, or write to us on WhatsApp.',
+      oneError: 'There is one field to correct.',
+      manyErrors: 'There are {count} fields to correct.',
+    },
+  },
+}[locale];
 
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
@@ -20,7 +106,16 @@ const errorClass = 'mt-1 text-sm font-medium text-red-700';
 const legalLinkClass = 'font-medium text-link underline';
 ---
 
-<cn-signup class="block">
+<cn-signup class="block" data-messages={JSON.stringify(t.messages)}>
+  <p
+    class="mb-4 flex flex-wrap items-center gap-x-2 rounded-xl bg-green-50 p-4 text-sm text-green-950 ring-1 ring-green-200"
+    data-auth="in"
+  >
+    <Icon name="tabler:circle-check" class="h-5 w-5 shrink-0 text-green-700" />
+    <span>{t.signedIn}</span>
+    <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.mailbox.path)}>{CTA.mailbox.text}</a>
+  </p>
+
   <!--
     method="dialog" with no <dialog> around it: submitting does nothing by itself, so if the script
     has not loaded yet the form neither reloads the page nor puts personal data in the address bar.
@@ -30,19 +125,18 @@ const legalLinkClass = 'font-medium text-link underline';
     novalidate
     class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
   >
-    <h2 class="font-heading text-2xl font-bold text-[#011028]">Tus datos</h2>
-    <p class="mt-1 text-sm text-slate-600">Te toma un par de minutos.</p>
+    <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.title}</h2>
+    <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
 
     <noscript>
-      <p class="mt-4 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">
-        Para registrarte en línea necesitas activar JavaScript en tu navegador. También puedes abrir tu casillero por
-        WhatsApp.
-      </p>
+      <p class="mt-4 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">{t.noscript}</p>
     </noscript>
+
+    <input type="hidden" name="lang" value={locale} />
 
     <div class="mt-6 grid gap-x-4 gap-y-5 sm:grid-cols-2">
       <div class="sm:col-span-2">
-        <label for="cn-country" class={labelClass}>País</label>
+        <label for="cn-country" class={labelClass}>{t.country}</label>
         <select
           id="cn-country"
           name="country"
@@ -67,7 +161,7 @@ const legalLinkClass = 'font-medium text-link underline';
       </div>
 
       <div>
-        <label for="cn-firstName" class={labelClass}>Nombre</label>
+        <label for="cn-firstName" class={labelClass}>{t.firstName}</label>
         <input
           id="cn-firstName"
           name="firstName"
@@ -83,7 +177,7 @@ const legalLinkClass = 'font-medium text-link underline';
       </div>
 
       <div>
-        <label for="cn-lastName" class={labelClass}>Apellido</label>
+        <label for="cn-lastName" class={labelClass}>{t.lastName}</label>
         <input
           id="cn-lastName"
           name="lastName"
@@ -99,7 +193,7 @@ const legalLinkClass = 'font-medium text-link underline';
       </div>
 
       <div>
-        <label for="cn-email" class={labelClass}>Correo electrónico</label>
+        <label for="cn-email" class={labelClass}>{t.email}</label>
         <input
           id="cn-email"
           name="email"
@@ -114,12 +208,12 @@ const legalLinkClass = 'font-medium text-link underline';
           class={inputClass}
           aria-describedby="cn-email-hint cn-email-error"
         />
-        <p id="cn-email-hint" class={hintClass}>Te enviaremos un enlace para confirmar tu cuenta.</p>
+        <p id="cn-email-hint" class={hintClass}>{t.emailHint}</p>
         <p id="cn-email-error" class={errorClass} hidden></p>
       </div>
 
       <div>
-        <label for="cn-phone" class={labelClass}>Teléfono</label>
+        <label for="cn-phone" class={labelClass}>{t.phone}</label>
         <input
           id="cn-phone"
           name="phone"
@@ -132,12 +226,12 @@ const legalLinkClass = 'font-medium text-link underline';
           class={inputClass}
           aria-describedby="cn-phone-hint cn-phone-error"
         />
-        <p id="cn-phone-hint" class={hintClass}>De preferencia, el número que usas en WhatsApp.</p>
+        <p id="cn-phone-hint" class={hintClass}>{t.phoneHint}</p>
         <p id="cn-phone-error" class={errorClass} hidden></p>
       </div>
 
       <div class="sm:col-span-2">
-        <label for="cn-address1" class={labelClass}>Dirección</label>
+        <label for="cn-address1" class={labelClass}>{t.address1}</label>
         <input
           id="cn-address1"
           name="address1"
@@ -154,7 +248,8 @@ const legalLinkClass = 'font-medium text-link underline';
 
       <div>
         <label for="cn-address2" class={labelClass}>
-          Apto / Suite <span class="font-normal text-slate-500">(opcional)</span>
+          {t.address2}{' '}
+          <span class="font-normal text-slate-500">{t.optional}</span>
         </label>
         <input
           id="cn-address2"
@@ -170,7 +265,7 @@ const legalLinkClass = 'font-medium text-link underline';
       </div>
 
       <div>
-        <label for="cn-city" class={labelClass}>Ciudad</label>
+        <label for="cn-city" class={labelClass}>{t.city}</label>
         <input
           id="cn-city"
           name="city"
@@ -201,7 +296,7 @@ const legalLinkClass = 'font-medium text-link underline';
               class={inputClass}
               aria-describedby={`cn-state-${country.code}-error`}
             >
-              <option value="">Elige uno</option>
+              <option value="">{t.choose}</option>
               {country.states.map((state) => (
                 <option value={state}>{state}</option>
               ))}
@@ -213,9 +308,9 @@ const legalLinkClass = 'font-medium text-link underline';
 
       <div>
         <label for="cn-postalCode" class={labelClass}>
-          Código postal{' '}
+          {t.postalCode}{' '}
           <span class="font-normal text-slate-500" data-cn-postal-optional hidden={initial.postalCode.required}>
-            (opcional)
+            {t.optional}
           </span>
         </label>
         <input
@@ -241,24 +336,41 @@ const legalLinkClass = 'font-medium text-link underline';
             class="mt-0.5 h-5 w-5 shrink-0 accent-[#053A86]"
             aria-describedby="cn-terms-error"
           />
-          <span>
-            {/* Explicit spaces: line breaks between text and tags are dropped from the output. */}
-            Acepto los{' '}
-            <a class={legalLinkClass} href={getPermalink('/terminos')} target="_blank" rel="noopener"
-              >Términos y condiciones</a
-            >{' '}
-            y la{' '}
-            <a class={legalLinkClass} href={getPermalink('/privacidad')} target="_blank" rel="noopener"
-              >Política de privacidad</a
-            >.
-          </span>
+          {/* Explicit spaces: line breaks between text and tags are dropped from the output. */}
+          {
+            locale === 'en' ? (
+              <span>
+                I accept the{' '}
+                <a class={legalLinkClass} href={href('/terminos')} target="_blank" rel="noopener">
+                  Terms and conditions
+                </a>{' '}
+                and the{' '}
+                <a class={legalLinkClass} href={href('/privacidad')} target="_blank" rel="noopener">
+                  Privacy policy
+                </a>
+                .
+              </span>
+            ) : (
+              <span>
+                Acepto los{' '}
+                <a class={legalLinkClass} href={href('/terminos')} target="_blank" rel="noopener">
+                  Términos y condiciones
+                </a>{' '}
+                y la{' '}
+                <a class={legalLinkClass} href={href('/privacidad')} target="_blank" rel="noopener">
+                  Política de privacidad
+                </a>
+                .
+              </span>
+            )
+          }
         </label>
         <p id="cn-terms-error" class={errorClass} hidden></p>
       </div>
 
       <!-- Honeypot: people never see or reach this field; whatever fills it is not a person. -->
       <div class="hidden" aria-hidden="true">
-        <label for="cn-contact-time">Deja este campo vacío</label>
+        <label for="cn-contact-time">{t.honeypot}</label>
         <input id="cn-contact-time" name="contact_time" type="text" tabindex="-1" autocomplete="off" />
       </div>
     </div>
@@ -270,22 +382,14 @@ const legalLinkClass = 'font-medium text-link underline';
       hidden
     >
       <p data-cn-alert-text></p>
-      <a
-        class="mt-2 inline-flex items-center gap-1.5 font-semibold underline"
-        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.signupHelp)}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <Icon name="tabler:brand-whatsapp" class="h-5 w-5" />
-        Escribir por WhatsApp
-      </a>
+      <WhatsAppHelp class="mt-1" message={WA_MESSAGES.signupHelp} />
     </div>
     <p class="sr-only" aria-live="polite" data-cn-status></p>
 
-    <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label="Enviando…">
-      Abrir mi casillero
+    <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label={t.sending}>
+      {CTA.signup.text}
     </button>
-    <p class="mt-3 text-center text-xs text-slate-500">Al enviar, te mandamos un correo para confirmar tu cuenta.</p>
+    <p class="mt-3 text-center text-xs text-slate-500">{t.afterSubmit}</p>
   </form>
 
   <div
@@ -295,71 +399,60 @@ const legalLinkClass = 'font-medium text-link underline';
   >
     <Icon name="tabler:mail-check" class="h-12 w-12 text-primary" />
     <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-sent-title>
-      Revisa tu correo
+      {t.sentTitle}
     </h2>
-    <p class="mt-3">
-      Enviamos un enlace a <strong class="break-all" data-cn-sent-email></strong>. Ábrelo para confirmar tu cuenta y
-      recibir tu número de cliente y tu dirección en Miami.
-    </p>
+    {
+      locale === 'en' ? (
+        <p class="mt-3">
+          We sent a link to <strong class="break-all" data-cn-sent-email />. Open it to confirm your account and get
+          your Carinova ID and your address in Miami.
+        </p>
+      ) : (
+        <p class="mt-3">
+          Te mandamos un enlace a <strong class="break-all" data-cn-sent-email />. Abrilo para confirmar tu cuenta y
+          recibir tu Carinova ID y tu dirección en Miami.
+        </p>
+      )
+    }
     <ul class="mt-4 list-disc space-y-1.5 pl-5 text-sm text-slate-600">
-      <li>Puede tardar un par de minutos en llegar.</li>
-      <li>Si no lo ves, revisa la carpeta de spam o correo no deseado.</li>
-      <li>El enlace vence en {CONFIRM_LINK_HOURS} horas.</li>
+      {t.sentNotes.map((note) => <li>{note}</li>)}
     </ul>
-    <button type="button" class="mt-6 text-sm font-semibold text-link underline" data-cn-edit>
-      ¿Escribiste mal tu correo? Corrígelo
-    </button>
+    <button type="button" class="mt-6 text-sm font-semibold text-link underline" data-cn-edit>{t.edit}</button>
   </div>
 </cn-signup>
 
 <script>
-  type Control = HTMLInputElement | HTMLSelectElement;
+  import { clearError, missingFields, postJson, setBusy, showErrors, type Control } from '~/utils/forms';
+  import { fill } from '~/utils/template';
 
-  const MESSAGES = {
-    missing: 'Completa este campo.',
-    terms: 'Para continuar, acepta los términos y la política de privacidad.',
-    unavailable:
-      'El registro en línea no está disponible en este momento. Escríbenos por WhatsApp y abrimos tu casillero.',
-    busy: 'Recibimos demasiados intentos seguidos. Espera un minuto y vuelve a intentarlo.',
-    failed: 'No pudimos enviar tu registro. Revisa tu conexión e inténtalo de nuevo, o escríbenos por WhatsApp.',
-  };
+  /** The sentences of the page's language (see `messages` above). */
+  type Messages = Record<'missing' | 'terms' | 'unavailable' | 'busy' | 'failed' | 'oneError' | 'manyErrors', string>;
 
   class CnSignup extends HTMLElement {
     private form!: HTMLFormElement;
+    private messages!: Messages;
     private busy = false;
 
     connectedCallback() {
       const form = this.querySelector('form');
       if (!form) return;
       this.form = form;
+      this.messages = JSON.parse(this.dataset.messages ?? '{}');
 
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         void this.submit();
       });
-      // An error goes away as soon as its field is touched.
-      form.addEventListener('input', (event) => this.clearError(event.target as Control));
+      form.addEventListener('input', (event) => clearError(event.target as Control));
       form.addEventListener('change', (event) => {
         const control = event.target as Control;
         if (control.name === 'country') this.applyCountry();
-        this.clearError(control);
+        clearError(control);
       });
       this.querySelector('[data-cn-edit]')?.addEventListener('click', () => this.showForm());
 
       // Browsers can restore the previous choice when coming back to the page.
       this.applyCountry();
-    }
-
-    /** The fields that are part of the submission: the hidden country's state list is disabled. */
-    private controls(): Array<Control> {
-      return Array.from(this.form.querySelectorAll<Control>('input[name], select[name]')).filter(
-        (control) => !control.disabled && control.name !== 'contact_time'
-      );
-    }
-
-    private errorOf(control: Control): HTMLElement | null {
-      const id = control.getAttribute('aria-describedby')?.split(' ').pop();
-      return id ? document.getElementById(id) : null;
     }
 
     /** State list, postal code rule and placeholders of the chosen country. */
@@ -380,7 +473,7 @@ const legalLinkClass = 'font-medium text-link underline';
       const required = option.dataset.postalRequired !== undefined;
       if (postal) {
         postal.required = required;
-        this.clearError(postal);
+        clearError(postal);
       }
       if (optional) optional.hidden = required;
 
@@ -392,29 +485,12 @@ const legalLinkClass = 'font-medium text-link underline';
       }
     }
 
-    private clearError(control: Control | null) {
-      if (!control?.name) return;
-      control.removeAttribute('aria-invalid');
-      const error = this.errorOf(control);
-      if (error) error.hidden = true;
-    }
-
     private showErrors(fields: Record<string, string>) {
-      let first: Control | undefined;
-      let count = 0;
-      for (const control of this.controls()) {
-        const message = fields[control.name];
-        const error = this.errorOf(control);
-        if (!message || !error) continue;
-        control.setAttribute('aria-invalid', 'true');
-        error.textContent = message;
-        error.hidden = false;
-        first ??= control;
-        count += 1;
-      }
-      first?.focus();
+      const count = showErrors(this.form, fields);
       const status = this.querySelector('[data-cn-status]');
-      if (status) status.textContent = count === 1 ? 'Hay un campo por corregir.' : `Hay ${count} campos por corregir.`;
+      if (status) {
+        status.textContent = count === 1 ? this.messages.oneError : fill(this.messages.manyErrors, { count });
+      }
     }
 
     private showAlert(message: string | null) {
@@ -423,15 +499,6 @@ const legalLinkClass = 'font-medium text-link underline';
       if (!alert || !text) return;
       text.textContent = message ?? '';
       alert.hidden = message === null;
-    }
-
-    private setBusy(busy: boolean) {
-      this.busy = busy;
-      const button = this.querySelector<HTMLButtonElement>('[data-cn-submit]');
-      if (!button) return;
-      button.dataset.label ??= button.textContent ?? '';
-      button.disabled = busy;
-      button.textContent = busy ? (button.dataset.busyLabel ?? '') : button.dataset.label;
     }
 
     private showSent(email: string) {
@@ -455,37 +522,25 @@ const legalLinkClass = 'font-medium text-link underline';
     private async submit() {
       if (this.busy) return;
       this.showAlert(null);
+      const { messages } = this;
 
       // Only "is it filled in" is checked here; the rules live on the server (worker/signup/validate.ts).
-      const missing: Record<string, string> = {};
-      for (const control of this.controls()) {
-        if (control.validity.valueMissing)
-          missing[control.name] = control.name === 'terms' ? MESSAGES.terms : MESSAGES.missing;
-      }
+      const missing = missingFields(this.form, messages.missing, { terms: messages.terms });
       if (Object.keys(missing).length > 0) return this.showErrors(missing);
 
       const data = new FormData(this.form);
       const body = { ...Object.fromEntries(data), terms: data.get('terms') === 'on' };
+      const button = this.querySelector<HTMLButtonElement>('[data-cn-submit]');
 
-      this.setBusy(true);
-      let status = 0;
-      let result: { ok?: boolean; fields?: Record<string, string> } | null = null;
-      try {
-        const response = await fetch('/api/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        status = response.status;
-        result = await response.json().catch(() => null);
-      } catch {
-        // No connection: handled below as a failure.
-      }
-      this.setBusy(false);
+      this.busy = true;
+      setBusy(button, true);
+      const { status, result } = await postJson('/api/signup', body);
+      this.busy = false;
+      setBusy(button, false);
 
       if (status === 200 && result?.ok) return this.showSent(String(data.get('email') ?? '').trim());
       if (status === 422 && result?.fields) return this.showErrors(result.fields);
-      this.showAlert(status === 503 ? MESSAGES.unavailable : status === 429 ? MESSAGES.busy : MESSAGES.failed);
+      this.showAlert(status === 503 ? messages.unavailable : status === 429 ? messages.busy : messages.failed);
     }
   }
 

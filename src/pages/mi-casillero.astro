@@ -1,0 +1,19 @@
+---
+// Mi casillero: the page of a customer who is signed in. Everything on it comes from the Worker at
+// the moment it is opened (Mailbox.astro), so the file itself holds nobody's data and search engines
+// have no use for it.
+import Layout from '~/layouts/PageLayout.astro';
+import Mailbox from '~/components/carinova/Mailbox.astro';
+import { i18n } from '~/i18n';
+
+const { locale } = i18n(Astro);
+
+const metadata = {
+  title: { es: 'Mi casillero', en: 'My mailbox' }[locale],
+  robots: { index: false, follow: false },
+};
+---
+
+<Layout metadata={metadata}>
+  <Mailbox />
+</Layout>

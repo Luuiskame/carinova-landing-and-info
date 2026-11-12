@@ -1,6 +1,6 @@
 // Cloudflare Workers configuration. The site is static: `astro build` writes it to dist/ and
 // Cloudflare serves those files directly. The Worker script (worker/index.ts) only adds the
-// sign-up API under /api/; no Astro adapter is involved.
+// API under /api/ (sign-up, customer sign-in, the form for companies); no Astro adapter is involved.
 // Docs: https://developers.cloudflare.com/workers/static-assets/
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -20,9 +20,9 @@
     // Everything else is tried as a file first, so pages and assets never run the Worker.
     "run_worker_first": ["/api/*"],
   },
-  // Keeps the Worker's logs (why a sign-up failed, a missing secret) in the Cloudflare dashboard.
+  // Keeps the Worker's logs (why a sign-up or a sign-in failed, a missing secret) in the Cloudflare dashboard.
   "observability": { "enabled": true },
   // Secrets are not listed here. Set them on the Worker (dashboard, or `npx wrangler secret put <NAME>`):
-  // RESEND_API_KEY, EMAIL_FROM, DATABASE_URL, SIGNUP_TOKEN_SECRET and, optionally, SIGNUP_NOTIFY_TO.
+  // RESEND_API_KEY, EMAIL_FROM, DATABASE_URL, SIGNUP_TOKEN_SECRET, OWNER_EMAIL and, optionally, SIGNUP_NOTIFY_TO.
   // For local runs they are read from `.env` (see `.env.example`).
 }

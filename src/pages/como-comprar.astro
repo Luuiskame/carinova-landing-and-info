@@ -1,0 +1,185 @@
+---
+// Cómo comprar: the process step by step (PROCESS_STEPS) and one worked example per kind of purchase
+// (SHOPPING_EXAMPLES), each one computed with the site's rates and openable in the calculator.
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import Headline from '~/components/ui/Headline.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+
+import { i18n } from '~/i18n';
+import { formatUSD } from '~/utils/rates';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA, PROCESS_STEPS, SHOPPING_EXAMPLES, WA_MESSAGES, quoteExample } = data;
+
+const t = {
+  es: {
+    tagline: 'Cómo comprar',
+    title: 'Cómo comprar en Estados Unidos desde Nicaragua',
+    description:
+      'Paso a paso para comprar en tiendas de Estados Unidos y recibir en Nicaragua, con ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
+    subtitle:
+      'Cuatro pasos, y ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
+    steps: 'Los pasos',
+    examples: {
+      tagline: 'Ejemplos por categoría',
+      title: '¿Cuánto cuesta traer…?',
+      subtitle:
+        'Seis compras de ejemplo, calculadas con nuestras tarifas. Abrí cualquiera en el cotizador y cambiá los datos por los de tu compra.',
+      open: 'Abrir en el cotizador',
+    },
+    closing: {
+      title: 'Empezá por abrir tu casillero',
+      subtitle: 'Con tu Carinova ID y tu dirección en Miami ya podés comprar en cualquier tienda de Estados Unidos.',
+      lead: '¿Querés que te guiemos en tu primera compra?',
+    },
+  },
+  en: {
+    tagline: 'How to buy',
+    title: 'How to buy in the United States from Nicaragua',
+    description:
+      'Step by step to buy at stores in the United States and receive in Nicaragua, with examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
+    subtitle:
+      'Four steps, and examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
+    steps: 'The steps',
+    examples: {
+      tagline: 'Examples by category',
+      title: 'How much does it cost to bring…?',
+      subtitle:
+        'Six example purchases, worked out with our rates. Open any of them in the calculator and change the details for those of your purchase.',
+      open: 'Open in the calculator',
+    },
+    closing: {
+      title: 'Start by opening your mailbox',
+      subtitle:
+        'With your Carinova ID and your address in Miami you can already buy at any store in the United States.',
+      lead: 'Would you like us to guide you through your first purchase?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.title, description: t.description };
+
+const examples = SHOPPING_EXAMPLES.map((example) => ({ ...example, quote: quoteExample(example) }));
+
+// The steps' links: the two calls to action as their buttons, anything else as a text link.
+const linkClass = (path: string) =>
+  path === CTA.signup.path
+    ? 'btn-primary'
+    : path === CTA.quote.path
+      ? 'btn'
+      : 'inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4';
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <WidgetWrapper id="pasos" containerClass="max-w-4xl pt-6 md:pt-8 lg:pt-10">
+    <h2 class="sr-only">{t.steps}</h2>
+    <ol class="space-y-5">
+      {
+        PROCESS_STEPS.map((step, index) => (
+          <li class="flex gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:gap-6 sm:p-8">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading text-xl font-bold text-white">
+              {index + 1}
+            </span>
+            <div class="min-w-0">
+              <h3 class="flex items-center gap-2 font-heading text-xl font-bold text-heading sm:text-2xl">
+                <Icon name={step.icon} class="h-7 w-7 shrink-0 text-primary" />
+                {step.title}
+              </h3>
+              <p class="mt-2 text-lg text-muted">{step.summary}</p>
+              <ul class="mt-4 space-y-2">
+                {step.details.map((detail) => (
+                  <li class="flex gap-2.5">
+                    <Icon name="tabler:circle-check-filled" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <span>{detail}</span>
+                  </li>
+                ))}
+              </ul>
+              {/* A customer who is signed in already did the first step: their casillero takes its place. */}
+              {step.link.path === CTA.signup.path ? (
+                <>
+                  <a class="btn-primary mt-5" href={href(step.link.path)} data-auth="out">
+                    {step.link.text}
+                  </a>
+                  <a class="btn-primary mt-5" href={href(CTA.mailbox.path)} data-auth="in">
+                    {CTA.mailbox.text}
+                  </a>
+                </>
+              ) : (
+                <a class:list={['mt-5', linkClass(step.link.path)]} href={href(step.link.path)}>
+                  {step.link.text}
+                </a>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </WidgetWrapper>
+
+  <WidgetWrapper id="ejemplos" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
+    <Headline tagline={t.examples.tagline} title={t.examples.title} subtitle={t.examples.subtitle} />
+    <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {
+        examples.map((example) => (
+          <li
+            id={example.id}
+            class="flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+          >
+            <h3 class="flex items-center gap-3 font-heading text-xl font-bold text-heading">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-primary">
+                <Icon name={example.icon} class="h-6 w-6" />
+              </span>
+              {example.category}
+            </h3>
+            <p class="mt-4 font-medium text-heading">{example.item}</p>
+            <p class="text-sm text-muted">{example.source}</p>
+            <p class="mt-4 w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800">
+              {example.quote.tariff}
+            </p>
+            <ul class="mt-3 space-y-1 text-sm break-words text-slate-700 tabular-nums">
+              {example.quote.lines.map((line) => (
+                <li>{line}</li>
+              ))}
+            </ul>
+            {example.quote.charged && <p class="mt-1 text-sm font-semibold text-heading">{example.quote.charged}</p>}
+            {example.quote.note && <p class="mt-1 text-sm text-slate-700">{example.quote.note}</p>}
+            <div class="mt-auto pt-5">
+              <p class="flex items-baseline justify-between gap-3 border-t border-slate-100 pt-4">
+                <span class="text-sm font-semibold text-slate-700">Total</span>
+                <span class="font-heading text-3xl font-extrabold text-heading tabular-nums">
+                  {formatUSD(example.quote.total)}
+                </span>
+              </p>
+              <p class="mt-1 flex items-center justify-end gap-1.5 text-sm text-muted">
+                <Icon name="tabler:clock" class="h-4 w-4" />
+                {example.quote.transit}
+              </p>
+              <div class="mt-4 flex flex-wrap items-center gap-x-5">
+                <a
+                  class="inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
+                  href={href(example.quote.path)}
+                >
+                  {t.examples.open}
+                </a>
+                <WhatsAppHelp message={WA_MESSAGES.example(example.category)} context={`(${example.category})`} />
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </WidgetWrapper>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.howToClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

@@ -1,51 +1,91 @@
 ---
-import { Icon } from 'astro-icon/components';
+// Abrir mi casillero: the sign-up form. Part of "Mi cuenta"; the only exits offered besides the form
+// are signing in, for people who already have a casillero, and WhatsApp, for people who prefer to be
+// helped.
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import SignupForm from '~/components/carinova/SignupForm.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
-import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { whatsappLink } from '~/utils/whatsapp';
+import { i18n } from '~/i18n';
 
-const cities = BRANCHES.map((branch) => branch.city).join(' o ');
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, CTA, WA_MESSAGES } = data;
 
-const metadata = {
-  title: 'Abre tu casillero',
-  description: `Regístrate en línea y recibe tu dirección en Miami para comprar en tiendas de Estados Unidos y retirar tus paquetes en ${cities}.`,
-};
+const cityNames = BRANCHES.map((branch) => branch.city);
 
-const steps = [
-  {
-    title: 'Confirma tu correo',
-    description: 'Te enviamos un enlace. Ábrelo para activar tu cuenta.',
+const t = {
+  es: {
+    tagline: 'Mi cuenta',
+    title: 'Abrí tu casillero',
+    description: `Registrate en línea y recibí tu Carinova ID y tu dirección en Miami para comprar en tiendas de Estados Unidos y retirar en ${cityNames.join(' o ')}.`,
+    subtitle:
+      'Registrate en línea y recibí tu Carinova ID y tu dirección en Miami para comprar en cualquier tienda de Estados Unidos.',
+    existing: '¿Ya tenés casillero?',
+    next: '¿Qué pasa después?',
+    steps: [
+      { title: 'Confirmá tu correo', description: 'Te mandamos un enlace. Abrilo para activar tu cuenta.' },
+      {
+        title: 'Recibí tu Carinova ID y tu dirección en Miami',
+        description: 'Los ves en pantalla al confirmar y también te llegan por correo.',
+      },
+      {
+        title: 'Comprá y nosotros lo traemos',
+        description: `Usá tu dirección de Miami en la tienda y retirá tu paquete en ${cityNames.join(' o ')}.`,
+      },
+    ],
+    helpTitle: '¿Preferís que te ayudemos?',
+    helpText: 'Escribinos y abrimos tu casillero por WhatsApp.',
   },
-  {
-    title: 'Recibe tu número de cliente y tu dirección en Miami',
-    description: 'Los ves en pantalla al confirmar y también te llegan por correo.',
+  en: {
+    tagline: 'My account',
+    title: 'Open your mailbox',
+    description: `Sign up online and get your Carinova ID and your address in Miami to buy at stores in the United States and pick up in ${cityNames.join(' or ')}.`,
+    subtitle:
+      'Sign up online and get your Carinova ID and your address in Miami to buy at any store in the United States.',
+    existing: 'Already have a mailbox?',
+    next: 'What happens next?',
+    steps: [
+      { title: 'Confirm your e-mail', description: 'We send you a link. Open it to activate your account.' },
+      {
+        title: 'Get your Carinova ID and your address in Miami',
+        description: 'You see them on screen when you confirm, and they also reach you by e-mail.',
+      },
+      {
+        title: 'Buy, and we bring it',
+        description: `Use your Miami address at the store and pick up your package in ${cityNames.join(' or ')}.`,
+      },
+    ],
+    helpTitle: 'Would you rather we help you?',
+    helpText: 'Write to us and we will open your mailbox through WhatsApp.',
   },
-  {
-    title: 'Compra y nosotros lo traemos',
-    description: `Usa tu dirección de Miami en la tienda y retira tu paquete en ${cities}.`,
-  },
-];
+}[locale];
+
+const metadata = { title: t.title, description: t.description };
 ---
 
-<Layout metadata={metadata}>
-  <HeroText
-    tagline="Casillero"
-    title="Abre tu casillero"
-    subtitle="Regístrate en línea y recibe tu dirección en Miami para comprar en cualquier tienda de Estados Unidos."
-  />
+<Layout metadata={metadata} breadcrumb={t.title}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <section class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 md:pb-20">
+  <p class="flex flex-wrap items-center justify-center gap-x-1.5 px-4 text-muted" data-auth="out">
+    <span>{t.existing}</span>
+    <a
+      class="inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
+      href={href(CTA.signin.path)}
+    >
+      {CTA.signin.text}
+    </a>
+  </p>
+
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:px-6 md:pb-20">
     <div class="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
       <SignupForm />
 
       <aside class="lg:pt-2">
-        <h2 class="font-heading text-xl font-bold text-heading">¿Qué pasa después?</h2>
+        <h2 class="font-heading text-xl font-bold text-heading">{t.next}</h2>
         <ol class="mt-5 space-y-5">
           {
-            steps.map((step, index) => (
+            t.steps.map((step, index) => (
               <li class="flex gap-4">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading font-bold text-white">
                   {index + 1}
@@ -60,17 +100,9 @@ const steps = [
         </ol>
 
         <div class="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
-          <h2 class="font-heading text-lg font-bold text-heading">¿Prefieres que te ayudemos?</h2>
-          <p class="mt-1 text-sm text-muted">Escríbenos y abrimos tu casillero por WhatsApp.</p>
-          <a
-            class="btn mt-4 w-full"
-            href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.casillero)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
-            Escribir por WhatsApp
-          </a>
+          <h2 class="font-heading text-lg font-bold text-heading">{t.helpTitle}</h2>
+          <p class="mt-1 text-sm text-muted">{t.helpText}</p>
+          <WhatsAppHelp class="mt-2" message={WA_MESSAGES.signupAssist} />
         </div>
       </aside>
     </div>

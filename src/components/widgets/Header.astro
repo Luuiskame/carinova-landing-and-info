@@ -5,7 +5,7 @@ import ToggleTheme from '~/components/common/ToggleTheme.astro';
 import ToggleMenu from '~/components/common/ToggleMenu.astro';
 import Button from '~/components/ui/Button.astro';
 
-import { getHomePermalink } from '~/utils/permalinks';
+import { i18n } from '~/i18n';
 import { trimSlash, getAsset } from '~/utils/permalinks';
 import type { CallToAction } from '~/types';
 
@@ -20,12 +20,26 @@ interface MenuLink extends Link {
   links?: Array<MenuLink>;
   /** Extra classes for the item, e.g. to hide it at the widths where it does not fit. */
   class?: string;
+  /** Carinova: shown only to visitors ('out') or only to customers who are signed in ('in'). */
+  auth?: 'in' | 'out';
+}
+
+/** Carinova: the link to the same page in the other language (src/navigation.ts). */
+interface LanguageLink {
+  code: string;
+  name: string;
+  lang: string;
+  href: string;
+  home: string;
 }
 
 export interface Props {
   id?: string;
   links?: Array<MenuLink>;
   actions?: Array<CallToAction>;
+  /** Carinova: "Ingresar", for visitors; hidden once a customer is signed in. */
+  signin?: { text: string; href: string };
+  language?: LanguageLink;
   isSticky?: boolean;
   isDark?: boolean;
   isFullWidth?: boolean;
@@ -38,6 +52,8 @@ const {
   id = 'header',
   links = [],
   actions = [],
+  signin,
+  language,
   isSticky = false,
   isDark = false,
   isFullWidth = false,
@@ -47,6 +63,13 @@ const {
 } = Astro.props;
 
 const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
+
+// Carinova: the labels of the header's own controls, in the page's language.
+const { locale, href } = i18n(Astro);
+const t = {
+  es: { navigation: 'Navegación principal', menu: 'Menú' },
+  en: { navigation: 'Main navigation', menu: 'Menu' },
+}[locale];
 
 // Compare paths without trailing slashes so the active link is detected
 // regardless of the `trailingSlash` setting (`getPermalink()` emits `/contact/`
@@ -58,8 +81,21 @@ const isActive = (href?: string) => typeof href === 'string' && `/${trimSlash(hr
 // so the name must change whenever the header content does: otherwise a page
 // with its own menu (the demo homes, the landing pages) would keep showing the
 // header of the page the visitor came from. Hash the props that shape the markup.
+// (Carinova: the language link's address changes with every page, so only its language is part of the
+// key; the script below keeps the address current while the header persists.)
 const persistKey = `header-${Array.from(
-  JSON.stringify({ links, actions, isSticky, isDark, isFullWidth, showToggleTheme, showRssFeed, position })
+  JSON.stringify({
+    links,
+    actions,
+    signin,
+    language: language?.lang,
+    isSticky,
+    isDark,
+    isFullWidth,
+    showToggleTheme,
+    showRssFeed,
+    position,
+  })
 )
   .reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7)
   .toString(36)}`;
@@ -91,28 +127,28 @@ const persistKey = `header-${Array.from(
       ]}
     >
       <div class:list={[{ 'mr-auto rtl:mr-0 rtl:ml-auto': position === 'right' }, 'flex justify-between']}>
-        <a class="flex items-center" href={getHomePermalink()}>
+        <a class="flex items-center" href={href('/')}>
           <Logo />
         </a>
         <div class="flex items-center lg:hidden">
-          <ToggleMenu />
+          <ToggleMenu label={t.menu} />
         </div>
       </div>
       <nav
-        class="items-center w-full lg:w-auto hidden lg:flex lg:mx-5 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
-        aria-label="Main navigation"
+        class="items-center w-full lg:w-auto hidden lg:flex lg:mx-2 xl:mx-5 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
+        aria-label={t.navigation}
       >
         <ul
           class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto text-xl lg:text-[0.9375rem] tracking-[0.01rem] font-medium lg:justify-center"
         >
           {
-            links.map(({ text, href, links, class: className }) => (
-              <li class:list={[{ dropdown: links?.length }, className]}>
+            links.map(({ text, href, links, class: className, auth }) => (
+              <li class:list={[{ dropdown: links?.length }, className]} data-auth={auth}>
                 {links?.length ? (
                   <>
                     <button
                       type="button"
-                      class="hover:text-link dark:hover:text-white px-4 py-3 flex items-center whitespace-nowrap"
+                      class="hover:text-link dark:hover:text-white px-4 lg:px-3 xl:px-4 py-3 flex items-center whitespace-nowrap"
                     >
                       {text}{' '}
                       <Icon
@@ -139,7 +175,7 @@ const persistKey = `header-${Array.from(
                 ) : (
                   <a
                     class:list={[
-                      'hover:text-link dark:hover:text-white px-4 py-3 flex items-center whitespace-nowrap',
+                      'hover:text-link dark:hover:text-white px-4 lg:px-3 xl:px-4 py-3 flex items-center whitespace-nowrap',
                       { 'aw-link-active': isActive(href) },
                     ]}
                     href={href}
@@ -159,7 +195,37 @@ const persistKey = `header-${Array.from(
         ]}
       >
         <div class="items-center flex justify-between w-full lg:w-auto">
-          <div class="flex">
+          <div class="flex items-center">
+            {
+              /* Carinova: the other language of this page. "EN" is what shows; its name is what is read. */
+              language && (
+                <a
+                  class="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-base lg:text-[0.9375rem] font-medium text-default hover:text-link dark:hover:text-white"
+                  href={language.href}
+                  hreflang={language.lang}
+                  lang={language.lang}
+                  aria-label={language.name}
+                  data-language-switch={language.lang}
+                  data-home={language.home}
+                >
+                  <Icon name="tabler:world" class="w-5 h-5" />
+                  <span aria-hidden="true">{language.code}</span>
+                </a>
+              )
+            }
+            {
+              /* Carinova: sign-in, for visitors. Between 1024 and 1279 px only its icon fits beside the links. */
+              signin && (
+                <a
+                  class="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-base lg:text-[0.9375rem] font-medium whitespace-nowrap text-default hover:text-link dark:hover:text-white"
+                  href={signin.href}
+                  data-auth="out"
+                >
+                  <Icon name="tabler:user-circle" class="w-5 h-5" />
+                  <span class="lg:sr-only xl:not-sr-only">{signin.text}</span>
+                </a>
+              )
+            }
             {showToggleTheme && <ToggleTheme iconClass="w-6 h-6 lg:w-5 lg:h-5 lg:inline-block" />}
             {
               showRssFeed && (
@@ -175,9 +241,12 @@ const persistKey = `header-${Array.from(
           </div>
           {
             actions?.length ? (
-              <span class="ml-4 rtl:ml-0 rtl:mr-4">
+              <span class="ml-4 lg:ml-2 xl:ml-4 rtl:ml-0 rtl:mr-4">
                 {actions.map((btnProps) => (
-                  <Button {...btnProps} class="ml-2 py-2.5 px-5.5 lg:px-6 font-semibold shadow-none text-sm w-auto" />
+                  <Button
+                    {...btnProps}
+                    class="ml-2 py-2.5 px-5.5 lg:px-5 xl:px-6 font-semibold shadow-none text-sm w-auto whitespace-nowrap"
+                  />
                 ))}
               </span>
             ) : (
@@ -203,6 +272,7 @@ const persistKey = `header-${Array.from(
     private onMqlChange?: () => void;
     private onPageLoad = () => {
       this.updateActiveLinks();
+      this.updateLanguageLink();
       this.closeOpenDropdown();
     };
 
@@ -216,6 +286,7 @@ const persistKey = `header-${Array.from(
       // the server-rendered `aw-link-active` class would go stale. Re-compute it
       // on every navigation (astro:page-load fires on load and after each swap).
       this.updateActiveLinks();
+      this.updateLanguageLink();
       document.addEventListener('astro:page-load', this.onPageLoad);
 
       const closeMenu = () => {
@@ -290,6 +361,21 @@ const persistKey = `header-${Array.from(
     private closeOpenDropdown() {
       const active = document.activeElement as HTMLElement | null;
       if (active && this.contains(active) && active.closest('.dropdown')) active.blur();
+    }
+
+    // Carinova: the language link leads to this page in the other language, and the header persists
+    // from page to page. Each page names its translation in the <head> (hreflang); a page without one
+    // (404) sends to the other language's home page. What the address carries (a filled-in calculator,
+    // a confirmation token, an anchor) goes along.
+    private updateLanguageLink() {
+      const link = this.querySelector<HTMLAnchorElement>('[data-language-switch]');
+      if (!link) return;
+      const alternate = document.head.querySelector<HTMLLinkElement>(
+        `link[rel="alternate"][hreflang="${link.dataset.languageSwitch}"]`
+      );
+      link.href = alternate
+        ? new URL(alternate.href).pathname + window.location.search + window.location.hash
+        : (link.dataset.home ?? '/');
     }
 
     private updateActiveLinks() {

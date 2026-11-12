@@ -1,0 +1,72 @@
+---
+// The services at a glance (home page): one column per axis, its two options inside. Every shipment
+// is one option of each column, which is why they are shown side by side. Each option links to its
+// section of /servicios.
+import { Icon } from 'astro-icon/components';
+import Headline from '~/components/ui/Headline.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { SERVICE_AXES, servicesOf } = data;
+
+const t = {
+  es: {
+    tagline: 'Servicios',
+    title: 'Elegí cómo viaja, quién lo manda y cómo lo recibís',
+    subtitle: 'Cada envío combina una opción de cada columna.',
+    more: 'Ver todos los servicios',
+  },
+  en: {
+    tagline: 'Services',
+    title: 'Choose how it travels, who sends it and how you receive it',
+    subtitle: 'Every shipment combines one option from each column.',
+    more: 'See all services',
+  },
+}[locale];
+---
+
+<WidgetWrapper id="servicios">
+  <Headline tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+  <div class="grid gap-6 lg:grid-cols-3">
+    {
+      SERVICE_AXES.map((axis) => (
+        <section class="flex flex-col rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200 sm:p-6">
+          <p class="text-sm font-bold tracking-wide text-secondary uppercase">{axis.name}</p>
+          <h3 class="mt-1 font-heading text-xl font-bold text-heading">{axis.question}</h3>
+          <ul class="mt-4 flex flex-1 flex-col gap-3">
+            {servicesOf(axis.id).map((service) => (
+              <li class="flex-1">
+                <a
+                  href={href(`/servicios#${service.id}`)}
+                  class:list={[
+                    'group flex h-full gap-3 rounded-xl bg-white p-4 transition hover:ring-2 hover:ring-[#053A86]',
+                    service.available ? 'ring-1 ring-slate-200' : 'border border-dashed border-slate-300',
+                  ]}
+                >
+                  <Icon
+                    name={service.icon}
+                    class:list={['mt-0.5 h-7 w-7 shrink-0', service.available ? 'text-primary' : 'text-slate-500']}
+                  />
+                  <span class="min-w-0">
+                    <span class="flex flex-wrap items-center gap-2 font-heading text-lg font-bold text-heading">
+                      {service.name}
+                      {service.badge && <ServiceBadge kind={service.badge} />}
+                    </span>
+                    <span class="mt-0.5 block text-sm text-muted">{service.summary}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+  <div class="mt-10 flex flex-col items-center gap-4">
+    <CtaGroup signup={false} />
+    <a class="font-semibold text-link underline underline-offset-4" href={href('/servicios')}>{t.more}</a>
+  </div>
+</WidgetWrapper>

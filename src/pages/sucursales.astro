@@ -1,30 +1,70 @@
 ---
+// Sucursales: the pickup branches in full (address, hours, WhatsApp, Maps) and the other ways to
+// reach Carinova. The branches' LocalBusiness data, with opening hours, goes out once the addresses
+// are real.
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import Branches from '~/components/carinova/Branches.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 
 import { SITE } from 'astrowind:config';
-import { BRANCHES, CONTACT, SITE_STATUS, SOCIAL_LINKS, WA_MESSAGES } from '~/data/carinova';
-import { whatsappLink } from '~/utils/whatsapp';
+import { CONTACT, SITE_STATUS, SOCIAL_LINKS, sentence } from '~/data/carinova';
+import { i18n } from '~/i18n';
+import { getCanonical } from '~/utils/permalinks';
 
-const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, WA_MESSAGES, describeHours } = data;
 
-const metadata = {
-  title: 'Sucursales y contacto',
-  description: `Direcciones, horarios y WhatsApp de Carinova en ${cities}.`,
-};
+const [hours] = BRANCHES[0].hours;
+const sameHours = BRANCHES.every((branch) => JSON.stringify(branch.hours) === JSON.stringify(BRANCHES[0].hours));
+const cityNames = BRANCHES.map((branch) => branch.city);
 
-// LocalBusiness data only once the addresses are real (it is what Google shows on maps).
+const t = {
+  es: {
+    tagline: 'Sucursales',
+    title: 'Sucursales de retiro',
+    description: `Direcciones, horarios y WhatsApp de Carinova en ${cityNames.join(' y ')}.${sameHours ? ` ${sentence(`Abrimos de ${describeHours(hours)}`)}` : ''}`,
+    subtitle: sameHours
+      ? sentence(`Por ahora retirás en ${cityNames.join(' y ')}, de ${describeHours(hours)}`)
+      : `Por ahora retirás en ${cityNames.join(' y ')}.`,
+    channels: 'Seguinos y escribinos',
+    closing: {
+      title: 'Tu próxima compra, lista para retirar',
+      subtitle: 'Abrí tu casillero y cotizá tu envío antes de comprar.',
+      lead: '¿No sabés en qué sucursal te conviene retirar?',
+    },
+  },
+  en: {
+    tagline: 'Branches',
+    title: 'Pickup branches',
+    description: `Addresses, opening hours and WhatsApp of Carinova in ${cityNames.join(' and ')}.${sameHours ? ` ${sentence(`We are open ${describeHours(hours)}`)}` : ''}`,
+    subtitle: sameHours
+      ? sentence(`For now you pick up in ${cityNames.join(' and ')}, ${describeHours(hours)}`)
+      : `For now you pick up in ${cityNames.join(' and ')}.`,
+    channels: 'Follow us and write to us',
+    closing: {
+      title: 'Your next purchase, ready for pickup',
+      subtitle: 'Open your mailbox and get a quote for your shipment before you buy.',
+      lead: 'Not sure which branch suits you for pickup?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.title, description: t.description };
+
+// LocalBusiness data only once the addresses are real (it is what Google shows on maps). Each branch
+// is one business whatever the language of the page: its @id is its Spanish address.
+const branchUrl = (id: string) => `${SITE?.site}/sucursales#${id}`;
 const localBusinesses = SITE_STATUS.isPreview
   ? []
   : BRANCHES.map((branch) => ({
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      '@id': `${SITE?.site}/sucursales#${branch.id}`,
+      '@id': branchUrl(branch.id),
       name: `${SITE?.name} ${branch.city}`,
-      url: `${SITE?.site}/sucursales#${branch.id}`,
+      url: `${getCanonical(href('/sucursales'))}#${branch.id}`,
       telephone: `+${branch.whatsapp}`,
       address: {
         '@type': 'PostalAddress',
@@ -32,56 +72,56 @@ const localBusinesses = SITE_STATUS.isPreview
         addressLocality: branch.city,
         addressCountry: 'NI',
       },
+      openingHoursSpecification: branch.hours.map((row) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: row.dayOfWeek,
+        opens: row.opens,
+        closes: row.closes,
+      })),
       parentOrganization: { '@id': `${SITE?.site}/#organization` },
       ...(branch.mapsUrl ? { hasMap: branch.mapsUrl } : {}),
     }));
+
+const otherChannels = [
+  ...(CONTACT.email ? [{ name: CONTACT.email, icon: 'tabler:mail', href: `mailto:${CONTACT.email}` }] : []),
+  ...SOCIAL_LINKS,
+];
 ---
 
-<Layout metadata={metadata}>
+<Layout metadata={metadata} breadcrumb={t.tagline}>
   {localBusinesses.length > 0 && <StructuredData slot="head" schema={localBusinesses} />}
 
-  <HeroText
-    tagline="Contacto"
-    title="Sucursales y contacto"
-    subtitle="Visítanos o escríbenos por WhatsApp: te atiende la sucursal donde retiras tus paquetes."
-  />
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
   <Branches tagline="" title="" />
 
-  <section class="mx-auto max-w-3xl px-4 py-12 text-center md:py-16">
-    <h2 class="font-heading text-2xl font-bold text-heading">Otras formas de contactarnos</h2>
-    <ul class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-      <li>
-        <a
-          class="btn"
-          href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.header)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Icon name="tabler:brand-whatsapp" class="mr-2 h-5 w-5" />
-          WhatsApp general
-        </a>
-      </li>
-      {
-        CONTACT.email && (
-          <li>
-            <a class="btn" href={`mailto:${CONTACT.email}`}>
-              <Icon name="tabler:mail" class="mr-2 h-5 w-5" />
-              {CONTACT.email}
-            </a>
-          </li>
-        )
-      }
-      {
-        SOCIAL_LINKS.map((link) => (
-          <li>
-            <a class="btn" href={link.href} target="_blank" rel="noopener noreferrer">
-              <Icon name={link.icon} class="mr-2 h-5 w-5" />
-              {link.name}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+  {
+    otherChannels.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-12 text-center md:py-16">
+        <h2 class="font-heading text-2xl font-bold text-heading">{t.channels}</h2>
+        <ul class="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2">
+          {otherChannels.map((channel) => (
+            <li>
+              <a
+                class="inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4"
+                href={channel.href}
+                target={channel.href.startsWith('mailto:') ? undefined : '_blank'}
+                rel={channel.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+              >
+                <Icon name={channel.icon} class="h-5 w-5" />
+                {channel.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.branchesClosing}
+    whatsappLead={t.closing.lead}
+  />
 </Layout>

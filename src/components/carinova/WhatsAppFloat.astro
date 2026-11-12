@@ -1,11 +1,25 @@
 ---
-// Floating WhatsApp button on every page. With one number it opens the chat directly; when the
-// branches have different numbers it opens a small branch menu (native <details>, no JS).
+// Floating WhatsApp button on every page, with the message of the page it is on
+// (WA_MESSAGES.floating, in the page's language). With one number it opens the chat directly; when
+// the branches have different numbers it opens a small branch menu (native <details>, no JS): the
+// message still says which page the customer was on, and the number says which branch they chose.
 import { Icon } from 'astro-icon/components';
-import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
+import { CONTACT } from '~/data/carinova';
+import { i18n, spanishPath } from '~/i18n';
 import { whatsappLink } from '~/utils/whatsapp';
 
+export interface Props {
+  /** Path of the current page, e.g. "/cotizador" or "/en/quote". */
+  path: string;
+}
+
+const { locale, data } = i18n(Astro);
+const { BRANCHES, CTA, WA_MESSAGES } = data;
+
+// The messages are kept by the page's Spanish path, whatever language it is read in.
+const message = WA_MESSAGES.floating[spanishPath(Astro.props.path)] ?? WA_MESSAGES.floatingDefault;
 const perBranch = new Set(BRANCHES.map((branch) => branch.whatsapp)).size > 1;
+const whichBranch = { es: '¿Con qué sucursal?', en: 'Which branch?' }[locale];
 
 // #1DA851: WhatsApp green dark enough for the white icon to reach 3:1.
 const buttonClass =
@@ -13,19 +27,19 @@ const buttonClass =
 ---
 
 <!-- z-30: below the header (z-40), so the open mobile menu covers it. -->
-<div class="fixed bottom-4 right-4 z-30 md:bottom-6 md:right-6 rtl:left-4 rtl:right-auto">
+<div class="fixed right-4 bottom-4 z-30 md:right-6 md:bottom-6 rtl:right-auto rtl:left-4">
   {
     perBranch ? (
       <details class="relative">
         <summary class:list={[buttonClass, 'cursor-pointer list-none [&::-webkit-details-marker]:hidden']}>
           <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
-          <span class="sr-only">Escríbenos por WhatsApp</span>
+          <span class="sr-only">{CTA.help.text}</span>
         </summary>
-        <div class="absolute bottom-16 right-0 w-56 rounded-xl bg-white p-2 text-slate-800 shadow-xl ring-1 ring-black/5">
-          <p class="px-3 py-2 text-sm font-semibold">¿Con qué sucursal?</p>
+        <div class="absolute right-0 bottom-16 w-56 rounded-xl bg-white p-2 text-slate-800 shadow-xl ring-1 ring-black/5">
+          <p class="px-3 py-2 text-sm font-semibold">{whichBranch}</p>
           {BRANCHES.map((branch) => (
             <a
-              href={whatsappLink(branch.whatsapp, WA_MESSAGES.branch(branch.city))}
+              href={whatsappLink(branch.whatsapp, message)}
               target="_blank"
               rel="noopener noreferrer"
               class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100"
@@ -37,14 +51,9 @@ const buttonClass =
         </div>
       </details>
     ) : (
-      <a
-        href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.floating)}
-        target="_blank"
-        rel="noopener noreferrer"
-        class={buttonClass}
-      >
+      <a href={whatsappLink(CONTACT.whatsapp, message)} target="_blank" rel="noopener noreferrer" class={buttonClass}>
         <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
-        <span class="sr-only">Escríbenos por WhatsApp</span>
+        <span class="sr-only">{CTA.help.text}</span>
       </a>
     )
   }

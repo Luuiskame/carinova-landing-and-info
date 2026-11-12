@@ -1,0 +1,63 @@
+---
+// Cotizador: where "Cotizar mi envío" leads. The calculator, then the rates and how each price is
+// worked out. The address can fill the calculator in (see QuoteCalculator.astro).
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import QuoteCalculator from '~/components/carinova/QuoteCalculator.astro';
+import RateCards from '~/components/carinova/RateCards.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+
+import { i18n } from '~/i18n';
+import { formatUSD } from '~/utils/rates';
+
+const { locale, data } = i18n(Astro);
+const { RATES, WA_MESSAGES } = data;
+const { air, sea } = RATES;
+
+const t = {
+  es: {
+    tagline: 'Cotizador',
+    metaTitle: 'Cotizador de envíos y tarifas',
+    description: `Calculá cuánto cuesta traer tu compra de Estados Unidos a Nicaragua: aéreo ${formatUSD(air.pricePerLb)} la libra, marítimo ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie³, electrónicos con impuestos.`,
+    title: 'Cotizá tu envío',
+    subtitle: 'Calculá cuánto cuesta traer tu compra o tu encomienda, sin registrarte.',
+    closing: {
+      title: '¿Ya sabés cuánto te sale?',
+      subtitle: 'Abrí tu casillero y recibí tu dirección en Miami para empezar a comprar.',
+      lead: '¿Tu envío es especial?',
+    },
+  },
+  en: {
+    tagline: 'Quote',
+    metaTitle: 'Shipping quote calculator and rates',
+    description: `Work out what it costs to bring your purchase from the United States to Nicaragua: air ${formatUSD(air.pricePerLb)} per pound, sea ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³, electronics with taxes included.`,
+    title: 'Quote your shipment',
+    subtitle: 'Work out what it costs to bring your purchase or your package, without signing up.',
+    closing: {
+      title: 'Now you know what it costs?',
+      subtitle: 'Open your mailbox and get your address in Miami to start buying.',
+      lead: 'Is your shipment a special one?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.metaTitle, description: t.description };
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <section id="calculadora" class="mx-auto max-w-3xl scroll-mt-24 px-4 pt-4 pb-14 sm:px-6 md:pb-20">
+    <QuoteCalculator />
+  </section>
+
+  <RateCards />
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    quote={false}
+    whatsapp={WA_MESSAGES.quoteClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

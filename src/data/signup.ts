@@ -6,7 +6,7 @@
 
 /**
  * Hours a confirmation link stays valid: shown in the copy and enforced by the Worker.
- * The privacy policy (src/pages/privacidad.md) states the number too.
+ * The privacy policy (src/data/legal) states the number too.
  */
 export const CONFIRM_LINK_HOURS = 48;
 

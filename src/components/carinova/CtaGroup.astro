@@ -1,0 +1,80 @@
+---
+// The calls to action of a section, in their order of importance (docs/INFORMATION-ARCHITECTURE.md →
+// "Calls to action"): 1. "Abrir mi casillero" (orange button), 2. "Cotizar mi envío" (outlined
+// button), 3. WhatsApp help with this place's own message (link). Buttons are only ever these two;
+// any other link on the page is a text link.
+//
+// A customer who is signed in already has a casillero: in the place of "Abrir mi casillero" they get
+// "Ir a mi casillero". Both buttons are in the page and CSS shows one (SessionState.astro).
+import { twMerge } from 'tailwind-merge';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
+
+export interface Props {
+  /** Show "Abrir mi casillero". */
+  signup?: boolean;
+  /** Show "Cotizar mi envío". */
+  quote?: boolean;
+  /** Where "Cotizar mi envío" goes: the calculator, possibly filled in (quotePath in src/data/services.ts). */
+  quotePath?: string;
+  /** WhatsApp message of this place (WA_MESSAGES); without one there is no WhatsApp link. */
+  whatsapp?: string;
+  /** A short question before the WhatsApp link, e.g. "¿Tenés dudas?". */
+  whatsappLead?: string;
+  /** `start`: centred on phones, aligned left from 1024 px (the home hero). */
+  align?: 'center' | 'start';
+  class?: string;
+}
+
+const { href, data } = i18n(Astro);
+const { CTA } = data;
+
+const {
+  signup = true,
+  quote = true,
+  quotePath = CTA.quote.path,
+  whatsapp,
+  whatsappLead,
+  align = 'center',
+  class: className,
+} = Astro.props;
+
+const justify = align === 'center' ? 'sm:justify-center' : 'sm:justify-center lg:justify-start';
+---
+
+<div class={twMerge('text-center', align === 'start' && 'lg:text-left', className)}>
+  {
+    (signup || quote) && (
+      <div class:list={['mx-auto flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row', justify]}>
+        {signup && (
+          <>
+            <a class="btn-primary" href={href(CTA.signup.path)} data-auth="out">
+              {CTA.signup.text}
+            </a>
+            <a class="btn-primary" href={href(CTA.mailbox.path)} data-auth="in">
+              {CTA.mailbox.text}
+            </a>
+          </>
+        )}
+        {quote && (
+          <a class="btn" href={href(quotePath)}>
+            {CTA.quote.text}
+          </a>
+        )}
+      </div>
+    )
+  }
+  {
+    whatsapp && (
+      <p
+        class:list={[
+          'flex flex-wrap items-center justify-center gap-x-1.5 text-muted',
+          { 'lg:justify-start': align === 'start', 'mt-3': signup || quote },
+        ]}
+      >
+        {whatsappLead && <span>{whatsappLead}</span>}
+        <WhatsAppHelp message={whatsapp} />
+      </p>
+    )
+  }
+</div>

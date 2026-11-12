@@ -178,3 +178,22 @@ test('the option lists are complete', () => {
   assert.equal(US.states.length, 52);
   for (const { states } of SIGNUP_COUNTRIES) assert.equal(new Set(states).size, states.length);
 });
+
+test('the messages come in the language of the form', () => {
+  const english = (input: unknown) => {
+    const result = validateSignup(input, 'en');
+    return result.ok ? {} : result.fields;
+  };
+
+  assert.equal(errorsOf({ ...nicaraguan, firstName: '' }).firstName, 'Escribí tu nombre.');
+  assert.equal(english({ ...nicaraguan, firstName: '' }).firstName, 'Enter your first name.');
+  assert.equal(english({ ...nicaraguan, state: '' }).state, 'Choose your department.');
+  assert.equal(english({ ...american, state: '' }).state, 'Choose your state.');
+  assert.equal(errorsOf({ ...american, state: '' }).state, 'Elegí tu estado.');
+  assert.equal(english({ ...american, postalCode: '3312' }).postalCode, 'Check the postal code (example: 33195-2311).');
+  assert.equal(english({ ...nicaraguan, terms: false }).terms, 'To continue, accept the terms and the privacy policy.');
+
+  // Same rules, same result: a department is stored as it is written, whatever the language of the form.
+  assert.deepEqual(validateSignup(nicaraguan, 'en'), validateSignup(nicaraguan, 'es'));
+  assert.deepEqual(Object.keys(english({})).sort(), Object.keys(errorsOf({})).sort());
+});

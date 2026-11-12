@@ -1,0 +1,271 @@
+---
+// The rates (/cotizador): one card per rate, the conditions under them, and how each price is worked
+// out, with the cubic-foot example of Carinova's brief. Everything comes from RATES and is computed
+// with utils/rates.ts, like the calculator above it.
+import { Icon } from 'astro-icon/components';
+import Headline from '~/components/ui/Headline.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
+import { LAST_MILE } from '~/data/carinova';
+import { quotePath } from '~/data/services';
+import { i18n } from '~/i18n';
+import {
+  describeUnitLine,
+  describeVolume,
+  describeWeight,
+  formatNumber,
+  formatUSD,
+  quoteByVolume,
+  quoteByWeight,
+  quoteUnits,
+} from '~/utils/rates';
+
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, FORMULA_EXAMPLE, RATES } = data;
+
+const { air, sea, electronics } = RATES;
+
+const t = {
+  es: {
+    tagline: 'Tarifas',
+    title: 'Lo que pagás por tu envío',
+    subtitle:
+      'Las tarifas incluyen seguro e impuestos cuando aplique. La entrega estimada se cuenta desde que recibimos tu paquete.',
+    cities: BRANCHES.map((branch) => branch.city).join(' y '),
+    roundUp: 'Cada libra iniciada se cobra completa.',
+    minimum: `Peso mínimo: ${formatNumber(air.minLb)} lb.`,
+    perPound: 'por libra',
+    perCubicFoot: 'por pie³',
+    airFact: 'Ideal para ropa, zapatos, electrónicos y compras pequeñas.',
+    seaFact: 'Se cobra por peso o por volumen, el que resulte mayor.',
+    calculate: (name: string) => `Calcular ${name.toLowerCase()}`,
+    electronicsNote: 'Tarifa fija por unidad, con envío aéreo e impuestos incluidos.',
+    pickup: 'Retiro en sucursal:',
+    homeDelivery: 'Entrega a domicilio',
+    howTitle: 'Cómo calculamos',
+    byPound: { title: 'Por libra', applies: 'Aéreo y marítimo', rule: 'Peso en libras × tarifa por libra.' },
+    byCubicFoot: {
+      title: 'Por pie cúbico',
+      applies: 'Marítimo',
+      rule: `Largo × ancho × alto de la caja, en pulgadas, ÷ 1,728 = pies cúbicos; × ${formatUSD(sea.pricePerCubicFoot)}. Comparamos con el precio por peso y cobramos el mayor.`,
+      link: 'Probalo en el cotizador',
+    },
+    byUnit: {
+      title: 'Por unidad',
+      applies: 'Electrónicos',
+      rule: 'Cantidad × tarifa de cada equipo, con el envío aéreo y los impuestos incluidos.',
+    },
+  },
+  en: {
+    tagline: 'Rates',
+    title: 'What you pay for your shipment',
+    subtitle:
+      'Rates include insurance and taxes where applicable. The delivery estimate counts from the moment we receive your package.',
+    cities: BRANCHES.map((branch) => branch.city).join(' and '),
+    roundUp: 'Each started pound is charged as a full pound.',
+    minimum: `Minimum weight: ${formatNumber(air.minLb)} lb.`,
+    perPound: 'per pound',
+    perCubicFoot: 'per ft³',
+    airFact: 'Ideal for clothes, shoes, electronics and small purchases.',
+    seaFact: 'Charged by weight or by volume, whichever is higher.',
+    calculate: (name: string) => `Calculate ${name.toLowerCase()} shipping`,
+    electronicsNote: 'Flat rate per unit, with air shipping and taxes included.',
+    pickup: 'Branch pickup:',
+    homeDelivery: 'Home delivery',
+    howTitle: 'How we calculate',
+    byPound: { title: 'Per pound', applies: 'Air and sea', rule: 'Weight in pounds × rate per pound.' },
+    byCubicFoot: {
+      title: 'Per cubic foot',
+      applies: 'Sea',
+      rule: `Length × width × height of the box, in inches, ÷ 1,728 = cubic feet; × ${formatUSD(sea.pricePerCubicFoot)}. We compare it with the price by weight and charge the higher one.`,
+      link: 'Try it in the calculator',
+    },
+    byUnit: {
+      title: 'Per unit',
+      applies: 'Electronics',
+      rule: 'Quantity × rate of each device, with air shipping and taxes included.',
+    },
+  },
+}[locale];
+
+const weightRule = [RATES.roundUpToPound ? t.roundUp : '', t.minimum].filter(Boolean);
+
+const cards = [
+  {
+    id: air.id,
+    icon: air.icon,
+    name: air.name,
+    prices: [{ amount: formatUSD(air.pricePerLb), unit: t.perPound }],
+    transit: air.transit,
+    facts: [...weightRule, t.airFact],
+  },
+  {
+    id: sea.id,
+    icon: sea.icon,
+    name: sea.name,
+    prices: [
+      { amount: formatUSD(sea.pricePerLb), unit: t.perPound },
+      { amount: formatUSD(sea.pricePerCubicFoot), unit: t.perCubicFoot },
+    ],
+    transit: sea.transit,
+    facts: [t.seaFact, ...weightRule],
+  },
+];
+
+// Worked examples of each way of pricing.
+const byWeight = quoteByWeight(2.3, air.pricePerLb, air.minLb, RATES.roundUpToPound);
+const byVolume = quoteByVolume(FORMULA_EXAMPLE.dims, sea.pricePerCubicFoot);
+const byUnit = quoteUnits({ celular: 1, laptop: 1 }, electronics.items);
+
+const formulas = [
+  {
+    icon: 'tabler:scale',
+    title: t.byPound.title,
+    applies: t.byPound.applies,
+    rule: `${t.byPound.rule} ${weightRule.join(' ')}`,
+    example: [describeWeight(byWeight)],
+  },
+  {
+    icon: 'tabler:ruler-measure',
+    title: t.byCubicFoot.title,
+    applies: t.byCubicFoot.applies,
+    rule: t.byCubicFoot.rule,
+    example: [`${FORMULA_EXAMPLE.item}: ${describeVolume(byVolume, locale)}`],
+    link: { text: t.byCubicFoot.link, path: FORMULA_EXAMPLE.path },
+  },
+  {
+    icon: 'tabler:devices',
+    title: t.byUnit.title,
+    applies: t.byUnit.applies,
+    rule: t.byUnit.rule,
+    example: [...byUnit.lines.map(describeUnitLine), `Total: ${formatUSD(byUnit.total)}`],
+  },
+];
+---
+
+<WidgetWrapper id="tarifas" containerClass="max-w-5xl" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
+  <Headline tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <div class="grid gap-6 md:grid-cols-3">
+    {
+      cards.map((card) => (
+        <article class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+            <Icon name={card.icon} class="h-7 w-7 text-primary" />
+            {card.name}
+          </h3>
+          <ul class="mt-5 space-y-1">
+            {card.prices.map((price) => (
+              <li class="flex items-baseline gap-1.5 text-heading">
+                <span class="font-heading text-4xl font-extrabold tracking-tight">{price.amount}</span>
+                <span class="text-muted">{price.unit}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="mt-3 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+            <Icon name="tabler:clock" class="h-4 w-4" />
+            {card.transit}
+          </p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            {card.facts.map((fact) => (
+              <li class="flex gap-2">
+                <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>{fact}</span>
+              </li>
+            ))}
+          </ul>
+          <a
+            class="mt-6 font-semibold text-link underline underline-offset-4"
+            href={href(quotePath({ tarifa: card.id }))}
+          >
+            {t.calculate(card.name)}
+          </a>
+        </article>
+      ))
+    }
+
+    <article class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h3 class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+        <Icon name={electronics.icon} class="h-7 w-7 text-primary" />
+        {electronics.name}
+      </h3>
+      <p class="mt-1 text-sm text-muted">{t.electronicsNote}</p>
+      <dl class="mt-4 divide-y divide-slate-100">
+        {
+          electronics.items.map((item) => (
+            <div class="flex items-center justify-between gap-3 py-2">
+              <dt class="flex items-center gap-2">
+                <Icon name={item.icon} class="h-5 w-5 text-slate-500" />
+                {item.name}
+              </dt>
+              <dd class="font-heading text-lg font-bold text-heading">{formatUSD(item.price)}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p class="mt-3 flex flex-1 items-start gap-1.5 text-sm font-medium text-slate-700">
+        <Icon name="tabler:clock" class="mt-0.5 h-4 w-4" />
+        {electronics.transit}
+      </p>
+      <a
+        class="mt-6 font-semibold text-link underline underline-offset-4"
+        href={href(quotePath({ tarifa: electronics.id }))}
+      >
+        {t.calculate(electronics.name)}
+      </a>
+    </article>
+  </div>
+
+  <div
+    class="mt-6 flex flex-col gap-3 rounded-2xl bg-white p-5 text-sm ring-1 ring-slate-200 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <p class="flex items-center gap-2">
+      <Icon name="tabler:building-store" class="h-5 w-5 shrink-0 text-primary" />
+      <span><strong class="text-heading">{t.pickup}</strong> {t.cities}.</span>
+    </p>
+    {
+      !LAST_MILE.available && (
+        <p class="flex flex-wrap items-center gap-2">
+          <Icon name="tabler:truck-delivery" class="h-5 w-5 shrink-0 text-slate-500" />
+          <strong class="text-heading">{t.homeDelivery}</strong>
+          <ServiceBadge kind="soon" />
+        </p>
+      )
+    }
+  </div>
+
+  <ul class="mx-auto mt-6 max-w-3xl space-y-1 text-center text-sm text-muted">
+    {RATES.notes.map((note) => <li>{note}</li>)}
+  </ul>
+
+  <h2
+    class="mt-16 text-center font-heading text-3xl font-bold tracking-tight text-heading md:text-4xl"
+    id="como-calculamos"
+  >
+    {t.howTitle}
+  </h2>
+  <div class="mt-8 grid gap-6 md:grid-cols-3">
+    {
+      formulas.map((formula) => (
+        <article class="flex flex-col rounded-2xl bg-white p-6 ring-1 ring-slate-200">
+          <h3 class="flex items-center gap-2 font-heading text-xl font-bold text-heading">
+            <Icon name={formula.icon} class="h-6 w-6 text-primary" />
+            {formula.title}
+          </h3>
+          <p class="mt-1 text-sm font-semibold text-secondary">{formula.applies}</p>
+          <p class="mt-3 text-sm">{formula.rule}</p>
+          <div class="mt-4 flex-1 rounded-xl bg-slate-100 p-3 text-sm font-semibold break-words text-heading tabular-nums">
+            {formula.example.map((line) => (
+              <p>{line}</p>
+            ))}
+          </div>
+          {formula.link && (
+            <a class="mt-4 font-semibold text-link underline underline-offset-4" href={href(formula.link.path)}>
+              {formula.link.text}
+            </a>
+          )}
+        </article>
+      ))
+    }
+  </div>
+</WidgetWrapper>

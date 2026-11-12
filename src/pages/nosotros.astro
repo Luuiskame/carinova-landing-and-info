@@ -1,95 +1,130 @@
 ---
+// Nosotros: who Carinova is. The story and the values are drafts until Carinova sends its own.
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import Content from '~/components/widgets/Content.astro';
 import Features2 from '~/components/widgets/Features2.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
 import Branches from '~/components/carinova/Branches.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
 
-import { BRANCHES, CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { getPermalink } from '~/utils/permalinks';
-import { whatsappLink } from '~/utils/whatsapp';
+import { i18n } from '~/i18n';
 
-const cities = BRANCHES.map((branch) => branch.city).join(' y ');
+const { locale, data } = i18n(Astro);
+const { BRANCHES, WA_MESSAGES } = data;
 
-const metadata = {
-  title: 'Nosotros',
-  description: `Carinova es una empresa nicaragüense de envíos de Estados Unidos a Nicaragua, con sucursales en ${cities}.`,
-};
----
+const cityNames = BRANCHES.map((branch) => branch.city);
 
-<Layout metadata={metadata}>
-  <HeroText
-    tagline="Nosotros"
-    title="Somos Carinova"
-    subtitle={`Una empresa nicaragüense que acerca las tiendas de Estados Unidos a ${cities}.`}
-  />
-
-  <!-- TODO: replace with Carinova's real story (founding year, founders, milestones). -->
-  <Content
-    image={{
-      src: '~/assets/images/carinova-logo.jpeg',
-      alt: 'Logo de Carinova: tres personas levantan juntas una antorcha encendida frente a un globo terráqueo.',
-    }}
-    classes={{ container: 'pt-4 md:pt-6 lg:pt-8' }}
-  >
-    <Fragment slot="content">
-      <h2 class="mb-4 font-heading text-3xl font-bold tracking-tight text-heading">Nuestra historia</h2>
-      <p class="mb-4">
-        Carinova nació en Nicaragua con una idea sencilla: que comprar en Estados Unidos sea fácil, seguro y con precios
-        claros para todos.
-      </p>
-      <p>
-        Desde nuestras sucursales en {cities} atendemos a cada cliente de forma personal, por WhatsApp y en persona, y nos
-        encargamos de que cada compra llegue bien a su destino.
-      </p>
-    </Fragment>
-  </Content>
-
-  <!-- TODO: confirm the values with Carinova (drafted from the symbols in the logo). -->
-  <Features2
-    tagline="Nuestros valores"
-    title="Lo que nos mueve"
-    columns={3}
-    items={[
+const t = {
+  es: {
+    tagline: 'Nosotros',
+    description: `Carinova es una empresa nicaragüense de envíos de Estados Unidos a Nicaragua, con sucursales en ${cityNames.join(' y ')}.`,
+    title: 'Somos Carinova',
+    subtitle: `Una empresa nicaragüense que acerca las tiendas de Estados Unidos a ${cityNames.join(' y ')}.`,
+    logoAlt: 'Logo de Carinova: tres personas levantan juntas una antorcha encendida frente a un globo terráqueo.',
+    storyTitle: 'Nuestra historia',
+    story: [
+      'Carinova nació en Nicaragua con una idea sencilla: que comprar en Estados Unidos sea fácil, seguro y con precios claros para todos.',
+      `Desde nuestras sucursales en ${cityNames.join(' y ')} atendemos a cada cliente de forma personal, por WhatsApp y en persona, y nos encargamos de que cada compra y cada encomienda lleguen bien a su destino.`,
+    ],
+    valuesTagline: 'Nuestros valores',
+    valuesTitle: 'Lo que nos mueve',
+    values: [
       {
         title: 'Trabajo en equipo',
         description:
           'Como en nuestro logo: tres personas levantando juntas la misma antorcha. Cada envío es trabajo de equipo, desde Miami hasta tu sucursal.',
-        icon: 'tabler:users-group',
       },
       {
         title: 'Alcance internacional',
         description:
           'El globo de nuestro nombre es el puente que cruzamos todos los días entre Estados Unidos y Nicaragua.',
-        icon: 'tabler:world',
       },
       {
         title: 'Compromiso',
         description: 'La llama es nuestra promesa: cuidar cada paquete como si fuera nuestro.',
-        icon: 'tabler:flame',
       },
-    ]}
+    ],
+    where: 'Dónde estamos',
+    closing: {
+      title: 'Hagamos tu primer envío',
+      subtitle: 'Abrí tu casillero en línea o cotizá tu envío antes de comprar.',
+      lead: '¿Querés conocernos mejor?',
+    },
+  },
+  en: {
+    tagline: 'About us',
+    description: `Carinova is a Nicaraguan company that ships from the United States to Nicaragua, with branches in ${cityNames.join(' and ')}.`,
+    title: 'We are Carinova',
+    subtitle: `A Nicaraguan company that brings the stores of the United States closer to ${cityNames.join(' and ')}.`,
+    logoAlt: 'Carinova logo: three people raise a lit torch together in front of a globe.',
+    storyTitle: 'Our story',
+    story: [
+      'Carinova was born in Nicaragua with a simple idea: buying in the United States should be easy, safe and clearly priced for everyone.',
+      `From our branches in ${cityNames.join(' and ')} we look after every customer personally, on WhatsApp and in person, and we make sure every purchase and every package reaches its destination safely.`,
+    ],
+    valuesTagline: 'Our values',
+    valuesTitle: 'What moves us',
+    values: [
+      {
+        title: 'Teamwork',
+        description:
+          'As in our logo: three people raising the same torch together. Every shipment is teamwork, from Miami to your branch.',
+      },
+      {
+        title: 'International reach',
+        description: 'The globe in our name is the bridge we cross every day between the United States and Nicaragua.',
+      },
+      {
+        title: 'Commitment',
+        description: 'The flame is our promise: to look after every package as if it were our own.',
+      },
+    ],
+    where: 'Where we are',
+    closing: {
+      title: 'Let us make your first shipment',
+      subtitle: 'Open your mailbox online or get a quote for your shipment before you buy.',
+      lead: 'Would you like to know us better?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.tagline, description: t.description };
+const valueIcons = ['tabler:users-group', 'tabler:world', 'tabler:flame'];
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <!-- TODO: replace with Carinova's real story (founding year, founders, milestones). -->
+  <Content
+    image={{ src: '~/assets/images/carinova-logo.jpeg', alt: t.logoAlt }}
+    classes={{ container: 'pt-4 md:pt-6 lg:pt-8' }}
+  >
+    <Fragment slot="content">
+      <h2 class="mb-4 font-heading text-3xl font-bold tracking-tight text-heading">{t.storyTitle}</h2>
+      <p class="mb-4">{t.story[0]}</p>
+      <p>{t.story[1]}</p>
+    </Fragment>
+  </Content>
+
+  <!-- TODO: confirm the values with Carinova (drafted from the symbols in the logo). -->
+  <Features2
+    tagline={t.valuesTagline}
+    title={t.valuesTitle}
+    columns={3}
+    items={t.values.map((value, index) => ({ ...value, icon: valueIcons[index] }))}
   >
     <Fragment slot="bg">
       <div class="absolute inset-0 bg-slate-50"></div>
     </Fragment>
   </Features2>
 
-  <Branches title="Dónde estamos" soft={false} />
+  <Branches compact title={t.where} soft={false} />
 
-  <CallToAction
-    isDark
-    title="Hagamos tu primer envío"
-    subtitle="Abre tu casillero en línea o escríbenos y te ayudamos."
-    actions={[
-      { variant: 'primary', text: 'Abrir mi casillero', href: getPermalink('/registro') },
-      {
-        text: 'Escribir por WhatsApp',
-        icon: 'tabler:brand-whatsapp',
-        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.header),
-        target: '_blank',
-      },
-    ]}
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.aboutClosing}
+    whatsappLead={t.closing.lead}
   />
 </Layout>

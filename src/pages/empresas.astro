@@ -1,0 +1,187 @@
+---
+// Empresas: for companies that want to be looked after personally. What Carinova offers them (the
+// same rates and services as everyone, one Carinova ID for the company, someone who contacts them)
+// and a form with the company's basic details, which is e-mailed to Carinova's owner
+// (BusinessForm.astro → POST /api/business). Part of "Mi cuenta": one Carinova ID per person or
+// company.
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import BusinessForm from '~/components/carinova/BusinessForm.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+
+import { i18n } from '~/i18n';
+import { formatUSD } from '~/utils/rates';
+
+const { locale, href, data } = i18n(Astro);
+const { BRANCHES, CTA, RATES, WA_MESSAGES } = data;
+
+const { air, sea } = RATES;
+const cityNames = BRANCHES.map((branch) => branch.city);
+
+const t = {
+  es: {
+    tagline: 'Empresas',
+    metaTitle: 'Carinova para empresas',
+    description:
+      'Envíos de Estados Unidos a Nicaragua para empresas: carga aérea y marítima, un Carinova ID para tu empresa y atención personalizada. Contanos qué necesitás.',
+    title: 'Carinova para tu empresa',
+    subtitle: 'Traé mercadería, repuestos o insumos de Estados Unidos con una atención a la medida de tu empresa.',
+    offers: 'Lo que ofrecemos a tu empresa',
+    benefits: [
+      {
+        icon: 'tabler:headset',
+        title: 'Atención personalizada',
+        text: 'Contanos qué trae tu empresa y cada cuánto: te contactamos para acordar la forma de trabajo que te convenga.',
+      },
+      {
+        icon: 'tabler:packages',
+        title: 'Carga aérea y marítima',
+        text: `Aéreo a ${formatUSD(air.pricePerLb)} la libra, en ${air.transit}. Marítimo a ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie cúbico, en ${sea.transit}.`,
+      },
+      {
+        icon: 'tabler:id-badge-2',
+        title: 'Un Carinova ID para tu empresa',
+        text: `El mismo ID para todos los envíos de tu empresa, con retiro en ${cityNames.join(' o ')}.`,
+      },
+    ],
+    quote: 'Cotizar un envío',
+    next: '¿Qué pasa después?',
+    steps: [
+      { title: 'Recibimos tu solicitud', description: 'Le llega directamente a nuestro equipo.' },
+      {
+        title: 'Te contactamos',
+        description: 'Por correo o por WhatsApp, para conocer lo que necesita tu empresa.',
+      },
+      {
+        title: 'Abrimos la cuenta de tu empresa',
+        description: 'Con su Carinova ID y su dirección en Miami, lista para recibir.',
+      },
+    ],
+    helpTitle: '¿Preferís escribirnos?',
+    helpText: 'También abrimos la cuenta de tu empresa por WhatsApp.',
+    helpLink: 'Abrir la cuenta de mi empresa',
+    closing: {
+      title: '¿Querés saber cuánto cuesta tu carga?',
+      subtitle: 'Cotizá por libra o por pie cúbico en segundos.',
+      lead: '¿Preferís hablar con un asesor?',
+    },
+  },
+  en: {
+    tagline: 'For companies',
+    metaTitle: 'Carinova for companies',
+    description:
+      'Shipping from the United States to Nicaragua for companies: air and sea cargo, one Carinova ID for your company and personal attention. Tell us what you need.',
+    title: 'Carinova for your company',
+    subtitle: 'Bring merchandise, parts or supplies from the United States with attention tailored to your company.',
+    offers: 'What we offer your company',
+    benefits: [
+      {
+        icon: 'tabler:headset',
+        title: 'Personal attention',
+        text: 'Tell us what your company brings and how often: we contact you to agree on the way of working that suits you.',
+      },
+      {
+        icon: 'tabler:packages',
+        title: 'Air and sea cargo',
+        text: `Air at ${formatUSD(air.pricePerLb)} per pound, in ${air.transit}. Sea at ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot, in ${sea.transit}.`,
+      },
+      {
+        icon: 'tabler:id-badge-2',
+        title: 'One Carinova ID for your company',
+        text: `The same ID for all your company’s shipments, with pickup in ${cityNames.join(' or ')}.`,
+      },
+    ],
+    quote: 'Get a quote for a shipment',
+    next: 'What happens next?',
+    steps: [
+      { title: 'We receive your request', description: 'It goes straight to our team.' },
+      {
+        title: 'We contact you',
+        description: 'By e-mail or on WhatsApp, to learn what your company needs.',
+      },
+      {
+        title: 'We open your company’s account',
+        description: 'With its Carinova ID and its address in Miami, ready to receive.',
+      },
+    ],
+    helpTitle: 'Would you rather write to us?',
+    helpText: 'We also open your company’s account through WhatsApp.',
+    helpLink: 'Open my company’s account',
+    closing: {
+      title: 'Want to know what your cargo costs?',
+      subtitle: 'Get a quote per pound or per cubic foot in seconds.',
+      lead: 'Would you rather talk to an advisor?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.metaTitle, description: t.description };
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <section class="mx-auto max-w-6xl px-4 pt-4 pb-4 sm:px-6">
+    <h2 class="sr-only">{t.offers}</h2>
+    <ul class="grid gap-5 md:grid-cols-3">
+      {
+        t.benefits.map((benefit, index) => (
+          <li class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <Icon name={benefit.icon} class="h-8 w-8 text-primary" />
+            <h3 class="mt-4 font-heading text-lg font-bold text-heading">{benefit.title}</h3>
+            <p class="mt-1 flex-1 text-muted">{benefit.text}</p>
+            {index === 1 && (
+              <a
+                class="mt-3 inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
+                href={href(CTA.quote.path)}
+              >
+                {t.quote}
+              </a>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="solicitud" class="mx-auto max-w-6xl scroll-mt-24 px-4 pt-10 pb-16 sm:px-6 md:pb-20">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-12">
+      <BusinessForm />
+
+      <aside class="lg:pt-2">
+        <h2 class="font-heading text-xl font-bold text-heading">{t.next}</h2>
+        <ol class="mt-5 space-y-5">
+          {
+            t.steps.map((step, index) => (
+              <li class="flex gap-4">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading font-bold text-white">
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 class="font-semibold text-heading">{step.title}</h3>
+                  <p class="mt-1 text-sm text-muted">{step.description}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+
+        <div class="mt-8 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+          <h2 class="font-heading text-lg font-bold text-heading">{t.helpTitle}</h2>
+          <p class="mt-1 text-sm text-muted">{t.helpText}</p>
+          <WhatsAppHelp class="mt-2" message={WA_MESSAGES.accountCompany} text={t.helpLink} />
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    signup={false}
+    whatsapp={WA_MESSAGES.businessClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

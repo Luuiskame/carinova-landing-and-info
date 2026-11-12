@@ -1,0 +1,459 @@
+---
+// Signing in (/ingresar), in two steps and without a password: the customer writes the e-mail of
+// their casillero, gets a one-time code there and types it here. POST /api/login sends the code and
+// POST /api/login/verify opens the session (worker/api.ts); the numbers (digits, minutes, attempts)
+// are in src/data/account.ts.
+//
+// The first step answers the same whether or not the e-mail has a casillero, so the form cannot be
+// used to find out who is a customer: that is why the second step says "si este correo tiene un
+// casillero".
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, LOGIN_RESEND_SECONDS } from '~/data/account';
+import { SIGNUP_NAME_EXAMPLES } from '~/data/signup';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    title: 'Ingresá con tu correo',
+    intro: `Te mandamos un código de ${LOGIN_CODE_DIGITS} dígitos a tu correo. No necesitás contraseña.`,
+    noscript: 'Para ingresar necesitás activar JavaScript en tu navegador.',
+    email: 'Correo electrónico',
+    emailHint: 'El correo con el que abriste tu casillero.',
+    send: 'Enviarme un código',
+    sending: 'Enviando…',
+    noMailbox: '¿Todavía no tenés casillero?',
+    codeTitle: 'Escribí tu código',
+    code: `Código de ${LOGIN_CODE_DIGITS} dígitos`,
+    enter: CTA.signin.text,
+    entering: 'Ingresando…',
+    notes: [
+      'Puede tardar un par de minutos en llegar. Si no lo ves, revisá la carpeta de spam o correo no deseado.',
+      'Nunca te vamos a pedir este código por WhatsApp ni por teléfono.',
+    ],
+    notArriving: 'Si no llega, puede que ese correo no tenga casillero.',
+    openYours: 'Abrí el tuyo',
+    resend: 'Enviar otro código',
+    change: 'Usar otro correo',
+    signedIn: 'Ya ingresaste en este navegador.',
+    // For the script.
+    messages: {
+      emailMissing: 'Escribí tu correo electrónico.',
+      codeMissing: `Escribí el código de ${LOGIN_CODE_DIGITS} dígitos.`,
+      codeInvalid: 'El código no es correcto o ya venció. Revisalo o pedí otro.',
+      resendIn: 'Enviar otro código ({seconds} s)',
+      resent: 'Listo: si el correo tiene un casillero, le enviamos otro código. El anterior ya no sirve.',
+      unavailable: 'El ingreso no está disponible en este momento. Escribinos por WhatsApp y te ayudamos.',
+      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
+      failed: 'No pudimos conectarnos. Revisá tu conexión e intentalo de nuevo.',
+    },
+  },
+  en: {
+    title: 'Sign in with your e-mail',
+    intro: `We send a ${LOGIN_CODE_DIGITS}-digit code to your e-mail. You do not need a password.`,
+    noscript: 'To sign in you need to turn on JavaScript in your browser.',
+    email: 'E-mail',
+    emailHint: 'The e-mail you opened your mailbox with.',
+    send: 'Send me a code',
+    sending: 'Sending…',
+    noMailbox: 'Do you not have a mailbox yet?',
+    codeTitle: 'Enter your code',
+    code: `${LOGIN_CODE_DIGITS}-digit code`,
+    enter: CTA.signin.text,
+    entering: 'Signing in…',
+    notes: [
+      'It can take a couple of minutes to arrive. If you do not see it, check your spam or junk folder.',
+      'We will never ask you for this code on WhatsApp or by phone.',
+    ],
+    notArriving: 'If it does not arrive, that e-mail may not have a mailbox.',
+    openYours: 'Open yours',
+    resend: 'Send another code',
+    change: 'Use another e-mail',
+    signedIn: 'You are already signed in on this browser.',
+    messages: {
+      emailMissing: 'Enter your e-mail.',
+      codeMissing: `Enter the ${LOGIN_CODE_DIGITS}-digit code.`,
+      codeInvalid: 'The code is not correct or has expired. Check it or ask for another one.',
+      resendIn: 'Send another code ({seconds} s)',
+      resent: 'Done: if the e-mail has a mailbox, we sent it another code. The earlier one no longer works.',
+      unavailable: 'Signing in is not available right now. Write to us on WhatsApp and we will help you.',
+      busy: 'We received too many attempts in a row. Wait a minute and try again.',
+      failed: 'We could not connect. Check your connection and try again.',
+    },
+  },
+}[locale];
+
+const config = {
+  locale,
+  /** Where a customer goes once signed in. */
+  mailbox: href(CTA.mailbox.path),
+  resendSeconds: LOGIN_RESEND_SECONDS,
+  codeMinutes: LOGIN_CODE_MINUTES,
+  messages: t.messages,
+};
+
+const cardClass = 'rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8';
+const labelClass = 'block text-sm font-semibold text-slate-700';
+const inputClass =
+  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-[#011028] outline-none transition placeholder:text-slate-400 focus:border-[#053A86] aria-[invalid=true]:border-red-600';
+const hintClass = 'mt-1 text-xs text-slate-500';
+const errorClass = 'mt-1 text-sm font-medium text-red-700';
+const linkClass = 'font-semibold text-link underline underline-offset-4';
+---
+
+<cn-signin class="block" data-config={JSON.stringify(config)}>
+  <!-- Step 1: the e-mail. method="dialog": without the script, submitting does nothing (see SignupForm.astro). -->
+  <form method="dialog" novalidate class={cardClass} data-cn-step="email">
+    <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.title}</h2>
+    <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
+
+    <noscript>
+      <p class="mt-4 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">{t.noscript}</p>
+    </noscript>
+
+    <div class="mt-6">
+      <label for="cn-signin-email" class={labelClass}>{t.email}</label>
+      <input
+        id="cn-signin-email"
+        name="email"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        autocapitalize="off"
+        spellcheck="false"
+        required
+        maxlength="254"
+        placeholder={SIGNUP_NAME_EXAMPLES.email}
+        class={inputClass}
+        aria-describedby="cn-signin-email-hint cn-signin-email-error"
+      />
+      <p id="cn-signin-email-hint" class={hintClass}>{t.emailHint}</p>
+      <p id="cn-signin-email-error" class={errorClass} hidden></p>
+    </div>
+
+    <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label={t.sending}>{t.send}</button>
+    <p class="mt-4 flex flex-wrap justify-center gap-x-1.5 text-center text-sm text-slate-600">
+      <span>{t.noMailbox}</span>
+      <a class={linkClass} href={href(CTA.signup.path)}>{CTA.signup.text}</a>
+    </p>
+  </form>
+
+  <!-- Step 2: the code. -->
+  <form method="dialog" novalidate class={cardClass} data-cn-step="code" hidden>
+    <Icon name="tabler:mail-check" class="h-12 w-12 text-primary" />
+    <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-code-title>
+      {t.codeTitle}
+    </h2>
+    {
+      locale === 'en' ? (
+        <p class="mt-2 text-slate-700">
+          If <strong class="break-all" data-cn-email /> has a mailbox, we sent it a {LOGIN_CODE_DIGITS}-digit code. It
+          expires in {LOGIN_CODE_MINUTES} minutes.
+        </p>
+      ) : (
+        <p class="mt-2 text-slate-700">
+          Si <strong class="break-all" data-cn-email /> tiene un casillero, le enviamos un código de {LOGIN_CODE_DIGITS}{' '}
+          dígitos. Vence en {LOGIN_CODE_MINUTES} minutos.
+        </p>
+      )
+    }
+
+    <div class="mt-6">
+      <label for="cn-signin-code" class={labelClass}>{t.code}</label>
+      <input
+        id="cn-signin-code"
+        name="code"
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        required
+        maxlength={LOGIN_CODE_DIGITS + 2}
+        placeholder={'0'.repeat(LOGIN_CODE_DIGITS)}
+        class:list={[inputClass, 'text-center font-heading text-2xl font-bold tracking-[0.3em] tabular-nums']}
+        aria-describedby="cn-signin-code-error"
+      />
+      <p id="cn-signin-code-error" class={errorClass} hidden></p>
+    </div>
+
+    <p class="mt-3 text-sm font-medium text-green-800" role="status" data-cn-status></p>
+
+    <button type="submit" class="btn-primary mt-4 w-full" data-cn-submit data-busy-label={t.entering}>
+      {t.enter}
+    </button>
+
+    <ul class="mt-5 list-disc space-y-1.5 pl-5 text-sm text-slate-600">
+      {t.notes.map((note) => <li>{note}</li>)}
+      <li>
+        {t.notArriving}{' '}
+        <a class={linkClass} href={href(CTA.signup.path)}>{t.openYours}</a>
+      </li>
+    </ul>
+
+    <div class="mt-5 flex flex-wrap gap-x-6 gap-y-1 border-t border-slate-100 pt-4">
+      <button
+        type="button"
+        class="min-h-11 text-sm font-semibold text-link underline underline-offset-4 disabled:text-slate-500 disabled:no-underline"
+        data-cn-resend
+        data-label={t.resend}
+      >
+        {t.resend}
+      </button>
+      <button
+        type="button"
+        class="min-h-11 text-sm font-semibold text-link underline underline-offset-4"
+        data-cn-change
+      >
+        {t.change}
+      </button>
+    </div>
+  </form>
+
+  <!-- When the request could not be made (no connection, service not available), whatever the step. -->
+  <div
+    class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-sm text-red-900"
+    role="alert"
+    data-cn-alert
+    hidden
+  >
+    <p data-cn-alert-text></p>
+    <WhatsAppHelp class="mt-1" message={WA_MESSAGES.signinError} />
+  </div>
+
+  <!-- For a customer who is already signed in (the script sends them straight to their casillero). -->
+  <div class={cardClass} data-cn-step="signed-in" hidden>
+    <Icon name="tabler:circle-check" class="h-12 w-12 text-green-700" />
+    <p class="mt-4 text-lg font-semibold text-[#011028]">{t.signedIn}</p>
+    <a class="btn-primary mt-5 w-full" href={href(CTA.mailbox.path)}>{CTA.mailbox.text}</a>
+  </div>
+</cn-signin>
+
+<script>
+  import type { Locale } from '~/i18n/locales';
+  import { clearError, postJson, setBusy, showErrors, type Control } from '~/utils/forms';
+  import { fill } from '~/utils/template';
+
+  type Step = 'email' | 'code' | 'signed-in';
+
+  interface Config {
+    locale: Locale;
+    mailbox: string;
+    resendSeconds: number;
+    codeMinutes: number;
+    /** The sentences of the page's language. */
+    messages: Record<
+      'emailMissing' | 'codeMissing' | 'codeInvalid' | 'resendIn' | 'resent' | 'unavailable' | 'busy' | 'failed',
+      string
+    >;
+  }
+
+  /** Where the e-mail waits while the customer goes to read the code: the tab may be reloaded on the way back. */
+  const PENDING = 'cn-signin';
+
+  class CnSignin extends HTMLElement {
+    private config!: Config;
+    private email = '';
+    private busy = false;
+    private countdown?: number;
+
+    connectedCallback() {
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+
+      for (const form of this.forms()) {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          void (form.dataset.cnStep === 'code' ? this.verify() : this.request());
+        });
+        form.addEventListener('input', (event) => clearError(event.target as Control));
+      }
+      this.querySelector('[data-cn-resend]')?.addEventListener('click', () => void this.resend());
+      this.querySelector('[data-cn-change]')?.addEventListener('click', () => this.changeEmail());
+
+      // Already signed in: nothing to do here.
+      if (document.documentElement.dataset.session === 'in') {
+        this.show('signed-in');
+        window.location.replace(this.config.mailbox);
+        return;
+      }
+
+      // Back from the mail app with the code, on a page that was reloaded meanwhile.
+      const pending = this.pending();
+      if (pending) {
+        this.email = pending;
+        this.show('code');
+        this.startCountdown(0);
+      }
+    }
+
+    disconnectedCallback() {
+      window.clearInterval(this.countdown);
+    }
+
+    private forms(): Array<HTMLFormElement> {
+      return Array.from(this.querySelectorAll<HTMLFormElement>('form'));
+    }
+
+    private form(step: 'email' | 'code'): HTMLFormElement {
+      return this.querySelector<HTMLFormElement>(`form[data-cn-step="${step}"]`)!;
+    }
+
+    /** The e-mail a code was asked for, while that code can still be valid. */
+    private pending(): string | null {
+      try {
+        const saved = JSON.parse(window.sessionStorage.getItem(PENDING) ?? 'null') as { email?: string; at?: number };
+        const fresh = typeof saved?.at === 'number' && Date.now() - saved.at < this.config.codeMinutes * 60_000;
+        return fresh && typeof saved.email === 'string' ? saved.email : null;
+      } catch {
+        return null;
+      }
+    }
+
+    private remember(email: string | null) {
+      try {
+        if (email) window.sessionStorage.setItem(PENDING, JSON.stringify({ email, at: Date.now() }));
+        else window.sessionStorage.removeItem(PENDING);
+      } catch {
+        // Private browsing without storage: the form still works, it just cannot survive a reload.
+      }
+    }
+
+    private show(step: Step) {
+      for (const element of this.querySelectorAll<HTMLElement>('[data-cn-step]')) {
+        element.hidden = element.dataset.cnStep !== step;
+      }
+      this.hideAlert();
+      this.setStatus('');
+
+      if (step === 'code') {
+        for (const address of this.querySelectorAll('[data-cn-email]')) address.textContent = this.email;
+        const code = this.form('code').querySelector<HTMLInputElement>('input[name="code"]');
+        if (code) {
+          code.value = '';
+          clearError(code);
+          code.focus();
+        }
+      }
+    }
+
+    private showAlert(status: number) {
+      const { messages } = this.config;
+      const alert = this.querySelector<HTMLElement>('[data-cn-alert]');
+      const text = alert?.querySelector('[data-cn-alert-text]');
+      if (!alert || !text) return;
+      text.textContent = status === 503 ? messages.unavailable : status === 429 ? messages.busy : messages.failed;
+      alert.hidden = false;
+    }
+
+    private hideAlert() {
+      const alert = this.querySelector<HTMLElement>('[data-cn-alert]');
+      if (alert) alert.hidden = true;
+    }
+
+    private setStatus(message: string) {
+      const status = this.querySelector('[data-cn-status]');
+      if (status) status.textContent = message;
+    }
+
+    /** "Enviar otro código" waits a little, so a slow e-mail is not answered with three more. */
+    private startCountdown(seconds = this.config.resendSeconds) {
+      const button = this.querySelector<HTMLButtonElement>('[data-cn-resend]');
+      if (!button) return;
+      window.clearInterval(this.countdown);
+
+      let left = seconds;
+      const tick = () => {
+        button.disabled = left > 0;
+        button.textContent =
+          left > 0 ? fill(this.config.messages.resendIn, { seconds: left }) : (button.dataset.label ?? '');
+        if (left <= 0) window.clearInterval(this.countdown);
+        left -= 1;
+      };
+      tick();
+      if (seconds > 0) this.countdown = window.setInterval(tick, 1000);
+    }
+
+    /** Asks for a code. Resolves with the HTTP status. */
+    private async ask(email: string): Promise<{ status: number; fields?: Record<string, string> }> {
+      const { status, result } = await postJson('/api/login', { email, lang: this.config.locale });
+      return { status, fields: result?.fields };
+    }
+
+    private async request() {
+      if (this.busy) return;
+      const form = this.form('email');
+      this.hideAlert();
+
+      const email = String(new FormData(form).get('email') ?? '').trim();
+      if (!email) return void showErrors(form, { email: this.config.messages.emailMissing });
+
+      const button = form.querySelector<HTMLButtonElement>('[data-cn-submit]');
+      this.busy = true;
+      setBusy(button, true);
+      const { status, fields } = await this.ask(email);
+      this.busy = false;
+      setBusy(button, false);
+
+      if (status === 200) {
+        this.email = email;
+        this.remember(email);
+        this.show('code');
+        this.startCountdown();
+        return;
+      }
+      if (status === 422 && fields) return void showErrors(form, fields);
+      this.showAlert(status);
+    }
+
+    private async resend() {
+      if (this.busy || !this.email) return;
+      this.busy = true;
+      const { status } = await this.ask(this.email);
+      this.busy = false;
+
+      this.hideAlert();
+      if (status !== 200) return this.showAlert(status);
+      this.remember(this.email);
+      this.setStatus(this.config.messages.resent);
+      this.startCountdown();
+    }
+
+    private changeEmail() {
+      this.remember(null);
+      window.clearInterval(this.countdown);
+      this.show('email');
+      this.form('email').querySelector<HTMLInputElement>('input[name="email"]')?.focus();
+    }
+
+    private async verify() {
+      if (this.busy) return;
+      const form = this.form('code');
+      const { messages } = this.config;
+      this.hideAlert();
+      this.setStatus('');
+
+      const code = String(new FormData(form).get('code') ?? '').trim();
+      if (!code) return void showErrors(form, { code: messages.codeMissing });
+
+      const button = form.querySelector<HTMLButtonElement>('[data-cn-submit]');
+      this.busy = true;
+      setBusy(button, true);
+      const { status, result } = await postJson('/api/login/verify', { email: this.email, code });
+
+      if (status === 200 && result?.ok) {
+        // Signed in: the session cookie is set. A full page load, so every page shows it from now on.
+        this.remember(null);
+        window.location.assign(this.config.mailbox);
+        return;
+      }
+      this.busy = false;
+      setBusy(button, false);
+
+      if (status === 401) return void showErrors(form, { code: messages.codeInvalid });
+      this.showAlert(status);
+    }
+  }
+
+  if (!customElements.get('cn-signin')) customElements.define('cn-signin', CnSignin);
+</script>

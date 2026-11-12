@@ -1,39 +1,64 @@
 ---
+// Ayuda: every frequently asked question, grouped by stage of the customer's journey (src/data/faq.ts).
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import FAQs from '~/components/widgets/FAQs.astro';
-import CallToAction from '~/components/widgets/CallToAction.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 
-import { CONTACT, WA_MESSAGES } from '~/data/carinova';
-import { FAQ_GROUPS, faqSchema } from '~/data/faq';
-import { whatsappLink } from '~/utils/whatsapp';
+import { faqSchema } from '~/data/faq';
+import { i18n } from '~/i18n';
 
-const metadata = {
-  title: 'Preguntas frecuentes',
-  description:
-    'Casillero, tarifas, tiempos de entrega, aduana y retiro de paquetes: respuestas a las dudas más comunes sobre los envíos de Carinova de EE. UU. a Nicaragua.',
-};
+const { locale, data } = i18n(Astro);
+const { FAQ_GROUPS, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    tagline: 'Ayuda',
+    title: 'Preguntas frecuentes',
+    description:
+      'Cuenta y casillero, servicios, tarifas, tiempos de entrega, artículos prohibidos y retiro: respuestas a las dudas más comunes sobre los envíos de Carinova de EE. UU. a Nicaragua.',
+    subtitle: 'Todo sobre tu cuenta, los servicios, las tarifas, los tiempos de entrega y el retiro de tus paquetes.',
+    topics: 'Temas',
+    closing: {
+      title: '¿No encontraste tu respuesta?',
+      subtitle: 'Escribinos y te ayudamos, o empezá abriendo tu casillero.',
+      lead: 'Contanos tu duda:',
+    },
+  },
+  en: {
+    tagline: 'Help',
+    title: 'Frequently asked questions',
+    description:
+      'Account and mailbox, services, rates, delivery times, prohibited items and pickup: answers to the most common questions about Carinova’s shipments from the US to Nicaragua.',
+    subtitle:
+      'Everything about your account, the services, the rates, the delivery times and the pickup of your packages.',
+    topics: 'Topics',
+    closing: {
+      title: 'Did you not find your answer?',
+      subtitle: 'Write to us and we will help you, or start by opening your mailbox.',
+      lead: 'Tell us your question:',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.title, description: t.description };
 ---
 
-<Layout metadata={metadata}>
+<Layout metadata={metadata} breadcrumb={t.title}>
   <!-- One FAQPage block for the whole page (the widgets below don't emit their own). -->
   <StructuredData slot="head" schema={faqSchema(FAQ_GROUPS.flatMap((group) => group.items))} />
 
-  <HeroText
-    tagline="Ayuda"
-    title="Preguntas frecuentes"
-    subtitle="Todo sobre tu casillero, las tarifas, los tiempos de entrega y el retiro de tus paquetes."
-  />
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <nav aria-label="Temas" class="mx-auto max-w-3xl px-4 pb-4">
+  <nav aria-label={t.topics} class="mx-auto max-w-3xl px-4 pb-4">
     <ul class="flex flex-wrap justify-center gap-2">
       {
         FAQ_GROUPS.map((group) => (
           <li>
             <a
               href={`#${group.id}`}
-              class="inline-block rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium transition hover:border-primary hover:text-primary"
+              class="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-4 text-sm font-medium transition hover:border-primary hover:text-primary"
             >
               {group.title}
             </a>
@@ -58,18 +83,10 @@ const metadata = {
     ))
   }
 
-  <CallToAction
-    isDark
-    title="¿No encontraste tu respuesta?"
-    subtitle="Escríbenos por WhatsApp y te ayudamos."
-    actions={[
-      {
-        variant: 'primary',
-        text: 'Preguntar por WhatsApp',
-        icon: 'tabler:brand-whatsapp',
-        href: whatsappLink(CONTACT.whatsapp, WA_MESSAGES.faq),
-        target: '_blank',
-      },
-    ]}
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.faqClosing}
+    whatsappLead={t.closing.lead}
   />
 </Layout>

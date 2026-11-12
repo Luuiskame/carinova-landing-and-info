@@ -2,7 +2,7 @@
 // What Carinova does not carry: the two lists of its "Prohibido / No ingresa vía aérea" graphic
 // (RESTRICTED_ITEMS). Used on /articulos-prohibidos and next to the Miami address after sign-up.
 import { Icon } from 'astro-icon/components';
-import { RESTRICTED_ITEMS } from '~/data/carinova';
+import { i18n } from '~/i18n';
 
 export interface Props {
   /** Heading of each list: h2 right under a page title, h3 inside a section that has its own h2. */
@@ -10,7 +10,7 @@ export interface Props {
 }
 
 const { headingTag: Heading = 'h2' } = Astro.props;
-const { prohibited, noAir } = RESTRICTED_ITEMS;
+const { prohibited, noAir } = i18n(Astro).data.RESTRICTED_ITEMS;
 
 const lists = [
   { ...prohibited, icon: 'tabler:ban', itemIcon: 'tabler:x', tone: 'text-red-800', ring: 'ring-red-200' },

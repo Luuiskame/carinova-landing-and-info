@@ -1,10 +1,13 @@
 ---
 import Layout from '~/layouts/PageLayout.astro';
 import SignupConfirm from '~/components/carinova/SignupConfirm.astro';
+import { i18n } from '~/i18n';
+
+const { locale } = i18n(Astro);
 
 // Reached only through the link of the confirmation e-mail: nothing here for search engines.
 const metadata = {
-  title: 'Confirma tu correo',
+  title: { es: 'Confirmá tu correo', en: 'Confirm your e-mail' }[locale],
   robots: { index: false, follow: false },
 };
 ---

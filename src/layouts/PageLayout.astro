@@ -2,21 +2,42 @@
 import Layout from '~/layouts/Layout.astro';
 import Header from '~/components/widgets/Header.astro';
 import Footer from '~/components/widgets/Footer.astro';
-import PreviewNotice from '~/components/carinova/PreviewNotice.astro';
 import WhatsAppFloat from '~/components/carinova/WhatsAppFloat.astro';
+import StructuredData from '~/components/common/StructuredData.astro';
 
-import { headerData, footerData } from '~/navigation';
+import { i18n } from '~/i18n';
+import { getFooterData, getHeaderData } from '~/navigation';
+import { getCanonical } from '~/utils/permalinks';
 
 import type { MetaData } from '~/types';
 
 export interface Props {
   metadata?: MetaData;
+  /**
+   * The page's name in the trail search engines show above a result ("Inicio › Cotizador"). Left out
+   * on the home page and on pages that are not indexed.
+   */
+  breadcrumb?: string;
 }
 
-const { metadata } = Astro.props;
+const { metadata, breadcrumb } = Astro.props;
+
+// Header and footer in the language of the page (its address decides: src/i18n).
+const page = i18n(Astro);
+const { pathname } = Astro.url;
+
+const trail = breadcrumb && {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { name: { es: 'Inicio', en: 'Home' }[page.locale], url: String(getCanonical(page.href('/'))) },
+    { name: breadcrumb, url: String(getCanonical(pathname)) },
+  ].map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: item.url })),
+};
 ---
 
 <Layout metadata={metadata}>
+  {trail && <StructuredData slot="head" schema={trail} />}
   <slot name="head" slot="head" />
   {
     /*
@@ -27,11 +48,16 @@ const { metadata } = Astro.props;
     goes missing on that page.
   */
   }
-  {Astro.slots.has('announcement') ? <slot name="announcement" /> : <PreviewNotice />}
-  {Astro.slots.has('header') ? <slot name="header" /> : <Header {...headerData} isSticky isDark position="right" />}
+  {
+    Astro.slots.has('header') ? (
+      <slot name="header" />
+    ) : (
+      <Header {...getHeaderData(page, pathname)} isSticky isDark position="right" />
+    )
+  }
   <main class="flex-1">
     <slot />
   </main>
-  {Astro.slots.has('footer') ? <slot name="footer" /> : <Footer {...footerData} />}
-  <WhatsAppFloat />
+  {Astro.slots.has('footer') ? <slot name="footer" /> : <Footer {...getFooterData(page, pathname)} />}
+  <WhatsAppFloat path={pathname} />
 </Layout>

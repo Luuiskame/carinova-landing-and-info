@@ -1,0 +1,195 @@
+---
+// Mi cuenta: what a Carinova account is made of (Carinova's brief): one Carinova ID per person or
+// company, the reception addresses in the United States and the pickup branches in Nicaragua. It is
+// also where a customer finds the way in: "Ingresar" leads to the sign-in page, and from there to
+// their casillero (/mi-casillero). Companies have their own page (/empresas).
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
+
+import { CARINOVA_ID_EXAMPLE, LAST_MILE } from '~/data/carinova';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { ACCOUNT_PARTS, BRANCHES, CTA, RECEPTION_POINTS, WA_MESSAGES, formatHours } = data;
+
+const cityNames = BRANCHES.map((branch) => branch.city);
+
+const t = {
+  es: {
+    tagline: 'Mi cuenta',
+    metaTitle: 'Mi cuenta: tu Carinova ID',
+    description: `Un Carinova ID por persona o empresa, con recepción en Miami y retiro en ${cityNames.join(' o ')}. Abrí tu casillero en línea.`,
+    title: 'Tu Carinova ID, para todos tus envíos',
+    subtitle:
+      'Al abrir tu casillero recibís tu Carinova ID y tu dirección en Estados Unidos, y retirás en la sucursal que te quede más cerca.',
+    existing: '¿Ya tenés tu Carinova ID?',
+    signin: 'Ingresá a tu casillero',
+    includes: 'Lo que incluye tu cuenta',
+    looksLike: 'Se ve así',
+    idFacts: [
+      'Lo recibís al confirmar tu correo, en pantalla y por correo.',
+      'Es el mismo para aéreo, marítimo, encomiendas y compras asistidas.',
+      'Tenelo a mano cuando nos escribas o retires tus paquetes.',
+    ],
+    company: '¿Sos empresa?',
+    companyLink: 'Conocé Carinova para empresas',
+    reception: 'Donde recibimos tus compras y encomiendas.',
+    fullAddress: 'Recibís la dirección completa al abrir tu casillero.',
+    pickup: 'Por ahora, en nuestras sucursales:',
+    homeDelivery: 'Entrega a domicilio',
+    branches: 'Ver direcciones y horarios',
+    closing: {
+      title: 'Abrí tu casillero en un par de minutos',
+      subtitle: 'Llenás un formulario corto, confirmás tu correo y listo: ya tenés tu Carinova ID.',
+      lead: '¿Tenés dudas antes de registrarte?',
+    },
+  },
+  en: {
+    tagline: 'My account',
+    metaTitle: 'My account: your Carinova ID',
+    description: `One Carinova ID per person or company, with reception in Miami and pickup in ${cityNames.join(' or ')}. Open your mailbox online.`,
+    title: 'Your Carinova ID, for all your shipments',
+    subtitle:
+      'When you open your mailbox you get your Carinova ID and your address in the United States, and you pick up at the branch closest to you.',
+    existing: 'Already have your Carinova ID?',
+    signin: 'Sign in to your mailbox',
+    includes: 'What your account includes',
+    looksLike: 'It looks like this',
+    idFacts: [
+      'You get it when you confirm your e-mail, on screen and by e-mail.',
+      'It is the same for air, sea, packages and assisted purchases.',
+      'Keep it at hand when you write to us or pick up your packages.',
+    ],
+    company: 'Are you a company?',
+    companyLink: 'See Carinova for companies',
+    reception: 'Where we receive your purchases and packages.',
+    fullAddress: 'You get the full address when you open your mailbox.',
+    pickup: 'For now, at our branches:',
+    homeDelivery: 'Home delivery',
+    branches: 'See addresses and opening hours',
+    closing: {
+      title: 'Open your mailbox in a couple of minutes',
+      subtitle: 'You fill in a short form, confirm your e-mail and that is it: you have your Carinova ID.',
+      lead: 'Any questions before you sign up?',
+    },
+  },
+}[locale];
+
+const metadata = { title: t.metaTitle, description: t.description };
+
+const part = (id: string) => ACCOUNT_PARTS.find((item) => item.id === id)!;
+const cardClass = 'flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-7';
+const titleClass = 'flex items-center gap-2 font-heading text-xl font-bold text-heading';
+const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4';
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <div class="px-4 pb-4 text-center">
+    <CtaGroup quote={false} />
+    <p class="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 text-muted" data-auth="out">
+      <span>{t.existing}</span>
+      <a class={linkClass} href={href(CTA.signin.path)}>{t.signin}</a>
+    </p>
+  </div>
+
+  <WidgetWrapper id="cuenta" containerClass="max-w-6xl" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
+    <h2 class="sr-only">{t.includes}</h2>
+    <div class="grid gap-6 lg:grid-cols-3">
+      <article id="carinova-id" class={cardClass}>
+        <h3 class={titleClass}>
+          <Icon name={part('carinova-id').icon} class="h-7 w-7 text-primary" />
+          {part('carinova-id').title}
+        </h3>
+        <p class="mt-2 text-muted">{part('carinova-id').summary}</p>
+        <p class="mt-5 text-xs font-semibold tracking-wide text-slate-600 uppercase">{t.looksLike}</p>
+        <p
+          class="mt-1 w-fit rounded-xl bg-[#011028] px-5 py-2 font-heading text-2xl font-extrabold tracking-wide text-white"
+        >
+          {CARINOVA_ID_EXAMPLE}
+        </p>
+        <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+          {
+            t.idFacts.map((fact) => (
+              <li class="flex gap-2">
+                <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>{fact}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+          <span>{t.company}</span>
+          <a class={linkClass} href={href('/empresas')}>{t.companyLink}</a>
+        </p>
+      </article>
+
+      <article id="recepcion" class={cardClass}>
+        <h3 class={titleClass}>
+          <Icon name={part('recepcion').icon} class="h-7 w-7 text-primary" />
+          {part('recepcion').title}
+        </h3>
+        <p class="mt-2 text-muted">{t.reception}</p>
+        <ul class="mt-5 space-y-3">
+          {
+            RECEPTION_POINTS.map((point) => (
+              <li
+                class:list={[
+                  'rounded-xl p-4',
+                  point.available ? 'bg-slate-50 ring-1 ring-slate-200' : 'border-2 border-dashed border-slate-300',
+                ]}
+              >
+                <p class="flex flex-wrap items-center gap-2 font-semibold text-heading">
+                  {point.city}, {point.state}
+                  {!point.available && <ServiceBadge kind="soon" />}
+                </p>
+                {point.available && <p class="mt-1 text-sm text-muted">{t.fullAddress}</p>}
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <article id="retiro" class={cardClass}>
+        <h3 class={titleClass}>
+          <Icon name={part('retiro').icon} class="h-7 w-7 text-primary" />
+          {part('retiro').title}
+        </h3>
+        <p class="mt-2 text-muted">{t.pickup}</p>
+        <ul class="mt-5 space-y-3">
+          {
+            BRANCHES.map((branch) => (
+              <li class="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                <p class="font-semibold text-heading">{branch.city}</p>
+                {branch.hours.map((row) => (
+                  <p class="text-sm text-muted">{`${row.days}, ${formatHours(row)}`}</p>
+                ))}
+              </li>
+            ))
+          }
+          {
+            !LAST_MILE.available && (
+              <li class="flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-slate-300 p-4 font-semibold text-heading">
+                {t.homeDelivery} <ServiceBadge kind="soon" />
+              </li>
+            )
+          }
+        </ul>
+        <a class:list={['mt-5', linkClass]} href={href('/sucursales')}>{t.branches}</a>
+      </article>
+    </div>
+  </WidgetWrapper>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.accountClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

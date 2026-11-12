@@ -8,9 +8,9 @@ site:
 # Default SEO metadata
 metadata:
   title:
-    default: Carinova — Courier de EE. UU. a Nicaragua
+    default: Carinova — Compras y encomiendas de EE. UU. a Nicaragua
     template: '%s | Carinova'
-  description: 'Compra en Estados Unidos y recibe en Managua o Bluefields. Envíos aéreos y marítimos con precios claros por libra. Abre tu casillero en línea.'
+  description: 'Traemos tus compras y encomiendas desde Estados Unidos hasta Nicaragua, por aire o por mar. Abrí tu casillero en línea y retirá en Managua o Bluefields.'
   robots:
     # Preview: keep search engines out until the placeholder content is replaced.
     # Set both to true at launch (and SITE_STATUS.isPreview to false in src/data/carinova.ts).

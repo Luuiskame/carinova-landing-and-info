@@ -1,0 +1,14 @@
+---
+// Términos y condiciones. The text is written once per language, in src/data/legal; this page shows
+// the one of the address being rendered (/terminos, /en/terms).
+import MarkdownLayout from '~/layouts/MarkdownLayout.astro';
+import * as en from '~/data/legal/terminos.en.md';
+import * as es from '~/data/legal/terminos.es.md';
+import { i18n } from '~/i18n';
+
+const { Content, frontmatter } = i18n(Astro).locale === 'en' ? en : es;
+---
+
+<MarkdownLayout frontmatter={frontmatter}>
+  <Content />
+</MarkdownLayout>
