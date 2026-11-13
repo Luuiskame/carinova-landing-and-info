@@ -1,8 +1,9 @@
 /**
- * The form for companies (/empresas): the options of its fields and their limits. The page renders
- * them and the Worker (worker/business/validate.ts) checks every submission against the same values,
- * so the two cannot disagree. What a company sends is e-mailed to Carinova (OWNER_EMAIL); nothing is
- * stored. No imports: the Worker bundles this file too.
+ * Carinova for companies: what it explores with a company (the home page and /empresas show it) and
+ * the form of /empresas: the options of its fields and their limits. The page renders them and the
+ * Worker (worker/business/validate.ts) checks every submission against the same values, so the two
+ * cannot disagree. What a company sends is e-mailed to Carinova (OWNER_EMAIL); nothing is stored.
+ * No imports: the Worker bundles this file too.
  */
 
 export interface BusinessVolume {
@@ -11,6 +12,63 @@ export interface BusinessVolume {
   es: string;
   en: string;
 }
+
+export interface BusinessSolution {
+  id: string;
+  icon: string;
+  es: { title: string; text: string };
+  en: { title: string; text: string };
+}
+
+/**
+ * What Carinova explores with a company, from its prototype ("Carinova para negocios"): shown on
+ * the home page and on /empresas. Each one is an evaluation, not a promise: the conditions are
+ * agreed case by case (BUSINESS_DISCLAIMER).
+ */
+export const BUSINESS_SOLUTIONS: Array<BusinessSolution> = [
+  {
+    id: 'importacion',
+    icon: 'tabler:packages',
+    es: {
+      title: 'Importación y abastecimiento',
+      text: 'Revisión del tipo de mercancía, la modalidad, el peso, el volumen y los requisitos documentales antes de cotizar.',
+    },
+    en: {
+      title: 'Importing and supply',
+      text: 'A review of the type of goods, the mode of transport, the weight, the volume and the documents required before quoting.',
+    },
+  },
+  {
+    id: 'recurrentes',
+    icon: 'tabler:repeat',
+    es: {
+      title: 'Envíos recurrentes',
+      text: 'Evaluación comercial de la frecuencia, la consolidación posible y las necesidades de abastecimiento, sujeta a factibilidad.',
+    },
+    en: {
+      title: 'Recurring shipments',
+      text: 'A commercial evaluation of the frequency, the possible consolidation and the supply needs, subject to feasibility.',
+    },
+  },
+  {
+    id: 'corporativa',
+    icon: 'tabler:headset',
+    es: {
+      title: 'Atención corporativa',
+      text: 'Definición del alcance, la trazabilidad requerida, la cobertura y las condiciones de servicio según la operación.',
+    },
+    en: {
+      title: 'Corporate service',
+      text: 'Definition of the scope, the traceability required, the coverage and the conditions of service according to the operation.',
+    },
+  },
+];
+
+/** Goes with BUSINESS_SOLUTIONS wherever they are shown. */
+export const BUSINESS_DISCLAIMER = {
+  es: 'Las modalidades empresariales y sus condiciones se estructuran caso por caso, previa evaluación de factibilidad y cumplimiento.',
+  en: 'Business arrangements and their conditions are structured case by case, after an evaluation of feasibility and compliance.',
+};
 
 /** How much the company expects to ship. Optional in the form: many do not know yet. */
 export const BUSINESS_VOLUMES: Array<BusinessVolume> = [

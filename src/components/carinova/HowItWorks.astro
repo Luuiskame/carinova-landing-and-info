@@ -1,51 +1,101 @@
 ---
-// "Cómo comprar" on the home page: the four steps in one line each (PROCESS_STEPS), the sign-up
-// button and a link to the full page with worked examples.
+// "¿Cómo funciona?" on the home page: the five steps of Carinova's prototype (PROCESS_STEPS), each
+// with where it leads. The full page, with details and worked examples, is /como-comprar.
+//
+// What a step leads to depends on who is looking: "Crear cuenta" and "Ingresar" are for visitors
+// (the second one opens the sign-in dialog); a customer who is signed in gets their account instead
+// of "Ingresar", and nothing to do in the first step.
+// "Revisar artículo" goes to the section of this page that does it.
 import { Icon } from 'astro-icon/components';
-import Headline from '~/components/ui/Headline.astro';
-import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
-import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 
 const { locale, href, data } = i18n(Astro);
-const { PROCESS_STEPS } = data;
+const { CTA, PROCESS_STEPS } = data;
 
 const t = {
   es: {
-    tagline: 'Cómo comprar',
-    title: `Tu compra en Estados Unidos, en ${PROCESS_STEPS.length} pasos`,
-    subtitle: 'Vos comprás; nosotros lo traemos.',
-    more: 'Ver el proceso con ejemplos por categoría',
+    eyebrow: 'El recorrido Carinova',
+    title: '¿Cómo funciona?',
+    intro: 'Cinco pasos claros, desde tu primera compra hasta tener tu paquete en Nicaragua.',
+    more: 'Ver cada paso con ejemplos',
   },
   en: {
-    tagline: 'How to buy',
-    title: `Your purchase in the United States, in ${PROCESS_STEPS.length} steps`,
-    subtitle: 'You buy; we bring it.',
-    more: 'See the process with examples by category',
+    eyebrow: 'The Carinova journey',
+    title: 'How does it work?',
+    intro: 'Five clear steps, from your first purchase to having your package in Nicaragua.',
+    more: 'See each step with examples',
   },
 }[locale];
+
+const steps = PROCESS_STEPS.map((step, index) => {
+  const path = step.link?.path;
+  return {
+    ...step,
+    number: String(index + 1).padStart(2, '0'),
+    // The third step stands out, as in the prototype: it is the one people skip.
+    highlight: Boolean(step.homeAnchor),
+    href: step.homeAnchor ?? (path && href(path)),
+    forVisitors: path === CTA.signup.path || path === CTA.signin.path,
+    opensSignin: path === CTA.signin.path,
+  };
+});
+
+const linkClass =
+  'mt-auto inline-flex min-h-11 items-center gap-1 pt-3 text-sm font-extrabold text-secondary underline-offset-4 hover:underline';
 ---
 
-<WidgetWrapper id="como-comprar" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
-  <Headline tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
-  <ol class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-    {
-      PROCESS_STEPS.map((step, index) => (
-        <li class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#011028] font-heading text-lg font-bold text-white">
-              {index + 1}
-            </span>
-            <Icon name={step.icon} class="h-7 w-7 text-primary" />
-          </div>
-          <h3 class="mt-4 font-heading text-lg font-bold text-heading">{step.title}</h3>
-          <p class="mt-2 text-muted">{step.summary}</p>
-        </li>
-      ))
-    }
-  </ol>
-  <div class="mt-10 flex flex-col items-center gap-4">
-    <CtaGroup quote={false} />
-    <a class="font-semibold text-link underline underline-offset-4" href={href('/como-comprar')}>{t.more}</a>
+<section id="como-funciona" class="scroll-mt-20 bg-white">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-24">
+    <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+      <div>
+        <p class="eyebrow">{t.eyebrow}</p>
+        <h2 class="display-title mt-4">{t.title}</h2>
+      </div>
+      <p class="max-w-sm text-base leading-relaxed text-muted lg:pb-2">{t.intro}</p>
+    </div>
+
+    <ol class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {
+        steps.map((step) => (
+          <li
+            class:list={[
+              'flex flex-col rounded-xl border p-6 transition hover:-translate-y-1 hover:border-[#ffcf9a] hover:shadow-lg lg:min-h-72 lg:p-5 xl:p-6',
+              step.highlight ? 'border-[#ffd5ad] bg-[#fff2e4]' : 'border-[#e3eaf4] bg-[#f8fafc]',
+            ]}
+          >
+            <p class="flex items-center justify-between text-sm font-black tracking-[0.08em] text-secondary">
+              <span>{step.number}</span>
+              <Icon name={step.icon} class="h-7 w-7 text-[#143c63]" />
+            </p>
+            <h3 class="mt-5 font-heading text-lg font-extrabold text-heading">{step.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-muted">{step.summary}</p>
+            {step.link && step.href && (
+              <>
+                <a
+                  class={linkClass}
+                  href={step.href}
+                  data-auth={step.forVisitors ? 'out' : undefined}
+                  data-dialog-open={step.opensSignin ? SIGNIN_DIALOG_ID : undefined}
+                >
+                  {step.link.text}
+                  <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+                </a>
+                {step.opensSignin && (
+                  <a class={linkClass} href={href(CTA.account.path)} data-auth="in">
+                    {CTA.account.text}
+                    <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+                  </a>
+                )}
+              </>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="mt-8 text-center">
+      <a class="font-semibold text-link underline underline-offset-4" href={href('/como-comprar')}>{t.more}</a>
+    </p>
   </div>
-</WidgetWrapper>
+</section>

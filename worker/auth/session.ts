@@ -9,7 +9,7 @@
  *   unless it is Secure, for the whole site and without a Domain, so nothing else on the domain can
  *   plant or overwrite it.
  * - A second cookie, readable by scripts, only says "a session exists" (SESSION_FLAG_COOKIE): the
- *   static pages use it to show "Mi casillero" instead of "Abrir mi casillero". It grants nothing.
+ *   static pages use it to show "Mi cuenta" instead of "Crear cuenta". It grants nothing.
  *
  * Web Crypto only: the same code runs on Cloudflare Workers and on Node (dev server, tests).
  */

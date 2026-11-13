@@ -1,37 +1,46 @@
 ---
-// What Carinova does not carry: the two lists of its "Prohibido / No ingresa vía aérea" graphic
-// (RESTRICTED_ITEMS). Used on /articulos-prohibidos and next to the Miami address after sign-up.
+// What Carinova cannot bring, in its three groups (RESTRICTED_ITEMS): not authorised yet,
+// prohibited for reception and transport, and what does not travel by air but does by sea. Used on
+// /articulos-prohibidos (the owner of the lists), under "¿Puede ingresar a Nicaragua?" on the home
+// page and next to the address after sign-up.
 import { Icon } from 'astro-icon/components';
+import type { RestrictedGroupId } from '~/data/carinova';
 import { i18n } from '~/i18n';
 
 export interface Props {
-  /** Heading of each list: h2 right under a page title, h3 inside a section that has its own h2. */
-  headingTag?: 'h2' | 'h3';
+  /** Heading of each list: h2 right under a page title, h3 or h4 inside a section that has its own headings. */
+  headingTag?: 'h2' | 'h3' | 'h4';
 }
 
 const { headingTag: Heading = 'h2' } = Astro.props;
-const { prohibited, noAir } = i18n(Astro).data.RESTRICTED_ITEMS;
+const { RESTRICTED_ITEMS, RESTRICTED_ORDER } = i18n(Astro).data;
 
-const lists = [
-  { ...prohibited, icon: 'tabler:ban', itemIcon: 'tabler:x', tone: 'text-red-800', ring: 'ring-red-200' },
-  { ...noAir, icon: 'tabler:plane-off', itemIcon: 'tabler:plane-off', tone: 'text-primary', ring: 'ring-blue-200' },
-];
+const LOOK: Record<RestrictedGroupId, { icon: string; itemIcon: string; tone: string; ring: string }> = {
+  notYet: { icon: 'tabler:clock-pause', itemIcon: 'tabler:minus', tone: 'text-amber-800', ring: 'ring-amber-200' },
+  prohibited: { icon: 'tabler:ban', itemIcon: 'tabler:x', tone: 'text-red-800', ring: 'ring-red-200' },
+  seaOnly: { icon: 'tabler:ship', itemIcon: 'tabler:plane-off', tone: 'text-brand', ring: 'ring-blue-200' },
+};
+
+const lists = RESTRICTED_ORDER.map((id) => ({ id, ...RESTRICTED_ITEMS[id], ...LOOK[id] }));
 ---
 
-<div class="grid gap-6 text-left md:grid-cols-2">
+<div class="grid gap-5 text-left md:grid-cols-3">
   {
     lists.map((list) => (
-      <section class:list={['rounded-2xl bg-white p-6 shadow-sm ring-1 sm:p-7', list.ring]}>
-        <Heading class:list={['flex items-center gap-2 font-heading text-xl font-bold', list.tone]}>
-          <Icon name={list.icon} class="h-6 w-6 shrink-0" />
+      <section
+        class:list={['rounded-2xl bg-white p-6 shadow-sm ring-1 sm:p-7', list.ring]}
+        data-restricted-group={list.id}
+      >
+        <Heading class:list={['flex items-start gap-2.5 font-heading text-lg font-extrabold', list.tone]}>
+          <Icon name={list.icon} class="mt-0.5 h-6 w-6 shrink-0" />
           {list.title}
         </Heading>
-        <p class="mt-2 text-sm text-muted">{list.summary}</p>
-        <ul class="mt-4 space-y-2.5">
+        <p class="mt-2 text-sm text-slate-600">{list.summary}</p>
+        <ul class="mt-4 space-y-2.5 text-slate-800">
           {list.items.map((item) => (
             <li class="flex gap-2.5">
               <Icon name={list.itemIcon} class:list={['mt-0.5 h-5 w-5 shrink-0', list.tone]} />
-              <span>{item}</span>
+              <span>{item.name}</span>
             </li>
           ))}
         </ul>

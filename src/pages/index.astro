@@ -1,21 +1,26 @@
 ---
-// Inicio: explains the promise and leads to the calls to action. One short section per section of the
-// site, in the order of the customer's journey (docs/INFORMATION-ARCHITECTURE.md → "Inicio"); the
-// details live on each section's own page. Like every page, it renders in Spanish at its own
-// address and in English under /en (src/i18n).
+// Inicio. The sections, their format and their order are those of Carinova's prototype page: hero,
+// the two ways of shipping, the calculator, "Compras por vos", how it works, what can enter,
+// companies, tracking, coverage, questions, careers and the closing band
+// (docs/INFORMATION-ARCHITECTURE.md → "The home page"). Each section is a component; what it says
+// comes from src/data, so the pages that own each subject cannot disagree with it. Like every page,
+// it renders in Spanish at its own address and in English under /en (src/i18n).
 import Layout from '~/layouts/PageLayout.astro';
 
 import HomeHero from '~/components/carinova/HomeHero.astro';
-import Stores from '~/components/carinova/Stores.astro';
+import ShippingModes from '~/components/carinova/ShippingModes.astro';
+import QuoteCalculator from '~/components/carinova/QuoteCalculator.astro';
+import PersonalShopper from '~/components/carinova/PersonalShopper.astro';
 import HowItWorks from '~/components/carinova/HowItWorks.astro';
-import ServiceMatrix from '~/components/carinova/ServiceMatrix.astro';
-import AccountSummary from '~/components/carinova/AccountSummary.astro';
-import Branches from '~/components/carinova/Branches.astro';
-import ClosingCta from '~/components/carinova/ClosingCta.astro';
-import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import ItemChecker from '~/components/carinova/ItemChecker.astro';
+import BusinessBand from '~/components/carinova/BusinessBand.astro';
+import TrackingBand from '~/components/carinova/TrackingBand.astro';
+import Coverage from '~/components/carinova/Coverage.astro';
+import HomeFaq from '~/components/carinova/HomeFaq.astro';
+import HomeClosing from '~/components/carinova/HomeClosing.astro';
 import Testimonials from '~/components/widgets/Testimonials.astro';
-import FAQs from '~/components/widgets/FAQs.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
+import { Icon } from 'astro-icon/components';
 
 import { SITE } from 'astrowind:config';
 import { CONTACT, REVIEWS, SOCIAL_LINKS } from '~/data/carinova';
@@ -24,8 +29,8 @@ import { ACTIVE_LOCALES } from '~/i18n/locales';
 import { formatUSD } from '~/utils/rates';
 import logoImage from '~/assets/favicons/apple-touch-icon.png';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, FEATURED_FAQS, RATES, WA_MESSAGES } = data;
+const { locale, data } = i18n(Astro);
+const { BRANCHES, RATES, TAGLINE, VALUE_PROPOSITION } = data;
 
 const cityNames = BRANCHES.map((branch) => branch.city);
 const hasReviews = REVIEWS.length > 0;
@@ -33,45 +38,27 @@ const { air, sea } = RATES;
 
 const t = {
   es: {
-    title: 'Carinova — Compras y encomiendas de EE. UU. a Nicaragua',
-    description: `Traemos tus compras y encomiendas de Estados Unidos a ${cityNames.join(' y ')}. Aéreo en ${air.transit}, marítimo desde ${formatUSD(sea.pricePerLb)} la libra. Abrí tu casillero en línea.`,
+    title: `Carinova | ${TAGLINE} · Estados Unidos a Nicaragua`,
+    description: `${VALUE_PROPOSITION} Aéreo en ${air.transit} a ${formatUSD(air.pricePerLb)} la libra; marítimo en ${sea.transit} desde ${formatUSD(sea.pricePerLb)} la libra. Retirá en ${cityNames.join(' o ')}.`,
     reviews: { tagline: 'Reseñas', title: 'Lo que dicen nuestros clientes', source: 'Reseña de Google' },
-    branches: {
-      tagline: 'Sucursales',
-      title: `Retirá en ${cityNames.join(' y ')}`,
-      subtitle: 'Tocá tu sucursal para ver la dirección y cómo llegar.',
-    },
-    faq: {
-      tagline: 'Ayuda',
-      title: 'Lo que más nos preguntan',
-      all: 'Ver todas las preguntas frecuentes',
-      other: '¿No encontraste tu respuesta?',
-    },
-    closing: {
-      title: '¿Listo para traer tu primera compra?',
-      subtitle: 'Abrí tu casillero en línea o cotizá tu envío en segundos.',
-      lead: '¿Preferís que te ayudemos?',
+    calculator: {
+      eyebrow: 'Calculadora interactiva',
+      title: ['Sacá cuentas.', 'Sin complicarte.'],
+      intro:
+        'Estimá el flete con una base de cálculo a la vez: peso, volumen o tarifa por unidad. Antes de pagar, confirmá el criterio aplicable a tu mercancía.',
+      tip: 'Sin registro. Con criterios claros.',
     },
   },
   en: {
-    title: 'Carinova — Purchases and packages from the US to Nicaragua',
-    description: `We bring your purchases and packages from the United States to ${cityNames.join(' and ')}. By air in ${air.transit}, by sea from ${formatUSD(sea.pricePerLb)} per pound. Open your mailbox online.`,
+    title: `Carinova | ${TAGLINE} · United States to Nicaragua`,
+    description: `${VALUE_PROPOSITION} By air in ${air.transit} at ${formatUSD(air.pricePerLb)} per pound; by sea in ${sea.transit} from ${formatUSD(sea.pricePerLb)} per pound. Pick up in ${cityNames.join(' or ')}.`,
     reviews: { tagline: 'Reviews', title: 'What our customers say', source: 'Google review' },
-    branches: {
-      tagline: 'Branches',
-      title: `Pick up in ${cityNames.join(' and ')}`,
-      subtitle: 'Tap your branch to see the address and how to get there.',
-    },
-    faq: {
-      tagline: 'Help',
-      title: 'What people ask us most',
-      all: 'See all frequently asked questions',
-      other: 'Did you not find your answer?',
-    },
-    closing: {
-      title: 'Ready to bring your first purchase?',
-      subtitle: 'Open your mailbox online or get a quote for your shipment in seconds.',
-      lead: 'Would you rather we help you?',
+    calculator: {
+      eyebrow: 'Interactive calculator',
+      title: ['Do the math.', 'Keep it simple.'],
+      intro:
+        'Estimate the freight on one basis at a time: weight, volume or a rate per unit. Before you pay, confirm which one applies to your goods.',
+      tip: 'No sign-up. Clear criteria.',
     },
   },
 }[locale];
@@ -99,6 +86,7 @@ const structuredData = [
     name: SITE?.name,
     url: SITE?.site,
     logo: new URL(logoImage.src, SITE?.site).toString(),
+    slogan: TAGLINE,
     description: t.description,
     areaServed: { '@type': 'Country', name: 'Nicaragua' },
     contactPoint: {
@@ -118,13 +106,38 @@ const structuredData = [
 
   <HomeHero />
 
-  <Stores />
+  <ShippingModes />
+
+  <section id="cotizador" class="scroll-mt-20 bg-[linear-gradient(180deg,#edf3fa,#f4f7fc)]">
+    <div
+      class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-20 lg:py-24"
+    >
+      <div class="lg:pt-8">
+        <p class="eyebrow">{t.calculator.eyebrow}</p>
+        <h2 class="display-title mt-4">{t.calculator.title[0]}<br />{t.calculator.title[1]}</h2>
+        <p class="mt-5 text-lg leading-relaxed text-muted">{t.calculator.intro}</p>
+        <p class="mt-6 flex items-center gap-3 text-sm font-bold text-[#29486c]">
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0df] text-secondary">
+            <Icon name="tabler:target-arrow" class="h-5 w-5" />
+          </span>
+          {t.calculator.tip}
+        </p>
+      </div>
+      <QuoteCalculator place="home" headingTag="h3" />
+    </div>
+  </section>
+
+  <PersonalShopper />
 
   <HowItWorks />
 
-  <ServiceMatrix />
+  <ItemChecker />
 
-  <AccountSummary />
+  <BusinessBand />
+
+  <TrackingBand />
+
+  <Coverage />
 
   {
     hasReviews && (
@@ -142,34 +155,7 @@ const structuredData = [
     )
   }
 
-  <!-- Section backgrounds alternate white / grey whether or not the reviews section is shown. -->
-  <Branches
-    compact
-    soft={hasReviews}
-    tagline={t.branches.tagline}
-    title={t.branches.title}
-    subtitle={t.branches.subtitle}
-  />
+  <HomeFaq />
 
-  <div class:list={[{ 'bg-slate-50': !hasReviews }]}>
-    <FAQs
-      id="preguntas"
-      tagline={t.faq.tagline}
-      title={t.faq.title}
-      subtitle={`<a class="text-link underline" href="${href('/preguntas-frecuentes')}">${t.faq.all}</a>`}
-      items={FEATURED_FAQS}
-      classes={{ container: 'pb-2 md:pb-4 lg:pb-4' }}
-    />
-    <p class="flex flex-wrap items-center justify-center gap-x-1.5 px-4 pb-14 text-muted md:pb-20">
-      <span>{t.faq.other}</span>
-      <WhatsAppHelp message={WA_MESSAGES.homeFaq} />
-    </p>
-  </div>
-
-  <ClosingCta
-    title={t.closing.title}
-    subtitle={t.closing.subtitle}
-    whatsapp={WA_MESSAGES.homeClosing}
-    whatsappLead={t.closing.lead}
-  />
+  <HomeClosing />
 </Layout>

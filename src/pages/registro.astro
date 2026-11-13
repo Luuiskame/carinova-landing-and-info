@@ -1,6 +1,6 @@
 ---
-// Abrir mi casillero: the sign-up form. Part of "Mi cuenta"; the only exits offered besides the form
-// are signing in, for people who already have a casillero, and WhatsApp, for people who prefer to be
+// Crear cuenta: the sign-up form. Part of "Mi cuenta"; the only exits offered besides the form
+// are signing in, for people who already have an account, and WhatsApp, for people who prefer to be
 // helped.
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
@@ -17,47 +17,47 @@ const cityNames = BRANCHES.map((branch) => branch.city);
 const t = {
   es: {
     tagline: 'Mi cuenta',
-    title: 'Abrí tu casillero',
-    description: `Registrate en línea y recibí tu Carinova ID y tu dirección en Miami para comprar en tiendas de Estados Unidos y retirar en ${cityNames.join(' o ')}.`,
+    title: 'Creá tu cuenta',
+    description: `Un solo registro: creá tu cuenta en línea y recibí tu Carinova ID y tu dirección en Estados Unidos para comprar en cualquier tienda y recibir en ${cityNames.join(' o ')}.`,
     subtitle:
-      'Registrate en línea y recibí tu Carinova ID y tu dirección en Miami para comprar en cualquier tienda de Estados Unidos.',
-    existing: '¿Ya tenés casillero?',
+      'Un solo registro. Al confirmar tu correo, el sistema te asigna automáticamente tu Carinova ID y te muestra tu dirección en Estados Unidos.',
+    existing: '¿Ya tenés cuenta?',
     next: '¿Qué pasa después?',
     steps: [
       { title: 'Confirmá tu correo', description: 'Te mandamos un enlace. Abrilo para activar tu cuenta.' },
       {
-        title: 'Recibí tu Carinova ID y tu dirección en Miami',
+        title: 'Recibí tu Carinova ID y tu dirección en Estados Unidos',
         description: 'Los ves en pantalla al confirmar y también te llegan por correo.',
       },
       {
         title: 'Comprá y nosotros lo traemos',
-        description: `Usá tu dirección de Miami en la tienda y retirá tu paquete en ${cityNames.join(' o ')}.`,
+        description: `Usá tu dirección en la tienda, seguí tu paquete en tu cuenta y retiralo en ${cityNames.join(' o ')}.`,
       },
     ],
     helpTitle: '¿Preferís que te ayudemos?',
-    helpText: 'Escribinos y abrimos tu casillero por WhatsApp.',
+    helpText: 'Escribinos y creamos tu cuenta por WhatsApp.',
   },
   en: {
     tagline: 'My account',
-    title: 'Open your mailbox',
-    description: `Sign up online and get your Carinova ID and your address in Miami to buy at stores in the United States and pick up in ${cityNames.join(' or ')}.`,
+    title: 'Create your account',
+    description: `One sign-up: create your account online and get your Carinova ID and your address in the United States to buy at any store and receive in ${cityNames.join(' or ')}.`,
     subtitle:
-      'Sign up online and get your Carinova ID and your address in Miami to buy at any store in the United States.',
-    existing: 'Already have a mailbox?',
+      'One sign-up. When you confirm your e-mail, the system assigns your Carinova ID automatically and shows you your address in the United States.',
+    existing: 'Already have an account?',
     next: 'What happens next?',
     steps: [
       { title: 'Confirm your e-mail', description: 'We send you a link. Open it to activate your account.' },
       {
-        title: 'Get your Carinova ID and your address in Miami',
+        title: 'Get your Carinova ID and your address in the United States',
         description: 'You see them on screen when you confirm, and they also reach you by e-mail.',
       },
       {
         title: 'Buy, and we bring it',
-        description: `Use your Miami address at the store and pick up your package in ${cityNames.join(' or ')}.`,
+        description: `Use your address at the store, follow your package in your account and pick it up in ${cityNames.join(' or ')}.`,
       },
     ],
     helpTitle: 'Would you rather we help you?',
-    helpText: 'Write to us and we will open your mailbox through WhatsApp.',
+    helpText: 'Write to us and we will create your account through WhatsApp.',
   },
 }[locale];
 
@@ -87,7 +87,7 @@ const metadata = { title: t.title, description: t.description };
           {
             t.steps.map((step, index) => (
               <li class="flex gap-4">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading font-bold text-white">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy font-heading font-bold text-white">
                   {index + 1}
                 </span>
                 <div>

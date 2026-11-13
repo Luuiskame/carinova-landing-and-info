@@ -1,0 +1,863 @@
+---
+// "Mi cuenta" for a customer who is signed in (/mi-cuenta): their Carinova ID, their packages (what
+// was received at the warehouse, what was shipped, what was delivered, each with its history), their
+// payments (invoices and the payments Carinova confirmed), their address in the United States and
+// the data they signed up with.
+//
+// The page is a static file, the same for everyone: it holds no customer data. The script asks the
+// Worker for the account of whoever is signed in (GET /api/account) and for their packages and
+// invoices (GET /api/account/activity); both read the session cookie, and nothing the page sends
+// says whose data it wants. Without a session the Worker answers 401 and the page goes back to what
+// a visitor sees (the rest of mi-cuenta.astro, `data-auth="out"`).
+//
+// Packages and invoices are written by the back office, in the database (docs/DATABASE.md): the page
+// only shows them. What the script builds comes from the <template> elements at the end, and every
+// word it shows travels in `data-config`, in the page's language.
+import { Icon } from 'astro-icon/components';
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import UsAddressCard from '~/components/carinova/UsAddressCard.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import {
+  INVOICE_STATES,
+  PACKAGE_STATUSES,
+  PAYMENT_METHODS,
+  PAYMENT_STATUSES,
+  SHIPPED_STATUSES,
+  WAREHOUSE_STATUSES,
+} from '~/data/account';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { ACCOUNT_PARTS, BRANCHES, RATES, RECEPTION_POINTS, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    loading: 'Abriendo tu cuenta…',
+    noscript: 'Para ver tu cuenta necesitás activar JavaScript en tu navegador.',
+    eyebrow: 'Mi cuenta',
+    idLabel: 'Tu Carinova ID',
+    idNote: 'Tenelo a mano cuando nos escribas o retires tus paquetes.',
+    sections: 'Secciones de tu cuenta',
+    packagesIntro: 'Lo que recibimos en nuestra bodega y lo que ya enviamos, con el estado de cada uno.',
+    filterLabel: 'Filtrar paquetes',
+    filters: { all: 'Todos', warehouse: 'En bodega', shipped: 'Enviados', delivered: 'Entregados' },
+    packagesEmpty:
+      'Todavía no recibimos paquetes a tu nombre. Cuando el primero llegue a nuestra bodega lo vas a ver aquí, con su estado.',
+    packagesNone: 'No tenés paquetes en este grupo.',
+    packagesAsk: 'Consultar por mis paquetes',
+    history: 'Ver historial',
+    packageAsk: 'Consultar por este paquete',
+    paymentsIntro: 'Tus facturas y los pagos que confirmamos.',
+    invoicesEmpty: 'Todavía no tenés facturas. Cuando emitamos la primera la vas a ver aquí.',
+    payments: 'Pagos',
+    invoiceAsk: 'Pagar o consultar esta factura',
+    paymentsNote:
+      'Para pagar o avisar de un pago, escribinos con el número de la factura. Un pago aparece como confirmado cuando nuestro equipo lo verifica.',
+    activityError: 'No pudimos cargar tus paquetes y tus pagos.',
+    retry: 'Intentar de nuevo',
+    detailsTitle: 'Mis datos',
+    detailsIntro: 'Con estos datos creaste tu cuenta.',
+    name: 'Nombre',
+    email: 'Correo electrónico',
+    phone: 'Teléfono',
+    address: 'Dirección',
+    since: 'Cliente desde',
+    changed: '¿Cambió algo?',
+    update: 'Pedir que actualicen mis datos',
+    nextTitle: '¿Qué querés hacer?',
+    howItWorks: 'Ver cómo funciona',
+    restricted: 'Ver qué puede ingresar',
+    signOut: 'Cerrar sesión',
+    signingOut: 'Cerrando sesión…',
+    errorTitle: 'No pudimos abrir tu cuenta',
+    errorText: 'Revisá tu conexión e intentalo de nuevo. Si sigue fallando, escribinos por WhatsApp.',
+    // For the script, with {placeholders}.
+    script: {
+      hello: 'Hola, {name}',
+      documentTitle: 'Mi cuenta {code} | Carinova',
+      received: 'Recibido en bodega',
+      warehouse: 'Bodega',
+      weight: 'Peso',
+      pounds: '{weight} lb',
+      pieces: 'Bultos',
+      pickup: 'Retiro en',
+      delivery: 'Entrega',
+      homeDelivery: 'A domicilio',
+      store: 'Tienda',
+      carrier: 'Llegó con',
+      issued: 'Emitida el {date}',
+      due: 'vence el {date}',
+      total: 'Total',
+      paid: 'Pagado',
+      balance: 'Saldo',
+      forPackage: '{description} ({reference})',
+      balanceDue: 'Saldo pendiente: {amount}',
+      inReview: 'Pagos en revisión: {amount}',
+      nothingDue: 'No tenés saldos pendientes.',
+    },
+  },
+  en: {
+    loading: 'Opening your account…',
+    noscript: 'To see your account you need to turn on JavaScript in your browser.',
+    eyebrow: 'My account',
+    idLabel: 'Your Carinova ID',
+    idNote: 'Keep it at hand when you write to us or pick up your packages.',
+    sections: 'Sections of your account',
+    packagesIntro: 'What we received at our warehouse and what we already shipped, with the status of each one.',
+    filterLabel: 'Filter packages',
+    filters: { all: 'All', warehouse: 'At the warehouse', shipped: 'Shipped', delivered: 'Delivered' },
+    packagesEmpty:
+      'We have not received any packages in your name yet. When the first one reaches our warehouse you will see it here, with its status.',
+    packagesNone: 'You have no packages in this group.',
+    packagesAsk: 'Ask about my packages',
+    history: 'See history',
+    packageAsk: 'Ask about this package',
+    paymentsIntro: 'Your invoices and the payments we confirmed.',
+    invoicesEmpty: 'You have no invoices yet. When we issue the first one you will see it here.',
+    payments: 'Payments',
+    invoiceAsk: 'Pay or ask about this invoice',
+    paymentsNote:
+      'To pay or to tell us about a payment, write to us with the number of the invoice. A payment shows as confirmed once our team verifies it.',
+    activityError: 'We could not load your packages and your payments.',
+    retry: 'Try again',
+    detailsTitle: 'My details',
+    detailsIntro: 'You created your account with these details.',
+    name: 'Name',
+    email: 'E-mail',
+    phone: 'Phone',
+    address: 'Address',
+    since: 'Customer since',
+    changed: 'Has something changed?',
+    update: 'Ask to have my details updated',
+    nextTitle: 'What would you like to do?',
+    howItWorks: 'See how it works',
+    restricted: 'See what can enter',
+    signOut: 'Sign out',
+    signingOut: 'Signing out…',
+    errorTitle: 'We could not open your account',
+    errorText: 'Check your connection and try again. If it keeps failing, write to us on WhatsApp.',
+    script: {
+      hello: 'Hi, {name}',
+      documentTitle: 'My account {code} | Carinova',
+      received: 'Received at the warehouse',
+      warehouse: 'Warehouse',
+      weight: 'Weight',
+      pounds: '{weight} lb',
+      pieces: 'Pieces',
+      pickup: 'Pickup at',
+      delivery: 'Delivery',
+      homeDelivery: 'Home delivery',
+      store: 'Store',
+      carrier: 'Arrived with',
+      issued: 'Issued on {date}',
+      due: 'due on {date}',
+      total: 'Total',
+      paid: 'Paid',
+      balance: 'Balance',
+      forPackage: '{description} ({reference})',
+      balanceDue: 'Balance due: {amount}',
+      inReview: 'Payments under review: {amount}',
+      nothingDue: 'You have no balance due.',
+    },
+  },
+}[locale];
+
+/** The titles of the sections are those of ACCOUNT_PARTS, so the page for visitors announces the same things. */
+const part = (id: string) => ACCOUNT_PARTS.find((item) => item.id === id)!;
+const sections = [
+  { id: 'paquetes', title: part('paquetes').title, icon: part('paquetes').icon },
+  { id: 'pagos', title: part('pagos').title, icon: part('pagos').icon },
+  { id: 'direccion', title: part('direccion').title, icon: part('direccion').icon },
+  { id: 'datos', title: t.detailsTitle, icon: 'tabler:user' },
+];
+
+const namesOf = <T extends { id: string; es: { name: string }; en: { name: string } }>(list: ReadonlyArray<T>) =>
+  Object.fromEntries(list.map((item) => [item.id, item[locale].name]));
+
+const config = {
+  /** For dates: Nicaragua writes "10 de noviembre de 2026". */
+  dateLocale: locale === 'en' ? 'en-US' : 'es-NI',
+  home: href('/'),
+  countries: Object.fromEntries(SIGNUP_COUNTRIES.map((country) => [country.code, country.name])),
+  /** Which statuses each filter of the packages shows. */
+  groups: { warehouse: WAREHOUSE_STATUSES, shipped: SHIPPED_STATUSES, delivered: ['delivered'] },
+  labels: {
+    packageStatus: namesOf(PACKAGE_STATUSES),
+    invoiceState: namesOf(INVOICE_STATES),
+    paymentStatus: namesOf(PAYMENT_STATUSES),
+    paymentMethod: Object.fromEntries(PAYMENT_METHODS.map((method) => [method.id, method[locale]])),
+    service: { air: RATES.air.name, sea: RATES.sea.name },
+    warehouse: Object.fromEntries(RECEPTION_POINTS.map((point) => [point.code, point.city])),
+    branch: Object.fromEntries(BRANCHES.map((branch) => [branch.id, branch.city])),
+  },
+  /** The colour of each status' label: where things stand at a glance. */
+  tones: {
+    received: 'blue',
+    processing: 'blue',
+    in_transit: 'amber',
+    ready: 'green',
+    delivered: 'slate',
+    returned: 'red',
+    cancelled: 'red',
+    unpaid: 'amber',
+    in_review: 'blue',
+    partial: 'amber',
+    paid: 'green',
+    void: 'slate',
+    pending: 'blue',
+    confirmed: 'green',
+    rejected: 'red',
+  },
+  text: {
+    ...t.script,
+    // The customer's Carinova ID, and the package or the invoice, go into the messages.
+    whatsappPackages: WA_MESSAGES.accountPackages('{code}'),
+    whatsappPackage: WA_MESSAGES.accountPackage('{code}', '{reference}'),
+    whatsappInvoice: WA_MESSAGES.accountInvoice('{code}', '{number}'),
+    whatsappUpdate: WA_MESSAGES.accountUpdate('{code}'),
+  },
+};
+
+const rows = [
+  { id: 'name', label: t.name },
+  { id: 'email', label: t.email },
+  { id: 'phone', label: t.phone },
+  { id: 'address', label: t.address },
+  { id: 'since', label: t.since },
+];
+
+const messageClass = 'mx-auto max-w-xl px-4 py-16 text-center md:py-24';
+const textClass = 'mt-4 text-lg text-muted';
+const cardClass = 'scroll-mt-28 rounded-2xl bg-white p-5 text-left shadow-lg ring-1 ring-slate-200 sm:p-8';
+const cardTitleClass = 'flex items-center gap-2.5 font-heading text-2xl font-bold text-heading';
+const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4';
+const chipClass =
+  'inline-flex min-h-10 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-bold text-slate-700 transition hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white';
+const pillClass =
+  'inline-flex shrink-0 items-center rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-800 data-[tone=amber]:bg-amber-100 data-[tone=amber]:text-amber-950 data-[tone=blue]:bg-blue-100 data-[tone=blue]:text-blue-900 data-[tone=green]:bg-green-100 data-[tone=green]:text-green-900 data-[tone=red]:bg-red-100 data-[tone=red]:text-red-900';
+const emptyClass = 'mt-4 rounded-xl border-2 border-dashed border-slate-300 p-6 text-center text-muted';
+---
+
+<cn-account class="block" data-auth="in" data-config={JSON.stringify(config)}>
+  <section data-cn-state="loading" class={messageClass} aria-busy="true">
+    <Icon name="tabler:loader-2" class="mx-auto h-12 w-12 text-primary motion-safe:animate-spin" />
+    <p class={textClass} role="status">{t.loading}</p>
+    <noscript>
+      <p class="mt-6 rounded-xl bg-amber-100 p-4 text-sm text-amber-950">{t.noscript}</p>
+    </noscript>
+  </section>
+
+  <section data-cn-state="ready" class="mx-auto max-w-4xl px-4 py-10 md:py-14" hidden>
+    <header class="dark rounded-2xl bg-[linear-gradient(135deg,#0d315e,#061b39_82%)] p-6 sm:p-9">
+      <p class="eyebrow">{t.eyebrow}</p>
+      <h1
+        class="mt-3 font-heading text-3xl font-extrabold text-white outline-none md:text-4xl"
+        tabindex="-1"
+        data-cn-hello
+      >
+      </h1>
+      <div class="mt-6 flex flex-wrap items-end gap-x-8 gap-y-3">
+        <div>
+          <p class="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.idLabel}</p>
+          <p
+            class="mt-1 font-heading text-3xl font-extrabold tracking-wide text-accent select-all sm:text-4xl"
+            data-cn-code
+          >
+          </p>
+        </div>
+        <p class="max-w-xs text-sm text-muted">{t.idNote}</p>
+      </div>
+    </header>
+
+    <nav class="mt-5" aria-label={t.sections}>
+      <ul class="flex flex-wrap gap-2">
+        {
+          sections.map((section) => (
+            <li>
+              <a class={chipClass} href={`#${section.id}`}>
+                <Icon name={section.icon} class="h-4 w-4" />
+                {section.title}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <section id="paquetes" class:list={['mt-6', cardClass]} aria-labelledby="cn-packages-title">
+      <h2 id="cn-packages-title" class={cardTitleClass}>
+        <Icon name={part('paquetes').icon} class="h-7 w-7 shrink-0 text-primary" />
+        {part('paquetes').title}
+      </h2>
+      <p class="mt-1 text-muted">{t.packagesIntro}</p>
+
+      <div class="mt-4 flex flex-wrap gap-1.5" role="group" aria-label={t.filterLabel} data-cn-filters hidden>
+        {
+          Object.entries(t.filters).map(([id, label], index) => (
+            <button type="button" class={chipClass} aria-pressed={index === 0 ? 'true' : 'false'} data-filter={id}>
+              {label} <span class="tabular-nums opacity-80" data-count={id} />
+            </button>
+          ))
+        }
+      </div>
+
+      <ul class="mt-4 space-y-3" data-cn-packages></ul>
+      <p class={emptyClass} data-cn-packages-empty hidden>{t.packagesEmpty}</p>
+      <p class={emptyClass} data-cn-packages-none hidden>{t.packagesNone}</p>
+      <div
+        class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+        data-cn-activity-error
+        hidden
+      >
+        <p>{t.activityError}</p>
+        <button type="button" class="mt-1 min-h-11 font-semibold underline underline-offset-4" data-cn-activity-retry>
+          {t.retry}
+        </button>
+      </div>
+      {/* The script writes the customer's Carinova ID into the message, in the place of "…". */}
+      <WhatsAppHelp
+        class="mt-3 text-sm"
+        message={WA_MESSAGES.accountPackages('…')}
+        text={t.packagesAsk}
+        data-cn-whatsapp-packages
+      />
+    </section>
+
+    <section id="pagos" class:list={['mt-6', cardClass]} aria-labelledby="cn-payments-title">
+      <h2 id="cn-payments-title" class={cardTitleClass}>
+        <Icon name={part('pagos').icon} class="h-7 w-7 shrink-0 text-primary" />
+        {part('pagos').title}
+      </h2>
+      <p class="mt-1 text-muted">{t.paymentsIntro}</p>
+
+      <p class="mt-4 rounded-lg bg-slate-100 p-3 font-semibold text-heading" data-cn-balance hidden></p>
+      <ul class="mt-4 space-y-3" data-cn-invoices></ul>
+      <p class={emptyClass} data-cn-invoices-empty hidden>{t.invoicesEmpty}</p>
+      <div
+        class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+        data-cn-activity-error
+        hidden
+      >
+        <p>{t.activityError}</p>
+        <button type="button" class="mt-1 min-h-11 font-semibold underline underline-offset-4" data-cn-activity-retry>
+          {t.retry}
+        </button>
+      </div>
+      <p class="mt-4 flex gap-2 text-sm text-slate-600">
+        <Icon name="tabler:info-circle" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <span>{t.paymentsNote}</span>
+      </p>
+    </section>
+
+    <div id="direccion" class="mt-6 scroll-mt-28">
+      <UsAddressCard />
+    </div>
+
+    <section id="datos" class:list={['mt-6', cardClass]} aria-labelledby="cn-details-title">
+      <h2 id="cn-details-title" class={cardTitleClass}>
+        <Icon name="tabler:user" class="h-7 w-7 shrink-0 text-primary" />
+        {t.detailsTitle}
+      </h2>
+      <p class="mt-1 text-muted">{t.detailsIntro}</p>
+      <dl class="mt-5 divide-y divide-slate-100">
+        {
+          rows.map((row) => (
+            <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+              <dt class="text-sm text-muted">{row.label}</dt>
+              <dd class="font-semibold break-words text-heading sm:text-right" data-cn-detail={row.id} />
+            </div>
+          ))
+        }
+      </dl>
+      <p class="mt-4 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+        <span>{t.changed}</span>
+        {/* Like the link of the packages, the script writes the customer's Carinova ID into the message. */}
+        <WhatsAppHelp message={WA_MESSAGES.accountUpdate('…')} text={t.update} data-cn-whatsapp-update />
+      </p>
+    </section>
+
+    <div class="mt-10 text-center">
+      <h2 class="font-heading text-2xl font-bold text-heading">{t.nextTitle}</h2>
+      <CtaGroup class="mt-6" signup={false} />
+      <p class="mt-3 flex flex-wrap items-center justify-center gap-x-6">
+        <a class={linkClass} href={href('/como-comprar')}>{t.howItWorks}</a>
+        <a class={linkClass} href={href('/articulos-prohibidos')}>{t.restricted}</a>
+      </p>
+      <button
+        type="button"
+        class="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600 underline underline-offset-4 hover:text-navy"
+        data-cn-signout
+        data-busy-label={t.signingOut}
+      >
+        {t.signOut}
+      </button>
+    </div>
+  </section>
+
+  <section data-cn-state="error" class={messageClass} hidden>
+    <Icon name="tabler:alert-triangle" class="mx-auto h-14 w-14 text-secondary" />
+    <h1 class="mt-5 font-heading text-3xl font-bold text-heading outline-none md:text-4xl" tabindex="-1">
+      {t.errorTitle}
+    </h1>
+    <p class={textClass}>{t.errorText}</p>
+    <div class="mt-8 flex flex-col items-center gap-3">
+      <button type="button" class="btn-primary w-full sm:w-auto" data-cn-retry>{t.retry}</button>
+      <WhatsAppHelp message={WA_MESSAGES.accountError} />
+    </div>
+  </section>
+
+  <!-- What the script builds the lists with: it copies a template and writes into its [data-f] places. -->
+  <template data-cn-template="package">
+    <li class="rounded-xl border border-slate-200 p-4 sm:p-5">
+      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div class="min-w-0">
+          <h3 class="font-heading text-lg font-bold break-words text-navy" data-f="description"></h3>
+          <p class="text-sm text-slate-600" data-f="summary"></p>
+        </div>
+        <span class={pillClass} data-f="status"></span>
+      </div>
+      <dl class="mt-3 grid gap-x-8 text-sm sm:grid-cols-2" data-f="facts"></dl>
+      <details class="mt-3">
+        <summary
+          class="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-link underline underline-offset-4"
+        >
+          {t.history}
+        </summary>
+        <ol class="mt-2 space-y-3 border-l-2 border-slate-200 pl-5" data-f="events"></ol>
+      </details>
+      <WhatsAppHelp class="text-sm" message={WA_MESSAGES.accountPackage('…', '…')} text={t.packageAsk} data-f="ask" />
+    </li>
+  </template>
+
+  <template data-cn-template="fact">
+    <div class="flex justify-between gap-4 border-b border-slate-100 py-1.5">
+      <dt class="text-slate-600" data-f="label"></dt>
+      <dd class="text-right font-medium break-words text-navy" data-f="value"></dd>
+    </div>
+  </template>
+
+  <template data-cn-template="event">
+    <li class="relative">
+      <span
+        class="absolute top-1.5 -left-[1.6rem] h-2.5 w-2.5 rounded-full bg-cta ring-4 ring-cta/20"
+        aria-hidden="true"></span>
+      <b class="block text-navy" data-f="name"></b>
+      <span class="block text-xs text-slate-600" data-f="when"></span>
+      <span class="block text-sm text-slate-700" data-f="note"></span>
+    </li>
+  </template>
+
+  <template data-cn-template="invoice">
+    <li class="rounded-xl border border-slate-200 p-4 sm:p-5">
+      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div class="min-w-0">
+          <h3 class="font-heading text-lg font-bold text-navy" data-f="number"></h3>
+          <p class="text-sm text-slate-600" data-f="dates"></p>
+        </div>
+        <span class={pillClass} data-f="state"></span>
+      </div>
+      <ul class="mt-3 divide-y divide-slate-100 text-sm" data-f="items"></ul>
+      <dl class="mt-2 border-t border-slate-200 pt-2 text-sm" data-f="totals"></dl>
+      <div class="mt-3" data-f="payments-block">
+        <h4 class="text-xs font-bold tracking-[0.12em] text-slate-600 uppercase">{t.payments}</h4>
+        <ul class="mt-1 divide-y divide-slate-100 text-sm" data-f="payments"></ul>
+      </div>
+      <p class="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-700" data-f="notes"></p>
+      <WhatsAppHelp
+        class="mt-1 text-sm"
+        message={WA_MESSAGES.accountInvoice('…', '…')}
+        text={t.invoiceAsk}
+        data-f="ask"
+      />
+    </li>
+  </template>
+
+  <template data-cn-template="line">
+    <li class="flex justify-between gap-4 py-2">
+      <span class="min-w-0 break-words" data-f="label"></span>
+      <span class="shrink-0 font-semibold text-navy tabular-nums" data-f="amount"></span>
+    </li>
+  </template>
+
+  <template data-cn-template="payment">
+    <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
+      <span class="min-w-0 break-words" data-f="label"></span>
+      <span class="flex shrink-0 items-center gap-2">
+        <span class="font-semibold text-navy tabular-nums" data-f="amount"></span>
+        <span class={pillClass} data-f="status"></span>
+      </span>
+    </li>
+  </template>
+</cn-account>
+
+<script>
+  import type { AccountActivity, AccountInvoice, AccountPackage } from '../../../worker/store';
+  import { CONTACT, MIAMI_ADDRESS } from '~/data/carinova';
+  import { getJson, postJson, setBusy, type Answer } from '~/utils/forms';
+  import { formatNumber, formatUSD } from '~/utils/rates';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  type State = 'loading' | 'ready' | 'error';
+  type Filter = 'all' | 'warehouse' | 'shipped' | 'delivered';
+
+  /** What GET /api/account answers with (worker/store.ts → Account). */
+  interface Account {
+    code: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    country: string;
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    createdAt: string;
+  }
+
+  interface Config {
+    dateLocale: string;
+    home: string;
+    /** Country names by code, in the page's language. */
+    countries: Record<string, string>;
+    groups: Record<Exclude<Filter, 'all'>, Array<string>>;
+    labels: Record<
+      'packageStatus' | 'invoiceState' | 'paymentStatus' | 'paymentMethod' | 'service' | 'warehouse' | 'branch',
+      Record<string, string>
+    >;
+    tones: Record<string, string>;
+    text: Record<string, string>;
+  }
+
+  /** The states of an invoice in which the customer still owes something. */
+  const OWED = ['unpaid', 'in_review', 'partial'];
+
+  class CnAccount extends HTMLElement {
+    private config!: Config;
+    private code = '';
+    private packages: Array<AccountPackage> = [];
+    private filter: Filter = 'all';
+
+    connectedCallback() {
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+      this.querySelector('[data-cn-retry]')?.addEventListener('click', () => void this.load());
+      this.querySelector('[data-cn-signout]')?.addEventListener('click', () => void this.signOut());
+      for (const button of this.querySelectorAll('[data-cn-activity-retry]')) {
+        button.addEventListener('click', () => void this.loadActivity());
+      }
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-filter]')) {
+        button.addEventListener('click', () => {
+          this.filter = (button.dataset.filter ?? 'all') as Filter;
+          this.renderPackages();
+        });
+      }
+      void this.load();
+    }
+
+    private show(state: State, moveFocus = true) {
+      for (const section of this.querySelectorAll<HTMLElement>('[data-cn-state]')) {
+        section.hidden = section.dataset.cnState !== state;
+      }
+      if (moveFocus) this.querySelector<HTMLElement>(`[data-cn-state="${state}"] h1`)?.focus({ preventScroll: true });
+    }
+
+    private setText(selector: string, text: string) {
+      const element = this.querySelector(selector);
+      if (element) element.textContent = text;
+    }
+
+    /** No session (it ended, or there never was one): the page goes back to what a visitor sees. */
+    private signedOut() {
+      document.documentElement.dataset.session = 'out';
+    }
+
+    private async load() {
+      // Nobody is signed in on this browser (SessionState.astro read the flag cookie): there is no
+      // account to ask for, and the page is showing what a visitor sees.
+      if (document.documentElement.dataset.session !== 'in') return;
+
+      this.show('loading', false);
+      const [account, activity] = await Promise.all([getJson('/api/account'), getJson('/api/account/activity')]);
+
+      // The Worker cleared the cookies with its answer.
+      if (account.status === 401) return this.signedOut();
+      if (account.status !== 200 || !account.result?.account) return this.show('error');
+
+      this.showAccount(account.result.account as Account);
+      this.showActivity(activity);
+      this.show('ready', window.location.hash === '');
+
+      // "Rastreá tu paquete" leads to /mi-cuenta#paquetes: the section exists only now.
+      const target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+      if (target && this.contains(target)) target.scrollIntoView();
+    }
+
+    private async loadActivity() {
+      this.showActivity(await getJson('/api/account/activity'));
+    }
+
+    private date(value: string | null, withTime = false): string {
+      const date = value ? new Date(value) : null;
+      if (!date || Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat(
+        this.config.dateLocale,
+        withTime ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }
+      ).format(date);
+    }
+
+    /** A copy of a template, and the way to write into its places. */
+    private build(name: string) {
+      const template = this.querySelector<HTMLTemplateElement>(`template[data-cn-template="${name}"]`);
+      const element = template?.content.firstElementChild?.cloneNode(true) as HTMLElement;
+      const place = (key: string) => element.querySelector<HTMLElement>(`[data-f="${key}"]`);
+      const set = (key: string, text: string) => {
+        const target = place(key);
+        if (target) target.textContent = text;
+      };
+      /** A status' label, in its colour. */
+      const pill = (key: string, status: string, labels: Record<string, string>) => {
+        const target = place(key);
+        if (!target) return;
+        target.textContent = labels[status] ?? status;
+        target.dataset.tone = this.config.tones[status] ?? 'slate';
+      };
+      return { element, place, set, pill };
+    }
+
+    private whatsapp(message: string, values: Record<string, string>): string {
+      return whatsappLink(CONTACT.whatsapp, fill(message, { code: this.code, ...values }));
+    }
+
+    private showAccount(account: Account) {
+      const { text, countries } = this.config;
+      this.code = account.code;
+
+      this.setText('[data-cn-hello]', fill(text.hello, { name: account.firstName }));
+      this.setText('[data-cn-code]', account.code);
+      this.setText('[data-cn-fill="firstName"]', MIAMI_ADDRESS.firstName(account.firstName));
+      this.setText('[data-cn-fill="lastName"]', MIAMI_ADDRESS.lastName(account.lastName));
+
+      const place = [account.city, account.state, account.postalCode].filter(Boolean).join(', ');
+      const address = [account.address1, account.address2, place, countries[account.country] ?? account.country];
+      const details: Record<string, string> = {
+        name: `${account.firstName} ${account.lastName}`,
+        email: account.email,
+        phone: account.phone,
+        address: address.filter(Boolean).join(' · '),
+        since: this.date(account.createdAt),
+      };
+      for (const [id, value] of Object.entries(details)) this.setText(`[data-cn-detail="${id}"]`, value);
+
+      this.querySelector('[data-cn-whatsapp-packages]')?.setAttribute('href', this.whatsapp(text.whatsappPackages, {}));
+      this.querySelector('[data-cn-whatsapp-update]')?.setAttribute('href', this.whatsapp(text.whatsappUpdate, {}));
+
+      document.documentElement.dataset.session = 'in';
+      document.title = fill(text.documentTitle, { code: account.code });
+    }
+
+    private showActivity(answer: Answer) {
+      if (answer.status === 401) return this.signedOut();
+      const activity =
+        answer.status === 200 && answer.result?.ok ? (answer.result as unknown as AccountActivity) : null;
+
+      for (const notice of this.querySelectorAll<HTMLElement>('[data-cn-activity-error]'))
+        notice.hidden = activity !== null;
+      this.packages = activity?.packages ?? [];
+      this.renderPackages(activity !== null);
+      this.renderInvoices(activity?.invoices ?? [], activity !== null);
+    }
+
+    /** Whether a package belongs to a filter of the list ("matches" is taken: every element has one). */
+    private inFilter(item: AccountPackage, filter: Filter): boolean {
+      return filter === 'all' || this.config.groups[filter].includes(item.status);
+    }
+
+    private renderPackages(loaded = true) {
+      const { labels, text } = this.config;
+      const list = this.querySelector<HTMLElement>('[data-cn-packages]');
+      if (!list) return;
+
+      const filters = this.querySelector<HTMLElement>('[data-cn-filters]');
+      if (filters) filters.hidden = this.packages.length === 0;
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-filter]')) {
+        const filter = (button.dataset.filter ?? 'all') as Filter;
+        button.setAttribute('aria-pressed', String(filter === this.filter));
+        const count = button.querySelector('[data-count]');
+        if (count) count.textContent = String(this.packages.filter((item) => this.inFilter(item, filter)).length);
+      }
+
+      const shown = this.packages.filter((item) => this.inFilter(item, this.filter));
+      const toggle = (selector: string, visible: boolean) => {
+        const element = this.querySelector<HTMLElement>(selector);
+        if (element) element.hidden = !visible;
+      };
+      toggle('[data-cn-packages-empty]', loaded && this.packages.length === 0);
+      toggle('[data-cn-packages-none]', this.packages.length > 0 && shown.length === 0);
+
+      list.replaceChildren(
+        ...shown.map((item) => {
+          const card = this.build('package');
+          card.set('description', item.description);
+          card.set('summary', [item.reference, labels.service[item.service] ?? item.service].join(' · '));
+          card.pill('status', item.status, labels.packageStatus);
+
+          const facts: Array<[string, string]> = [
+            [text.received, this.date(item.receivedAt)],
+            [text.warehouse, labels.warehouse[item.warehouse] ?? item.warehouse],
+            [text.weight, item.weightLb === null ? '' : fill(text.pounds, { weight: formatNumber(item.weightLb) })],
+            [text.pieces, item.pieces > 1 ? String(item.pieces) : ''],
+            item.deliveryMethod === 'home'
+              ? [text.delivery, text.homeDelivery]
+              : [text.pickup, labels.branch[item.branch] ?? item.branch],
+            [text.store, item.store],
+            [text.carrier, [item.carrier, item.carrierTracking].filter(Boolean).join(' · ')],
+          ];
+          card.place('facts')?.replaceChildren(
+            ...facts
+              .filter(([, value]) => value !== '')
+              .map(([label, value]) => {
+                const fact = this.build('fact');
+                fact.set('label', label);
+                fact.set('value', value);
+                return fact.element;
+              })
+          );
+
+          card.place('events')?.replaceChildren(
+            ...item.events.map((event) => {
+              const row = this.build('event');
+              row.set('name', labels.packageStatus[event.status] ?? event.status);
+              row.set('when', this.date(event.at, true));
+              row.set('note', event.note);
+              return row.element;
+            })
+          );
+          // A package without history yet (it should always have its reception) has nothing to open.
+          const history = card.element.querySelector('details');
+          if (history) history.hidden = item.events.length === 0;
+
+          card.place('ask')?.setAttribute('href', this.whatsapp(text.whatsappPackage, { reference: item.reference }));
+          return card.element;
+        })
+      );
+    }
+
+    private renderInvoices(invoices: Array<AccountInvoice>, loaded: boolean) {
+      const { labels, text } = this.config;
+      const list = this.querySelector<HTMLElement>('[data-cn-invoices]');
+      if (!list) return;
+
+      const empty = this.querySelector<HTMLElement>('[data-cn-invoices-empty]');
+      if (empty) empty.hidden = !loaded || invoices.length > 0;
+
+      // What is owed across the invoices, and what is waiting to be confirmed.
+      const owed = invoices.filter((invoice) => OWED.includes(invoice.state));
+      const due = owed.reduce((sum, invoice) => sum + invoice.balance, 0);
+      const waiting = owed.reduce((sum, invoice) => sum + invoice.pending, 0);
+      const balance = this.querySelector<HTMLElement>('[data-cn-balance]');
+      if (balance) {
+        balance.hidden = invoices.length === 0;
+        balance.textContent = [
+          due > 0 ? fill(text.balanceDue, { amount: formatUSD(due) }) : text.nothingDue,
+          waiting > 0 ? fill(text.inReview, { amount: formatUSD(waiting) }) : '',
+        ]
+          .filter(Boolean)
+          .join(' · ');
+      }
+
+      const line = (label: string, amount: number) => {
+        const row = this.build('line');
+        row.set('label', label);
+        row.set('amount', formatUSD(amount));
+        return row.element;
+      };
+
+      list.replaceChildren(
+        ...invoices.map((invoice) => {
+          const card = this.build('invoice');
+          card.set('number', invoice.number);
+          card.set(
+            'dates',
+            [
+              fill(text.issued, { date: this.date(invoice.issuedAt) }),
+              invoice.dueAt && OWED.includes(invoice.state) ? fill(text.due, { date: this.date(invoice.dueAt) }) : '',
+            ]
+              .filter(Boolean)
+              .join(', ')
+          );
+          card.pill('state', invoice.state, labels.invoiceState);
+
+          card
+            .place('items')
+            ?.replaceChildren(
+              ...invoice.items.map((item) =>
+                line(
+                  item.packageReference
+                    ? fill(text.forPackage, { description: item.description, reference: item.packageReference })
+                    : item.description,
+                  item.amount
+                )
+              )
+            );
+          card.place('totals')?.replaceChildren(
+            ...(
+              [
+                [text.total, invoice.total],
+                [text.paid, invoice.paid],
+                [text.balance, invoice.balance],
+              ] as Array<[string, number]>
+            ).map(([label, amount]) => {
+              const fact = this.build('fact');
+              fact.set('label', label);
+              fact.set('value', formatUSD(amount));
+              return fact.element;
+            })
+          );
+
+          const payments = card.place('payments-block');
+          if (payments) payments.hidden = invoice.payments.length === 0;
+          card.place('payments')?.replaceChildren(
+            ...invoice.payments.map((payment) => {
+              const row = this.build('payment');
+              row.set(
+                'label',
+                [labels.paymentMethod[payment.method] ?? payment.method, this.date(payment.paidAt), payment.reference]
+                  .filter(Boolean)
+                  .join(' · ')
+              );
+              row.set('amount', formatUSD(payment.amount));
+              row.pill('status', payment.status, labels.paymentStatus);
+              return row.element;
+            })
+          );
+
+          const notes = card.place('notes');
+          if (notes) {
+            notes.hidden = invoice.notes === '';
+            notes.textContent = invoice.notes;
+          }
+          // A void invoice has nothing to pay; the others can be asked about.
+          const ask = card.place('ask');
+          if (ask) {
+            ask.hidden = invoice.state === 'void';
+            ask.setAttribute('href', this.whatsapp(text.whatsappInvoice, { number: invoice.number }));
+          }
+          return card.element;
+        })
+      );
+    }
+
+    private async signOut() {
+      const button = this.querySelector<HTMLButtonElement>('[data-cn-signout]');
+      setBusy(button, true);
+      const { status } = await postJson('/api/logout', {});
+      if (status !== 200) return setBusy(button, false);
+      // A full page load: every page is back to what a visitor sees.
+      window.location.assign(this.config.home);
+    }
+  }
+
+  if (!customElements.get('cn-account')) customElements.define('cn-account', CnAccount);
+</script>

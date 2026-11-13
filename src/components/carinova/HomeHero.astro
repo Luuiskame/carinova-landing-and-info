@@ -1,199 +1,51 @@
 ---
-// Home hero: Carinova's promise, the calls to action and the rates at a glance. Each rate opens the
-// calculator with that rate chosen. Only the text column is `.dark` (white text on navy); the rates
-// card keeps light colours.
-//
-// The background is a carousel of the websites customers buy from (StoreMarquee.astro): rows of
-// stores drift behind everything, and one more row runs at full strength under the text, where
-// nothing covers it. A navy veil lies over the background where the text is: at 86 % the faintest
-// text of the column (the orange WhatsApp link) keeps 4.5:1 against the brightest thing that can
-// pass behind it, a store's name.
+// Home hero, as in Carinova's prototype: its line, the title in two lines (the second one orange),
+// the promise and two buttons. "Cotizá tu envío" leads to the calculator a little further down the
+// page; "Crear cuenta" to the sign-up form (a customer who is signed in gets their account instead).
+// Text only, centred, on navy: the ring at the right is decoration.
 import { Icon } from 'astro-icon/components';
-import CtaGroup from '~/components/carinova/CtaGroup.astro';
-import StoreMarquee from '~/components/carinova/StoreMarquee.astro';
-import { quotePath } from '~/data/services';
 import { i18n } from '~/i18n';
-import { formatUSD } from '~/utils/rates';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, RATES, RECEPTION_POINTS, VALUE_PROPOSITION, VALUE_PROPOSITION_HIGHLIGHT, WA_MESSAGES } = data;
-
-const { air, sea, electronics } = RATES;
-const cities = BRANCHES.map((branch) => branch.city);
-const reception = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
-const lowestUnitPrice = Math.min(...electronics.items.map((item) => item.price));
-
-// The promise with its key words in orange (falls back to plain text if the words change).
-const highlight = VALUE_PROPOSITION_HIGHLIGHT;
-const [before, after] = VALUE_PROPOSITION.split(highlight);
-
-const t = {
-  es: {
-    route: 'Estados Unidos → Nicaragua',
-    intro: `Comprá en cualquier tienda o recibí lo que te manda tu familia: lo traemos por aire o por mar y lo retirás en ${cities.join(' o ')}.`,
-    lead: '¿Tenés dudas?',
-    facts: [`Recepción en ${reception.join(' y ')}`, `Retiro en ${cities.join(' y ')}`, 'Compras asistidas gratis'],
-    rates: 'Tarifas',
-    delivery: 'Entrega estimada',
-    perPound: 'por libra',
-    perPoundOrFoot: `por libra o ${formatUSD(sea.pricePerCubicFoot)} por pie³`,
-    from: `desde ${formatUSD(lowestUnitPrice)}`,
-    perUnit: 'por unidad, con impuestos',
-    note: 'La entrega estimada se cuenta desde que recibimos tu paquete. Las tarifas incluyen seguro e impuestos cuando aplique.',
-  },
-  en: {
-    route: 'United States → Nicaragua',
-    intro: `Buy at any store or receive what your family sends you: we bring it by air or by sea and you pick it up in ${cities.join(' or ')}.`,
-    lead: 'Any questions?',
-    facts: [`Reception in ${reception.join(' and ')}`, `Pickup in ${cities.join(' and ')}`, 'Free assisted purchases'],
-    rates: 'Rates',
-    delivery: 'Estimated delivery',
-    perPound: 'per pound',
-    perPoundOrFoot: `per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³`,
-    from: `from ${formatUSD(lowestUnitPrice)}`,
-    perUnit: 'per unit, taxes included',
-    note: 'The delivery estimate counts from the moment we receive your package. Rates include insurance and taxes where applicable.',
-  },
-}[locale];
-
-const rates = [
-  {
-    id: air.id,
-    icon: air.icon,
-    name: air.name,
-    price: formatUSD(air.pricePerLb),
-    unit: t.perPound,
-    transit: air.transit,
-  },
-  {
-    id: sea.id,
-    icon: sea.icon,
-    name: sea.name,
-    price: formatUSD(sea.pricePerLb),
-    unit: t.perPoundOrFoot,
-    transit: sea.transit,
-  },
-  {
-    id: electronics.id,
-    icon: electronics.icon,
-    name: electronics.name,
-    price: t.from,
-    unit: t.perUnit,
-    transit: electronics.transit,
-  },
-];
-
-const factIcons = ['tabler:building-warehouse', 'tabler:map-pin', 'tabler:shopping-bag'];
-const facts = t.facts.map((text, index) => ({ icon: factIcons[index], text }));
+const { href, data } = i18n(Astro);
+const { CTA, HEADLINE, TAGLINE, VALUE_PROPOSITION } = data;
 ---
 
-<section class="relative overflow-hidden bg-dark">
-  <!-- The background stops, fading out, above the row that runs at the bottom on desktop: two rows on top of each other would not read. -->
-  <StoreMarquee class="bottom-36 [mask-image:linear-gradient(180deg,#000_80%,transparent)]" />
-
-  <!--
-    The veil over the stores. Phones: the text takes the whole width, so the veil does too. Desktop:
-    the text is the left column (it ends before 54 % of the width at every size), and the stores
-    show at the right of it, around the rates card.
-  -->
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-    <div
-      class="absolute inset-0 bg-[rgb(1_16_40/0.86)] lg:bg-transparent lg:bg-[linear-gradient(90deg,rgb(1_16_40/0.86)_0%,rgb(1_16_40/0.86)_54%,rgb(1_16_40/0.3)_72%,rgb(1_16_40/0.3)_100%)]"
-    >
-    </div>
-    <div
-      class="absolute inset-0 bg-[radial-gradient(45%_60%_at_95%_0%,rgb(250_112_5/0.18),transparent_70%),radial-gradient(50%_60%_at_0%_100%,rgb(5_58_134/0.55),transparent_70%)]"
-    >
-    </div>
+<section
+  class="dark relative isolate overflow-hidden bg-[radial-gradient(ellipse_at_54%_38%,#14345c_0%,#081d3d_47%,#020d21_100%)]"
+>
+  <div
+    class="pointer-events-none absolute top-1/2 -right-64 -z-10 h-[44rem] w-[44rem] -translate-y-1/2 rounded-full border border-cta/10 bg-[radial-gradient(circle,transparent_58%,rgb(255_138_0/0.1)_58.2%,transparent_58.7%)] max-sm:-right-60 max-sm:h-[22rem] max-sm:w-[22rem]"
+    aria-hidden="true"
+  >
   </div>
 
-  <div
-    class="relative mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-x-14 lg:gap-y-12 lg:pt-20 lg:pb-14"
-  >
-    <div class="dark text-center lg:text-left">
-      <p
-        class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#011028]/70 px-4 py-1.5 text-sm font-semibold text-accent"
-      >
-        <Icon name="tabler:plane-departure" class="h-4 w-4" />
-        {t.route}
-      </p>
+  <div class="relative mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 md:py-24 lg:py-28">
+    <p class="eyebrow justify-center">Carinova · {TAGLINE}</p>
 
-      <h1
-        class="mt-5 font-heading text-4xl leading-[1.1] font-extrabold tracking-tight text-balance text-heading sm:text-5xl lg:text-[3.1rem]"
-      >
-        {
-          after === undefined ? (
-            VALUE_PROPOSITION
-          ) : (
-            <>
-              {before}
-              <span class="text-accent">{highlight}</span>
-              {after}
-            </>
-          )
-        }
-      </h1>
+    <h1
+      class="mx-auto mt-7 font-heading text-[clamp(3rem,8.1vw,7.5rem)] leading-[0.98] font-extrabold tracking-[-0.065em] text-balance text-white"
+    >
+      {HEADLINE[0]}
+      <span class="block text-accent">{HEADLINE[1]}</span>
+    </h1>
 
-      <p class="mx-auto mt-5 max-w-xl text-lg text-pretty text-muted md:text-xl lg:mx-0">{t.intro}</p>
+    <p class="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-pretty text-muted sm:text-lg md:text-xl">
+      {VALUE_PROPOSITION}
+    </p>
 
-      <CtaGroup class="mt-8" align="start" whatsapp={WA_MESSAGES.homeHero} whatsappLead={t.lead} />
-
-      <ul class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted lg:justify-start">
-        {
-          facts.map((fact) => (
-            <li class="flex items-center gap-2">
-              <Icon name={fact.icon} class="h-5 w-5 text-accent" />
-              {fact.text}
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-
-    <!--
-      The stores at full strength, with nothing over them: under the text on phones, under both
-      columns on desktop. It reaches the edges of the hero's content (the negative margins undo the
-      grid's padding).
-    -->
-    <StoreMarquee variant="strip" class="-mx-4 sm:-mx-6 lg:col-span-2 lg:row-start-2" />
-
-    <div class="mx-auto w-full max-w-md lg:col-start-2 lg:row-start-1 lg:max-w-none">
-      <div
-        class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-2xl ring-1 shadow-black/30 ring-black/5 sm:p-7"
-      >
-        <div class="flex items-baseline justify-between gap-4">
-          <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.rates}</h2>
-          <p class="text-sm text-slate-600">{t.delivery}</p>
-        </div>
-        <ul class="mt-3 divide-y divide-slate-100">
-          {
-            rates.map((rate) => (
-              <li>
-                <a
-                  href={href(quotePath({ tarifa: rate.id }))}
-                  class="group -mx-2 flex items-center gap-3 rounded-xl px-2 py-3.5 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#053A86]"
-                >
-                  <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-[#053A86]">
-                    <Icon name={rate.icon} class="h-6 w-6" />
-                  </span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block font-semibold text-[#011028]">{rate.name}</span>
-                    <span class="block text-sm text-slate-600">
-                      <strong class="text-base text-[#011028]">{rate.price}</strong> {rate.unit}
-                    </span>
-                  </span>
-                  <span class="shrink-0 text-right text-sm font-medium text-slate-700">{rate.transit}</span>
-                  <Icon
-                    name="tabler:chevron-right"
-                    class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#053A86]"
-                  />
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-3 text-xs leading-relaxed text-slate-600">{t.note}</p>
-      </div>
+    <div class="mx-auto mt-9 flex max-w-sm flex-col justify-center gap-3.5 sm:max-w-none sm:flex-row">
+      <a class="btn-primary" href="#cotizador">
+        {CTA.quote.text}
+        <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+      </a>
+      <a class="btn" href={href(CTA.signup.path)} data-auth="out">
+        {CTA.signup.text}
+        <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+      </a>
+      <a class="btn" href={href(CTA.account.path)} data-auth="in">
+        {CTA.account.text}
+        <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+      </a>
     </div>
   </div>
 </section>

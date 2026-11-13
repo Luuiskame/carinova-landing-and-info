@@ -1,7 +1,9 @@
 /**
  * What the Worker keeps in the database: the confirmed customers, the one-time codes they sign in
- * with and their sessions. Production uses Neon (PostgreSQL) over HTTP; the tables are defined in
- * db/schema.sql. The in-memory store exists for `astro dev` without a database and for the tests.
+ * with and their sessions; and what it reads from it for "Mi cuenta": the packages and the invoices
+ * of the customer who is signed in, which the back office writes. Production uses Neon (PostgreSQL)
+ * over HTTP; the tables are defined in db/schema.sql and explained in docs/DATABASE.md. The
+ * in-memory store exists for `astro dev` without a database and for the tests.
  *
  * Every operation is one SQL statement: it either happens whole or not at all, and two requests at
  * the same moment cannot interleave (two confirmations of one link, two guesses at one code).
@@ -9,6 +11,7 @@
  * auth/session.ts), so reading the database gives nothing to sign in with.
  */
 import { neon } from '@neondatabase/serverless';
+import type { InvoiceState, PackageService, PackageStatus, PaymentMethod, PaymentStatus } from '../src/data/account.ts';
 import { localeFrom, type Locale } from '../src/i18n/locales.ts';
 import type { SignupData } from './signup/validate.ts';
 
@@ -36,6 +39,73 @@ export interface Account extends Customer {
   locale: Locale;
   /** ISO 8601. */
   createdAt: string;
+}
+
+/** A change of status in the history of a package. */
+export interface PackageEvent {
+  status: PackageStatus;
+  /** ISO 8601. */
+  at: string;
+  /** What Carinova wrote next to it for the customer; empty when nothing. */
+  note: string;
+}
+
+/** A package as its owner sees it in "Mi cuenta". Nothing internal: no notes of the team, no ids. */
+export interface AccountPackage {
+  /** The reference shown to the customer: "PKG-000123". */
+  reference: string;
+  description: string;
+  /** Empty when not known. */
+  store: string;
+  /** Who delivered it to the warehouse, and under which number; empty when not known. */
+  carrier: string;
+  carrierTracking: string;
+  service: PackageService;
+  status: PackageStatus;
+  /** The warehouse that received it: "MIA". */
+  warehouse: string;
+  /** The branch it will be picked up at ("managua"); empty when not decided, or for home delivery. */
+  branch: string;
+  deliveryMethod: 'pickup' | 'home';
+  /** Pounds, as weighed at the warehouse; null when not weighed yet. */
+  weightLb: number | null;
+  pieces: number;
+  /** ISO 8601; null for a stage the package has not reached. */
+  receivedAt: string;
+  shippedAt: string | null;
+  readyAt: string | null;
+  deliveredAt: string | null;
+  /** Oldest first. */
+  events: Array<PackageEvent>;
+}
+
+/** An invoice as the customer sees it. Amounts are US dollars. */
+export interface AccountInvoice {
+  /** "INV-000123" */
+  number: string;
+  state: InvoiceState;
+  /** ISO 8601. */
+  issuedAt: string;
+  dueAt: string | null;
+  total: number;
+  /** Confirmed payments. */
+  paid: number;
+  /** Payments waiting to be confirmed. */
+  pending: number;
+  /** total − paid. */
+  balance: number;
+  /** What Carinova wrote for the customer; empty when nothing. */
+  notes: string;
+  items: Array<{ description: string; amount: number; /** "PKG-000123", or empty. */ packageReference: string }>;
+  payments: Array<{ amount: number; method: PaymentMethod; status: PaymentStatus; paidAt: string; reference: string }>;
+}
+
+/** What "Mi cuenta" shows besides the customer's own details. */
+export interface AccountActivity {
+  /** Newest first. */
+  packages: Array<AccountPackage>;
+  /** Newest first; drafts are not included. */
+  invoices: Array<AccountInvoice>;
 }
 
 /** A session to open: the hash of its token and how long it lasts. */
@@ -82,8 +152,15 @@ export interface Store {
    */
   redeemLoginCode(email: string, codeHash: string, maxAttempts: number, session: NewSession): Promise<Account | null>;
 
-  /** The account a session belongs to; null once the session ended or expired. */
+  /** The account a session belongs to; null once the session ended or expired, or the account was suspended. */
   findAccount(sessionTokenHash: string): Promise<Account | null>;
+
+  /**
+   * The packages and the invoices of the customer a session belongs to, at most `limit` of each (the
+   * most recent ones); null when there is no such session. Only ever that customer's own rows: the
+   * session decides whose, nothing the request says does.
+   */
+  findActivity(sessionTokenHash: string, limit: number): Promise<AccountActivity | null>;
 
   endSession(sessionTokenHash: string): Promise<void>;
 }
@@ -123,7 +200,7 @@ SELECT code, first_name, last_name, false AS is_new, false AS signed_in FROM cus
 // code of the last day, retired or not. Codes too old to count are swept away on the way.
 const ISSUE_LOGIN_CODE = `
 WITH customer AS (
-  SELECT id, first_name FROM customers WHERE email = $1
+  SELECT id, first_name FROM customers WHERE email = $1 AND status = 'active'
 ), sent AS (
   SELECT
     count(*) FILTER (WHERE created_at > now() - interval '15 minutes') AS last_quarter,
@@ -150,7 +227,7 @@ SELECT first_name FROM allowed WHERE EXISTS (SELECT 1 FROM issued)`;
 // In SET, "attempts" is the value before this attempt.
 const REDEEM_LOGIN_CODE = `
 WITH customer AS (
-  SELECT id FROM customers WHERE email = $1
+  SELECT id FROM customers WHERE email = $1 AND status = 'active'
 ), tried AS (
   UPDATE customer_login_codes SET
     attempts = attempts + 1,
@@ -170,7 +247,88 @@ SELECT ${ACCOUNT_COLUMNS} FROM customers WHERE id = (SELECT customer_id FROM ope
 const FIND_ACCOUNT = `
 SELECT ${ACCOUNT_COLUMNS.replace(/(\w+)/g, 'c.$1')}
 FROM customer_sessions s JOIN customers c ON c.id = s.customer_id
-WHERE s.token_hash = $1 AND s.expires_at > now()`;
+WHERE s.token_hash = $1 AND s.expires_at > now() AND c.status = 'active'`;
+
+// One statement, one round trip: the customer of the session, their latest packages with the history
+// of each one and their latest invoices with their lines and payments, as two JSON arrays. Drafts are
+// the team's work in progress and never leave the database; neither do the team's notes.
+const FIND_ACTIVITY = `
+WITH me AS (
+  SELECT c.id
+  FROM customer_sessions s JOIN customers c ON c.id = s.customer_id
+  WHERE s.token_hash = $1 AND s.expires_at > now() AND c.status = 'active'
+), mine AS (
+  SELECT p.*, w.code AS warehouse_code, b.code AS branch_code
+  FROM packages p
+  JOIN warehouses w ON w.id = p.warehouse_id
+  LEFT JOIN branches b ON b.id = p.branch_id
+  WHERE p.customer_id = (SELECT id FROM me)
+  ORDER BY p.received_at DESC, p.id DESC
+  LIMIT $2::int
+), owed AS (
+  SELECT i.id, i.number, i.issued_at, i.due_at, i.notes,
+         t.total_usd, t.paid_usd, t.pending_usd, t.balance_usd, t.payment_state
+  FROM invoices i JOIN invoice_totals t ON t.invoice_id = i.id
+  WHERE i.customer_id = (SELECT id FROM me) AND i.status <> 'draft'
+  ORDER BY i.issued_at DESC, i.id DESC
+  LIMIT $2::int
+)
+SELECT
+  EXISTS (SELECT 1 FROM me) AS signed_in,
+  COALESCE((
+    SELECT json_agg(json_build_object(
+      'reference', m.code,
+      'description', m.description,
+      'store', m.store,
+      'carrier', m.carrier,
+      'carrierTracking', m.carrier_tracking,
+      'service', m.service,
+      'status', m.status,
+      'warehouse', m.warehouse_code,
+      'branch', m.branch_code,
+      'deliveryMethod', m.delivery_method,
+      'weightLb', m.weight_lb,
+      'pieces', m.pieces,
+      'receivedAt', m.received_at,
+      'shippedAt', m.shipped_at,
+      'readyAt', m.ready_at,
+      'deliveredAt', m.delivered_at,
+      'events', COALESCE((
+        SELECT json_agg(json_build_object('status', e.status, 'at', e.created_at, 'note', e.note)
+                        ORDER BY e.created_at, e.id)
+        FROM package_events e WHERE e.package_id = m.id
+      ), '[]'::json)
+    ) ORDER BY m.received_at DESC, m.id DESC)
+    FROM mine m
+  ), '[]'::json) AS packages,
+  COALESCE((
+    SELECT json_agg(json_build_object(
+      'number', o.number,
+      'state', o.payment_state,
+      'issuedAt', o.issued_at,
+      'dueAt', o.due_at,
+      'total', o.total_usd,
+      'paid', o.paid_usd,
+      'pending', o.pending_usd,
+      'balance', o.balance_usd,
+      'notes', o.notes,
+      'items', COALESCE((
+        SELECT json_agg(json_build_object(
+          'description', it.description, 'amount', it.amount_usd, 'packageReference', pk.code
+        ) ORDER BY it.id)
+        FROM invoice_items it LEFT JOIN packages pk ON pk.id = it.package_id
+        WHERE it.invoice_id = o.id
+      ), '[]'::json),
+      'payments', COALESCE((
+        SELECT json_agg(json_build_object(
+          'amount', pay.amount_usd, 'method', pay.method, 'status', pay.status,
+          'paidAt', pay.paid_at, 'reference', pay.reference
+        ) ORDER BY pay.paid_at, pay.id)
+        FROM payments pay WHERE pay.invoice_id = o.id
+      ), '[]'::json)
+    ) ORDER BY o.issued_at DESC, o.id DESC)
+    FROM owed o
+  ), '[]'::json) AS invoices`;
 
 const END_SESSION = 'DELETE FROM customer_sessions WHERE token_hash = $1';
 
@@ -190,6 +348,72 @@ const accountOf = (row: Record<string, unknown>): Account => ({
   postalCode: text(row.postal_code),
   locale: localeFrom(row.locale),
   createdAt: new Date(row.created_at as string | Date).toISOString(),
+});
+
+/** A JSON column: the driver hands it over parsed; a driver that does not gets it parsed here. */
+const jsonOf = <T>(value: unknown): T => (typeof value === 'string' ? JSON.parse(value) : value) as T;
+
+const isoOf = (value: unknown): string | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const date = new Date(value as string);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+};
+
+const numberOf = (value: unknown): number => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+type Json = Record<string, unknown>;
+
+/** The rows of FIND_ACTIVITY as the API answers them: no nulls where a text goes, dates in ISO 8601. */
+const activityOf = (row: Json): AccountActivity => ({
+  packages: jsonOf<Array<Json>>(row.packages).map((item) => ({
+    reference: text(item.reference),
+    description: text(item.description),
+    store: text(item.store),
+    carrier: text(item.carrier),
+    carrierTracking: text(item.carrierTracking),
+    service: text(item.service) as PackageService,
+    status: text(item.status) as PackageStatus,
+    warehouse: text(item.warehouse),
+    branch: text(item.branch),
+    deliveryMethod: item.deliveryMethod === 'home' ? 'home' : 'pickup',
+    weightLb: item.weightLb === null || item.weightLb === undefined ? null : numberOf(item.weightLb),
+    pieces: numberOf(item.pieces) || 1,
+    receivedAt: isoOf(item.receivedAt) ?? '',
+    shippedAt: isoOf(item.shippedAt),
+    readyAt: isoOf(item.readyAt),
+    deliveredAt: isoOf(item.deliveredAt),
+    events: ((item.events as Array<Json> | null) ?? []).map((event) => ({
+      status: text(event.status) as PackageStatus,
+      at: isoOf(event.at) ?? '',
+      note: text(event.note),
+    })),
+  })),
+  invoices: jsonOf<Array<Json>>(row.invoices).map((item) => ({
+    number: text(item.number),
+    state: text(item.state) as InvoiceState,
+    issuedAt: isoOf(item.issuedAt) ?? '',
+    dueAt: isoOf(item.dueAt),
+    total: numberOf(item.total),
+    paid: numberOf(item.paid),
+    pending: numberOf(item.pending),
+    balance: numberOf(item.balance),
+    notes: text(item.notes),
+    items: ((item.items as Array<Json> | null) ?? []).map((line) => ({
+      description: text(line.description),
+      amount: numberOf(line.amount),
+      packageReference: text(line.packageReference),
+    })),
+    payments: ((item.payments as Array<Json> | null) ?? []).map((payment) => ({
+      amount: numberOf(payment.amount),
+      method: text(payment.method) as PaymentMethod,
+      status: text(payment.status) as PaymentStatus,
+      paidAt: isoOf(payment.paidAt) ?? '',
+      reference: text(payment.reference),
+    })),
+  })),
 });
 
 export const sqlStore = (query: Query): Store => ({
@@ -237,6 +461,11 @@ export const sqlStore = (query: Query): Store => ({
     return row ? accountOf(row) : null;
   },
 
+  async findActivity(sessionTokenHash, limit) {
+    const [row] = await query(FIND_ACTIVITY, [sessionTokenHash, limit]);
+    return row && row.signed_in === true ? activityOf(row) : null;
+  },
+
   async endSession(sessionTokenHash) {
     await query(END_SESSION, [sessionTokenHash]);
   },
@@ -252,9 +481,14 @@ const DAY = 24 * 60 * MINUTE;
 
 /**
  * Same behaviour as the database, kept in memory. Numbers restart whenever the process does.
- * `now` lets the tests move the clock.
+ * `now` lets the tests move the clock. Nothing writes packages or invoices here (the back office
+ * does, in the real database), so every account has none, unless `activity` says what an account
+ * has: the tests and the browser checks use it to see "Mi cuenta" with something in it.
  */
-export const memoryStore = ({ now = Date.now }: { now?: () => number } = {}): Store => {
+export const memoryStore = ({
+  now = Date.now,
+  activity,
+}: { now?: () => number; activity?: (account: Account) => AccountActivity } = {}): Store => {
   const accounts = new Map<string, Account>();
   const codes = new Map<string, { hash: string; attempts: number; expiresAt: number; used: boolean }>();
   /** When each customer was sent a code, for the limits. */
@@ -263,6 +497,13 @@ export const memoryStore = ({ now = Date.now }: { now?: () => number } = {}): St
 
   const open = (email: string, session: NewSession) =>
     sessions.set(session.tokenHash, { email, expiresAt: now() + session.days * DAY });
+
+  /** The account a live session belongs to. */
+  const accountOf = (sessionTokenHash: string): Account | null => {
+    const session = sessions.get(sessionTokenHash);
+    if (!session || session.expiresAt <= now()) return null;
+    return accounts.get(session.email) ?? null;
+  };
 
   return {
     async create(data, { locale, session }) {
@@ -310,9 +551,14 @@ export const memoryStore = ({ now = Date.now }: { now?: () => number } = {}): St
     },
 
     async findAccount(sessionTokenHash) {
-      const session = sessions.get(sessionTokenHash);
-      if (!session || session.expiresAt <= now()) return null;
-      return accounts.get(session.email) ?? null;
+      return accountOf(sessionTokenHash);
+    },
+
+    async findActivity(sessionTokenHash, limit) {
+      const account = accountOf(sessionTokenHash);
+      if (!account) return null;
+      const { packages, invoices } = activity?.(account) ?? { packages: [], invoices: [] };
+      return { packages: packages.slice(0, limit), invoices: invoices.slice(0, limit) };
     },
 
     async endSession(sessionTokenHash) {

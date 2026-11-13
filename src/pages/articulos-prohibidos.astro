@@ -1,5 +1,7 @@
 ---
-// Artículos prohibidos: what Carinova does not carry and what cannot travel by air (RESTRICTED_ITEMS).
+// Artículos restringidos (/articulos-prohibidos), "¿Puede ingresar?" in the footer: the owner of what
+// Carinova cannot bring, in its three groups (RESTRICTED_ITEMS): not authorised yet, prohibited for
+// reception and transport, and what does not travel by air but does by sea.
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
@@ -13,11 +15,12 @@ const { WA_MESSAGES } = data;
 const t = {
   es: {
     tagline: 'Antes de comprar',
-    title: 'Artículos prohibidos',
+    title: '¿Puede ingresar a Nicaragua?',
+    metaTitle: 'Artículos prohibidos y restringidos',
     description:
-      'Lo que Carinova no transporta de Estados Unidos a Nicaragua y los productos que no pueden viajar por vía aérea. Revisalo antes de comprar.',
+      'Lo que Carinova no puede traer de Estados Unidos a Nicaragua: artículos prohibidos, artículos que todavía no estamos autorizados a traer y productos que no viajan por aéreo pero sí por marítimo. Revisalo antes de comprar.',
     subtitle:
-      'Hay productos que no transportamos y otros que no pueden viajar en avión. Revisá la lista antes de hacer tu compra.',
+      'Hay artículos que no recibimos ni transportamos, otros que todavía no estamos autorizados a traer y otros que solo viajan por marítimo. Revisá las listas antes de comprar o enviar.',
     closing: {
       title: '¿No estás seguro de un producto?',
       subtitle: 'Preguntanos antes de comprarlo y te decimos si podemos traerlo.',
@@ -26,11 +29,12 @@ const t = {
   },
   en: {
     tagline: 'Before you buy',
-    title: 'Prohibited items',
+    title: 'Can it enter Nicaragua?',
+    metaTitle: 'Prohibited and restricted items',
     description:
-      'What Carinova does not carry from the United States to Nicaragua and the products that cannot travel by air. Check it before you buy.',
+      'What Carinova cannot bring from the United States to Nicaragua: prohibited items, items we are not authorised to bring yet and products that do not travel by air but do by sea. Check it before you buy.',
     subtitle:
-      'There are products we do not carry and others that cannot travel by plane. Check the list before you buy.',
+      'Some items we neither receive nor carry, others we are not authorised to bring yet, and others only travel by sea. Check the lists before you buy or send.',
     closing: {
       title: 'Not sure about a product?',
       subtitle: 'Ask us before you buy it and we will tell you if we can bring it.',
@@ -39,13 +43,13 @@ const t = {
   },
 }[locale];
 
-const metadata = { title: t.title, description: t.description };
+const metadata = { title: t.metaTitle, description: t.description };
 ---
 
-<Layout metadata={metadata} breadcrumb={t.title}>
+<Layout metadata={metadata} breadcrumb={t.metaTitle}>
   <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <section class="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6 md:pb-16">
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-12 sm:px-6 md:pb-16">
     <Restrictions />
   </section>
 

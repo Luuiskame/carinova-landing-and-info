@@ -53,12 +53,9 @@ const englishPages = (): AstroIntegration => ({
   },
 });
 
-// Pages that search engines have no use for: what a confirmation link opens, the customer's own
-// page (both noindex) and the English 404 page.
-const PRIVATE_PAGES = [
-  ...[ROUTES.signupConfirm, ROUTES.mailbox].flatMap((route) => [route.es, route.en]),
-  ENGLISH_NOT_FOUND,
-];
+// Pages that search engines have no use for: what a confirmation link opens (noindex) and the
+// English 404 page. "Mi cuenta" stays: what it holds of a customer is fetched when they are signed in.
+const PRIVATE_PAGES = [ROUTES.signupConfirm.es, ROUTES.signupConfirm.en, ENGLISH_NOT_FOUND];
 const pathOfUrl = (url: string) => new URL(url).pathname.replace(/\/+$/, '') || '/';
 
 export default defineConfig({
@@ -74,22 +71,13 @@ export default defineConfig({
 
   // Native Fonts API: self-hosts + subsets + preloads the fonts and generates
   // metric-adjusted fallbacks. Injected via <Font /> in Layout.astro and consumed
-  // through the CSS variables in CustomStyles.astro: Inter for text, Montserrat
-  // (close to the logo's wordmark) for headings.
+  // through the CSS variables in CustomStyles.astro: Inter for text and headings, as in
+  // Carinova's prototype (the wordmark itself is an image: Logo.astro).
   fonts: [
     {
       provider: fontProviders.fontsource(),
       name: 'Inter',
       cssVariable: '--font-inter',
-      weights: ['100 900'],
-      styles: ['normal'],
-      subsets: ['latin'],
-      fallbacks: ['sans-serif'],
-    },
-    {
-      provider: fontProviders.fontsource(),
-      name: 'Montserrat',
-      cssVariable: '--font-montserrat',
       weights: ['100 900'],
       styles: ['normal'],
       subsets: ['latin'],

@@ -6,19 +6,23 @@
  */
 import * as es from '../services.ts';
 import type { ProcessStep, Service, ServiceAxis, ServiceAxisId, ShoppingExample } from '../services.ts';
-import { LAST_MILE, sentence } from '../carinova.ts';
+import { sentence } from '../carinova.ts';
 import { formatUSD } from '../../utils/rates.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, RESTRICTED_ITEMS, describeHours } from './carinova.ts';
 
 const { air, sea, electronics } = RATES;
 const cities = BRANCHES.map((branch) => branch.city);
 const [branchHours] = BRANCHES[0].hours;
-const lowestUnitPrice = Math.min(...electronics.items.map((item) => item.price));
 
 /** "a, b and c" */
 const listOf = (items: Array<string>): string =>
   items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 const lowercaseFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+/** "cell phones US$30, tablets US$40, …" */
+const devicePrices = electronics.items
+  .map((item) => `${item.brand ? item.plural : item.plural.toLowerCase()} ${formatUSD(item.price)}`)
+  .join(', ');
 
 /** The text of an id, or an error that names what is missing. */
 const textOf = <T>(table: Record<string, T>, id: string, kind: string): T => {
@@ -31,17 +35,17 @@ const AXIS_TEXT: Record<ServiceAxisId, Pick<ServiceAxis, 'name' | 'question' | '
   transporte: {
     name: 'Mode of transport',
     question: 'How does your package travel?',
-    rule: 'Speed or savings: you choose.',
+    rule: 'Two routes, one destination: speed or savings, you choose.',
   },
   solucion: {
     name: 'Commercial solution',
-    question: 'Who sends it to your mailbox?',
+    question: 'Who makes the purchase?',
     rule: 'You buy it or your family sends it to you, or we buy it for you.',
   },
   distribucion: {
     name: 'Final delivery',
     question: 'How do you receive it in Nicaragua?',
-    rule: 'At our branches or, soon, at your home.',
+    rule: 'At our branches or at your home, for an additional charge.',
   },
 };
 
@@ -61,64 +65,68 @@ const SERVICE_TEXT: Record<string, ServiceText> = {
   aereo: {
     name: 'Air',
     summary: `${formatUSD(air.pricePerLb)} per pound · ${air.transit}`,
-    description: 'For what you need soon: clothes, shoes, accessories, electronics and small purchases.',
+    description:
+      'Made for what you want to receive soon. It uses a base rate per pound and, for certain electronics, a flat rate per unit.',
     facts: [
-      `${formatUSD(air.pricePerLb)} per pound.`,
       `Estimated delivery: ${air.transit}, ${RATES.transitFrom}.`,
-      `Cell phones, tablets, laptops and consoles: flat rate from ${formatUSD(lowestUnitPrice)} per unit, taxes included.`,
-      `They cannot travel by plane: ${listOf(RESTRICTED_ITEMS.noAir.items.map(lowercaseFirst))}.`,
+      `Base rate: ${formatUSD(air.pricePerLb)} per pound.`,
+      `Electronics per unit: ${devicePrices}.`,
+      `They cannot travel by plane, but they can by sea: ${listOf(RESTRICTED_ITEMS.seaOnly.items.map((item) => lowercaseFirst(item.name)))}.`,
+      'The rate that applies is confirmed according to the type of goods, the packaging and the conditions of the service.',
     ],
-    link: 'Get an air quote',
+    link: 'Calculate air shipping',
   },
   maritimo: {
     name: 'Sea',
     summary: `${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³ · ${sea.transit}`,
-    description: 'For heavy or bulky things: household goods, furniture, appliances and large boxes.',
+    description:
+      'Ideal for large loads, planned purchases and shipments where cost comes first. It is quoted by weight or by volume.',
     facts: [
-      `${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot: we charge whichever is higher.`,
-      'Cubic foot: length × width × height, in inches, ÷ 1,728.',
       `Estimated delivery: ${sea.transit}, ${RATES.transitFrom}.`,
+      `Base rate by weight: ${formatUSD(sea.pricePerLb)} per pound.`,
+      `Rate by volume: ${formatUSD(sea.pricePerCubicFoot)} per cubic foot.`,
+      'Whether weight or volume applies is determined by the cargo, its packaging and the conditions of the service.',
     ],
-    link: 'Get a sea quote',
+    link: 'Calculate sea shipping',
   },
   encomiendas: {
     name: 'Packages',
-    summary: 'What you or your family send to your mailbox.',
+    summary: 'What you or your family send to our warehouse.',
     description:
-      'We bring any package that reaches your mailbox in Miami: your online purchases or the box your family sends you from the United States.',
+      'We bring any package that reaches our warehouse in your name: your online purchases or the box your family sends you from the United States.',
     facts: [
       'Buy at any store that ships within the United States.',
       'Your family or your friends can also send a box to your Miami address.',
       'It travels by air or by sea, as you prefer.',
     ],
-    link: 'See how to buy',
+    link: 'See how it works',
   },
   'compras-asistidas': {
     name: 'Assisted purchases',
-    summary: 'We buy for you, without charging for the service.',
-    description:
-      'You have no card, or the store does not accept yours? Send us the link to the product and we buy it for you.',
+    summary: 'You choose the product and we make the purchase for you.',
+    description: 'Choose the store and share the link to the product with us: we make the purchase for you.',
     facts: [
-      'The service is free: you pay for the product and the shipping.',
-      'Request it on WhatsApp with the link to the product.',
-      'It arrives at your mailbox and travels like any other package.',
+      'Before buying we confirm availability, whether the item can enter and the total cost.',
+      'The cost of the purchase, the taxes and the freight are confirmed before we handle the operation.',
+      'It arrives at our warehouse and travels like any other package.',
     ],
+    link: 'Prepare my request',
     whatsappText: 'Request an assisted purchase',
   },
   'retiro-en-sucursal': {
     name: 'Branch pickup',
     summary: `${listOf(cities)} · ${branchHours.days}`,
-    description: 'We let you know when your package is ready and you pick it up at the branch closest to you.',
+    description: 'When your package is available for delivery, you pick it up at the branch closest to you.',
     facts: [`Branches in ${listOf(cities)}.`, sentence(`We are open ${describeHours(branchHours)}`)],
     link: 'See branches',
   },
   'entrega-a-domicilio': {
     name: 'Home delivery',
-    summary: 'Your package to your door.',
-    description: LAST_MILE.available
-      ? 'We take your package to your home (the last mile).'
-      : 'Delivery to your home (the last mile) will be available soon. In the meantime, you pick up your package at a branch.',
-    facts: [],
+    summary: 'Anywhere in the country, for an additional charge.',
+    description:
+      'We deliver anywhere in the country, subject to coordination and coverage. Home delivery has an additional charge that depends on the destination and the operating conditions.',
+    facts: ['The address, the coverage and the charge are confirmed when the delivery is arranged.'],
+    whatsappText: 'Ask about home delivery',
   },
 };
 
@@ -137,44 +145,56 @@ export const SERVICES: Array<Service> = es.SERVICES.map((service) => {
 
 export const servicesOf = (axis: ServiceAxisId) => SERVICES.filter((service) => service.axis === axis);
 
+const receivingNow = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
+const receivingSoon = RECEPTION_POINTS.filter((point) => !point.available).map((point) => point.city);
+const soonNote = receivingSoon.length ? ` ${listOf(receivingSoon)}, coming soon.` : '';
+
 /** In the order of ../services.ts: the steps have no id. */
 const STEP_TEXT: Array<Pick<ProcessStep, 'title' | 'summary' | 'details'> & { link: string }> = [
   {
-    title: 'Open your mailbox',
-    summary: 'Sign up online and get your Carinova ID and your address in Miami.',
+    title: 'Sign up',
+    summary:
+      'Sign up with your e-mail and your phone number. When you confirm your e-mail, the system assigns your Carinova ID automatically.',
     details: [
-      'You fill in a short form and confirm your e-mail.',
-      'When you confirm, you see your Carinova ID and your address in Miami, and we also e-mail them to you.',
+      'You fill in a short form and confirm your e-mail with the link we send you.',
+      'When you confirm, you see your Carinova ID and your address in the United States, and we also e-mail them to you.',
     ],
     link: CTA.signup.text,
   },
   {
-    title: 'Buy, or have your package sent',
-    summary: 'Use your Miami address at any store in the United States, or give it to your family.',
+    title: 'Sign in to your account',
+    summary: 'Handle everything from one place.',
     details: [
-      'At checkout, write your first name and your last name exactly as they appear in your Miami address.',
-      'No card? Request an assisted purchase: we buy for you, free of charge.',
-      'Before you buy, check that your product is not on the list of prohibited items.',
+      'You sign in with your e-mail and a one-time code: there is no password to remember.',
+      'Your account has your Carinova ID, your address in the United States, your packages and your payments.',
     ],
-    link: 'See prohibited items',
+    link: CTA.signin.text,
   },
   {
-    title: 'We bring it to Nicaragua',
-    summary: `By air in ${air.transit} or by sea in ${sea.transit}, ${RATES.transitFrom}.`,
+    title: 'Can it enter?',
+    summary: 'Before you buy or send, check whether the item can enter.',
     details: [
-      `Air: ${formatUSD(air.pricePerLb)} per pound. Sea: ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot.`,
-      'Cell phones, tablets, laptops and consoles travel at a flat rate per unit, taxes included.',
-      'Rates include insurance and taxes where applicable.',
+      'Some items are prohibited, others we are not authorised to bring yet, and others only travel by sea.',
+      'If your item is not on the lists, ask us before you buy it.',
+    ],
+    link: 'Check an item',
+  },
+  {
+    title: 'We receive it',
+    summary: `Send it to the address of our warehouse in ${listOf(receivingNow)} shown in your account.${soonNote}`,
+    details: [
+      'At the store’s checkout, write your first name and your last name exactly as they appear in your address.',
+      'Would you rather we buy for you? Request an assisted purchase.',
+      `We bring it by air in ${air.transit} or by sea in ${sea.transit}, ${RATES.transitFrom}.`,
     ],
     link: CTA.quote.text,
   },
   {
-    title: 'Pick it up at your branch',
-    summary: `Collect your package in ${cities.join(' or ')}.`,
+    title: 'You receive it',
+    summary: `Pick up in ${cities.join(' or ')}. Home delivery has an additional charge.`,
     details: [
-      'We let you know when your package is ready for pickup.',
-      sentence(`We are open ${describeHours(branchHours)}`),
-      LAST_MILE.available ? 'We also take it to your home.' : 'Home delivery is coming soon.',
+      sentence(`Our branches are open ${describeHours(branchHours)}`),
+      'Home delivery is arranged according to the destination and the coverage.',
     ],
     link: 'See branches',
   },
@@ -182,26 +202,24 @@ const STEP_TEXT: Array<Pick<ProcessStep, 'title' | 'summary' | 'details'> & { li
 
 export const PROCESS_STEPS: Array<ProcessStep> = es.PROCESS_STEPS.map((step, index) => {
   const text = STEP_TEXT[index];
-  if (!text) throw new Error(`Step ${index + 1} of "Cómo comprar" has no English text (src/data/en/services.ts).`);
+  if (!text) throw new Error(`Step ${index + 1} of "¿Cómo funciona?" has no English text (src/data/en/services.ts).`);
   return {
     ...step,
     title: text.title,
     summary: text.summary,
     details: text.details,
-    link: { ...step.link, text: text.link },
+    link: step.link && { ...step.link, text: text.link },
   };
 });
 
-const receivingNow = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
-const receivingSoon = RECEPTION_POINTS.filter((point) => !point.available).map((point) => point.city);
-
 const ACCOUNT_TEXT: Record<string, { title: string; summary: string }> = {
   'carinova-id': { title: 'Carinova ID', summary: 'One per person or company, for all your shipments.' },
-  recepcion: {
-    title: 'Reception in the United States',
-    summary: `${listOf(receivingNow)}.${receivingSoon.length ? ` ${listOf(receivingSoon)}, coming soon.` : ''}`,
+  direccion: { title: 'Your address in the United States', summary: `${listOf(receivingNow)}.${soonNote}` },
+  paquetes: {
+    title: 'Your packages',
+    summary: 'What we received at the warehouse and what we already shipped, with the status of each one.',
   },
-  retiro: { title: 'Pickup in Nicaragua', summary: `${listOf(cities)}.` },
+  pagos: { title: 'Your payments', summary: 'Your invoices and the payments we confirmed.' },
 };
 
 export const ACCOUNT_PARTS: typeof es.ACCOUNT_PARTS = es.ACCOUNT_PARTS.map((part) => ({
@@ -212,24 +230,16 @@ export const ACCOUNT_PARTS: typeof es.ACCOUNT_PARTS = es.ACCOUNT_PARTS.map((part
 const EXAMPLE_TEXT: Record<string, Pick<ShoppingExample, 'category' | 'item' | 'source'>> = {
   ropa: {
     category: 'Clothes and shoes',
-    item: 'Two blouses, a pair of pants and a pair of sneakers',
-    source: 'From Shein and Nike',
+    item: 'Two blouses, a pair of pants and a pair of sneakers: 3 lb',
+    source: 'From SHEIN and Nike',
   },
   celulares: { category: 'Cell phones and tablets', item: 'A new cell phone', source: 'From Amazon' },
-  laptops: {
-    category: 'Laptops and consoles',
-    item: 'A laptop and a PlayStation',
-    source: 'From Best Buy and Walmart',
-  },
-  hogar: {
-    category: 'Home and kitchen',
-    item: 'An 18 lb cookware set, in a 16 × 12 × 10 inch box',
-    source: 'From Walmart',
-  },
+  laptops: { category: 'Laptops and consoles', item: 'A laptop', source: 'From Best Buy' },
+  hogar: { category: 'Home and kitchen', item: 'An 18 lb cookware set', source: 'From Walmart' },
   muebles: {
     category: 'Furniture',
-    item: 'A 40 lb office chair, in a 28 × 26 × 14 inch box',
-    source: 'From Costco',
+    item: 'An office chair, in a 28 × 26 × 14 inch box',
+    source: 'From Home Depot',
   },
   encomienda: {
     category: 'Family packages',
@@ -246,10 +256,11 @@ export const SHOPPING_EXAMPLES: Array<ShoppingExample> = es.SHOPPING_EXAMPLES.ma
 export const quoteExample = es.exampleQuoter(
   RATES,
   {
-    air: 'Air, per pound',
-    sea: 'Sea, by weight or by volume',
-    electronics: 'Electronics, flat rate per unit',
-    electronicsNote: 'Includes air shipping and taxes.',
+    airWeight: 'Air, per pound',
+    seaWeight: 'Sea, by weight',
+    seaVolume: 'Sea, by volume',
+    unit: 'Air, rate per unit',
+    unitNote: 'The rate per unit is not added to the rate per pound.',
   },
   'en'
 );

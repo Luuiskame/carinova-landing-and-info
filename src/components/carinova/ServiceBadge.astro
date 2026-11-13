@@ -1,21 +1,22 @@
 ---
-// "Gratis" (green) or "Próximamente" (grey) next to a service, a reception point or a delivery option,
-// in the page's language. It brings its own leading space, so the text around it never reads
-// "Compras asistidasGratis" (screen readers, search engines); flex containers ignore that space.
+// "Próximamente" (grey) next to what is not available yet (the Los Ángeles warehouse), or "Cargo
+// adicional" (amber) next to a service that is charged apart (home delivery), in the page's
+// language. It brings its own leading space, so the text around it never reads "Entrega a
+// domicilioCargo adicional" (screen readers, search engines); flex containers ignore that space.
 import { i18n } from '~/i18n';
 
 export interface Props {
-  kind: 'free' | 'soon';
+  kind: 'soon' | 'extra';
 }
 
 const { kind } = Astro.props;
 const { locale } = i18n(Astro);
 
 const label = {
-  es: { free: 'Gratis', soon: 'Próximamente' },
-  en: { free: 'Free', soon: 'Coming soon' },
+  es: { soon: 'Próximamente', extra: 'Cargo adicional' },
+  en: { soon: 'Coming soon', extra: 'Additional charge' },
 }[locale][kind];
-const tone = kind === 'free' ? 'bg-green-100 text-green-900' : 'bg-slate-200 text-slate-800';
+const tone = kind === 'extra' ? 'bg-amber-100 text-amber-950' : 'bg-slate-200 text-slate-800';
 ---
 
 {' '}<span

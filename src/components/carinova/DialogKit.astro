@@ -1,0 +1,51 @@
+---
+// What the dialogs of the site share (sign-in, the details of a rate, a store's card): how they are
+// opened and closed. One script for all of them, loaded by PageLayout.
+//
+//   <a href="/ingresar" data-dialog-open="cn-signin-dialog">Ingresá</a>
+//   <dialog id="cn-signin-dialog" class="cn-dialog"> … <button data-cn-dialog-close>×</button></dialog>
+//
+// - `data-dialog-open` names the dialog. When the page has no such dialog, or without JavaScript,
+//   the element does what it would do anyway: a link leads to its page.
+// - The dialog closes with its close button (`data-cn-dialog-close`), with a click on the veil around
+//   it and with Esc (the browser's own). The browser also keeps the focus inside while it is open
+//   and gives it back to the opener afterwards; a field marked `autofocus` gets it on opening.
+//
+// The header persists from page to page and the dialogs do not, so the listener is on the document:
+// registered once, it looks for the dialog in the page being shown. It listens on the way down
+// (capture): the page router also listens for clicks on links, and it must find this one already
+// handled, or it would take the visitor to the link's page. The look of a dialog is the `cn-dialog`
+// class (tailwind.css).
+---
+
+<script>
+  const onClick = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    const opener = target.closest<HTMLElement>('[data-dialog-open]');
+    if (opener) {
+      const dialog = document.getElementById(opener.dataset.dialogOpen ?? '');
+      // With Ctrl, ⌘, Shift or Alt a link opens its page in another tab, as links do.
+      if (!(dialog instanceof HTMLDialogElement) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+      event.preventDefault();
+      // The phone menu covers the page: close it first (the header's toggle does it).
+      document.querySelector<HTMLElement>('[data-aw-toggle-menu].expanded')?.click();
+      if (!dialog.open) dialog.showModal();
+      dialog.dispatchEvent(new CustomEvent('cn:open', { detail: { opener } }));
+      return;
+    }
+
+    const dialog = target.closest<HTMLDialogElement>('dialog.cn-dialog');
+    // The close button, a link that leads elsewhere, or a click on the veil (the dialog itself).
+    if (dialog && (target.closest('[data-cn-dialog-close]') || target === dialog)) dialog.close();
+  };
+  document.addEventListener('click', onClick, { capture: true });
+
+  // A page swapped in by the router starts with its dialogs closed, whatever was open before.
+  document.addEventListener('astro:before-swap', () => {
+    for (const dialog of document.querySelectorAll<HTMLDialogElement>('dialog.cn-dialog[open]')) dialog.close();
+  });
+</script>

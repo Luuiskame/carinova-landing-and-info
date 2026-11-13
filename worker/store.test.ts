@@ -52,15 +52,17 @@ test('every statement is sent with exactly the values it has placeholders for', 
     [{ first_name: 'Paul' }],
     [row],
     [row],
+    [{ signed_in: true, packages: [], invoices: [] }],
     []
   );
   await store.create(data, { ...customer, session: { tokenHash: 'a'.repeat(64), days: 30 } });
   await store.issueLoginCode({ email: data.email, codeHash: 'b'.repeat(64), minutes: 10, limits });
   await store.redeemLoginCode(data.email, 'b'.repeat(64), 5, { tokenHash: 'c'.repeat(64), days: 30 });
   await store.findAccount('c'.repeat(64));
+  await store.findActivity('c'.repeat(64), 50);
   await store.endSession('c'.repeat(64));
 
-  assert.equal(calls.length, 5);
+  assert.equal(calls.length, 6);
   for (const { text, params } of calls) {
     assert.equal(params.length, placeholders(text), text.trim().split('\n')[0]);
     assert.equal(params.includes(undefined), false, 'undefined is not a value the database takes');

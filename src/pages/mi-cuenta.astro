@@ -1,79 +1,89 @@
 ---
-// Mi cuenta: what a Carinova account is made of (Carinova's brief): one Carinova ID per person or
-// company, the reception addresses in the United States and the pickup branches in Nicaragua. It is
-// also where a customer finds the way in: "Ingresar" leads to the sign-in page, and from there to
-// their casillero (/mi-casillero). Companies have their own page (/empresas).
+// Mi cuenta. One address, two views, and CSS shows the one that applies (SessionState.astro):
+//
+// - A customer who is signed in gets their account (AccountPanel.astro): Carinova ID, packages,
+//   payments, address in the United States and their details, all fetched from the Worker.
+// - A visitor gets what an account is made of (ACCOUNT_PARTS) and the two ways in: "Ingresá", which
+//   opens the sign-in dialog, and "Crear cuenta". Companies have their own page (/empresas).
+//
+// The file itself holds nobody's data, so it can be indexed like any other page.
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import AccountPanel from '~/components/carinova/AccountPanel.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
-import CtaGroup from '~/components/carinova/CtaGroup.astro';
 import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 
 import { CARINOVA_ID_EXAMPLE, LAST_MILE } from '~/data/carinova';
+import { PACKAGE_STAGES, SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 
 const { locale, href, data } = i18n(Astro);
-const { ACCOUNT_PARTS, BRANCHES, CTA, RECEPTION_POINTS, WA_MESSAGES, formatHours } = data;
+const { ACCOUNT_PARTS, BRANCHES, CTA, RECEPTION_POINTS, WA_MESSAGES } = data;
 
 const cityNames = BRANCHES.map((branch) => branch.city);
 
 const t = {
   es: {
     tagline: 'Mi cuenta',
-    metaTitle: 'Mi cuenta: tu Carinova ID',
-    description: `Un Carinova ID por persona o empresa, con recepción en Miami y retiro en ${cityNames.join(' o ')}. Abrí tu casillero en línea.`,
-    title: 'Tu Carinova ID, para todos tus envíos',
+    metaTitle: 'Mi cuenta: Carinova ID, paquetes y pagos',
+    description: `Ingresá a tu cuenta Carinova: tu Carinova ID, tu dirección en Estados Unidos, tus paquetes con su estado y tus pagos. Retirá en ${cityNames.join(' o ')}.`,
+    title: 'Tu cuenta Carinova',
     subtitle:
-      'Al abrir tu casillero recibís tu Carinova ID y tu dirección en Estados Unidos, y retirás en la sucursal que te quede más cerca.',
-    existing: '¿Ya tenés tu Carinova ID?',
-    signin: 'Ingresá a tu casillero',
-    includes: 'Lo que incluye tu cuenta',
+      'Realizá todas tus gestiones desde un mismo lugar: tu Carinova ID, tu dirección, tus paquetes y tus pagos.',
+    signin: 'Ingresá a tu cuenta',
+    noAccount: '¿Todavía no tenés cuenta?',
+    includes: 'Lo que encontrás en tu cuenta',
     looksLike: 'Se ve así',
     idFacts: [
-      'Lo recibís al confirmar tu correo, en pantalla y por correo.',
+      'El sistema te lo asigna al confirmar tu correo.',
       'Es el mismo para aéreo, marítimo, encomiendas y compras asistidas.',
-      'Tenelo a mano cuando nos escribas o retires tus paquetes.',
     ],
     company: '¿Sos empresa?',
-    companyLink: 'Conocé Carinova para empresas',
-    reception: 'Donde recibimos tus compras y encomiendas.',
-    fullAddress: 'Recibís la dirección completa al abrir tu casillero.',
-    pickup: 'Por ahora, en nuestras sucursales:',
+    companyLink: 'Conocé Carinova para negocios',
+    fullAddress: 'Ves la dirección completa al ingresar.',
+    stages: 'Cada paquete, con su etapa:',
+    paymentFacts: [
+      'Cada factura con su monto y su estado.',
+      'Un pago aparece como confirmado cuando nuestro equipo lo verifica.',
+    ],
+    pickup: 'Retirás en',
     homeDelivery: 'Entrega a domicilio',
-    branches: 'Ver direcciones y horarios',
+    branches: 'Ver sucursales',
     closing: {
-      title: 'Abrí tu casillero en un par de minutos',
+      title: 'Creá tu cuenta en un par de minutos',
       subtitle: 'Llenás un formulario corto, confirmás tu correo y listo: ya tenés tu Carinova ID.',
       lead: '¿Tenés dudas antes de registrarte?',
     },
   },
   en: {
     tagline: 'My account',
-    metaTitle: 'My account: your Carinova ID',
-    description: `One Carinova ID per person or company, with reception in Miami and pickup in ${cityNames.join(' or ')}. Open your mailbox online.`,
-    title: 'Your Carinova ID, for all your shipments',
-    subtitle:
-      'When you open your mailbox you get your Carinova ID and your address in the United States, and you pick up at the branch closest to you.',
-    existing: 'Already have your Carinova ID?',
-    signin: 'Sign in to your mailbox',
-    includes: 'What your account includes',
+    metaTitle: 'My account: Carinova ID, packages and payments',
+    description: `Sign in to your Carinova account: your Carinova ID, your address in the United States, your packages with their status and your payments. Pick up in ${cityNames.join(' or ')}.`,
+    title: 'Your Carinova account',
+    subtitle: 'Handle everything from one place: your Carinova ID, your address, your packages and your payments.',
+    signin: 'Sign in to your account',
+    noAccount: 'Do you not have an account yet?',
+    includes: 'What you find in your account',
     looksLike: 'It looks like this',
     idFacts: [
-      'You get it when you confirm your e-mail, on screen and by e-mail.',
+      'The system assigns it when you confirm your e-mail.',
       'It is the same for air, sea, packages and assisted purchases.',
-      'Keep it at hand when you write to us or pick up your packages.',
     ],
     company: 'Are you a company?',
-    companyLink: 'See Carinova for companies',
-    reception: 'Where we receive your purchases and packages.',
-    fullAddress: 'You get the full address when you open your mailbox.',
-    pickup: 'For now, at our branches:',
+    companyLink: 'See Carinova for business',
+    fullAddress: 'You see the full address when you sign in.',
+    stages: 'Every package, with its stage:',
+    paymentFacts: [
+      'Every invoice with its amount and its status.',
+      'A payment shows as confirmed once our team verifies it.',
+    ],
+    pickup: 'You pick up in',
     homeDelivery: 'Home delivery',
-    branches: 'See addresses and opening hours',
+    branches: 'See branches',
     closing: {
-      title: 'Open your mailbox in a couple of minutes',
+      title: 'Create your account in a couple of minutes',
       subtitle: 'You fill in a short form, confirm your e-mail and that is it: you have your Carinova ID.',
       lead: 'Any questions before you sign up?',
     },
@@ -86,110 +96,145 @@ const part = (id: string) => ACCOUNT_PARTS.find((item) => item.id === id)!;
 const cardClass = 'flex scroll-mt-24 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-7';
 const titleClass = 'flex items-center gap-2 font-heading text-xl font-bold text-heading';
 const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4';
+const factClass = 'flex gap-2';
 ---
 
 <Layout metadata={metadata} breadcrumb={t.tagline}>
-  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+  <AccountPanel />
 
-  <div class="px-4 pb-4 text-center">
-    <CtaGroup quote={false} />
-    <p class="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 text-muted" data-auth="out">
-      <span>{t.existing}</span>
-      <a class={linkClass} href={href(CTA.signin.path)}>{t.signin}</a>
-    </p>
-  </div>
+  <div data-auth="out">
+    <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <WidgetWrapper id="cuenta" containerClass="max-w-6xl" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
-    <h2 class="sr-only">{t.includes}</h2>
-    <div class="grid gap-6 lg:grid-cols-3">
-      <article id="carinova-id" class={cardClass}>
-        <h3 class={titleClass}>
-          <Icon name={part('carinova-id').icon} class="h-7 w-7 text-primary" />
-          {part('carinova-id').title}
-        </h3>
-        <p class="mt-2 text-muted">{part('carinova-id').summary}</p>
-        <p class="mt-5 text-xs font-semibold tracking-wide text-slate-600 uppercase">{t.looksLike}</p>
-        <p
-          class="mt-1 w-fit rounded-xl bg-[#011028] px-5 py-2 font-heading text-2xl font-extrabold tracking-wide text-white"
-        >
-          {CARINOVA_ID_EXAMPLE}
-        </p>
-        <ul class="mt-5 flex-1 space-y-2.5 text-sm">
-          {
-            t.idFacts.map((fact) => (
-              <li class="flex gap-2">
-                <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{fact}</span>
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
-          <span>{t.company}</span>
-          <a class={linkClass} href={href('/empresas')}>{t.companyLink}</a>
-        </p>
-      </article>
-
-      <article id="recepcion" class={cardClass}>
-        <h3 class={titleClass}>
-          <Icon name={part('recepcion').icon} class="h-7 w-7 text-primary" />
-          {part('recepcion').title}
-        </h3>
-        <p class="mt-2 text-muted">{t.reception}</p>
-        <ul class="mt-5 space-y-3">
-          {
-            RECEPTION_POINTS.map((point) => (
-              <li
-                class:list={[
-                  'rounded-xl p-4',
-                  point.available ? 'bg-slate-50 ring-1 ring-slate-200' : 'border-2 border-dashed border-slate-300',
-                ]}
-              >
-                <p class="flex flex-wrap items-center gap-2 font-semibold text-heading">
-                  {point.city}, {point.state}
-                  {!point.available && <ServiceBadge kind="soon" />}
-                </p>
-                {point.available && <p class="mt-1 text-sm text-muted">{t.fullAddress}</p>}
-              </li>
-            ))
-          }
-        </ul>
-      </article>
-
-      <article id="retiro" class={cardClass}>
-        <h3 class={titleClass}>
-          <Icon name={part('retiro').icon} class="h-7 w-7 text-primary" />
-          {part('retiro').title}
-        </h3>
-        <p class="mt-2 text-muted">{t.pickup}</p>
-        <ul class="mt-5 space-y-3">
-          {
-            BRANCHES.map((branch) => (
-              <li class="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                <p class="font-semibold text-heading">{branch.city}</p>
-                {branch.hours.map((row) => (
-                  <p class="text-sm text-muted">{`${row.days}, ${formatHours(row)}`}</p>
-                ))}
-              </li>
-            ))
-          }
-          {
-            !LAST_MILE.available && (
-              <li class="flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-slate-300 p-4 font-semibold text-heading">
-                {t.homeDelivery} <ServiceBadge kind="soon" />
-              </li>
-            )
-          }
-        </ul>
-        <a class:list={['mt-5', linkClass]} href={href('/sucursales')}>{t.branches}</a>
-      </article>
+    <div class="px-4 pb-4 text-center">
+      <div class="mx-auto flex max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row">
+        <a class="btn-primary" href={href(CTA.signin.path)} data-dialog-open={SIGNIN_DIALOG_ID}>
+          {t.signin}
+          <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+        </a>
+        <a class="btn" href={href(CTA.signup.path)}>
+          {CTA.signup.text}
+          <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+        </a>
+      </div>
     </div>
-  </WidgetWrapper>
 
-  <ClosingCta
-    title={t.closing.title}
-    subtitle={t.closing.subtitle}
-    whatsapp={WA_MESSAGES.accountClosing}
-    whatsappLead={t.closing.lead}
-  />
+    <WidgetWrapper id="cuenta" containerClass="max-w-6xl" bg='<div class="absolute inset-0 bg-slate-50"></div>'>
+      <h2 class="mb-8 text-center font-heading text-3xl font-bold tracking-tight text-heading md:text-4xl">
+        {t.includes}
+      </h2>
+      <div class="grid gap-6 md:grid-cols-2">
+        <article id="carinova-id" class={cardClass}>
+          <h3 class={titleClass}>
+            <Icon name={part('carinova-id').icon} class="h-7 w-7 text-primary" />
+            {part('carinova-id').title}
+          </h3>
+          <p class="mt-2 text-muted">{part('carinova-id').summary}</p>
+          <p class="mt-5 text-xs font-semibold tracking-wide text-slate-600 uppercase">{t.looksLike}</p>
+          <p
+            class="mt-1 w-fit rounded-xl bg-navy px-5 py-2 font-heading text-2xl font-extrabold tracking-wide text-white"
+          >
+            {CARINOVA_ID_EXAMPLE}
+          </p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            {
+              t.idFacts.map((fact) => (
+                <li class={factClass}>
+                  <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{fact}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="mt-5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+            <span>{t.company}</span>
+            <a class={linkClass} href={href('/empresas')}>{t.companyLink}</a>
+          </p>
+        </article>
+
+        <article id="direccion-eeuu" class={cardClass}>
+          <h3 class={titleClass}>
+            <Icon name={part('direccion').icon} class="h-7 w-7 text-primary" />
+            {part('direccion').title}
+          </h3>
+          <ul class="mt-5 space-y-3">
+            {
+              RECEPTION_POINTS.map((point) => (
+                <li
+                  class:list={[
+                    'rounded-xl p-4',
+                    point.available ? 'bg-slate-50 ring-1 ring-slate-200' : 'border-2 border-dashed border-slate-300',
+                  ]}
+                >
+                  <p class="flex flex-wrap items-center gap-2 font-semibold text-heading">
+                    {point.city}, {point.state}
+                    {!point.available && <ServiceBadge kind="soon" />}
+                  </p>
+                  {point.available && <p class="mt-1 text-sm text-muted">{t.fullAddress}</p>}
+                </li>
+              ))
+            }
+          </ul>
+        </article>
+
+        <article id="tus-paquetes" class={cardClass}>
+          <h3 class={titleClass}>
+            <Icon name={part('paquetes').icon} class="h-7 w-7 text-primary" />
+            {part('paquetes').title}
+          </h3>
+          <p class="mt-2 text-muted">{part('paquetes').summary}</p>
+          <p class="mt-5 text-sm font-semibold text-heading">{t.stages}</p>
+          <ol class="mt-2 flex flex-wrap gap-2 text-sm">
+            {
+              PACKAGE_STAGES.map((stage, index) => (
+                <li class="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-800">
+                  {`${index + 1}. ${stage[locale].name}`}
+                </li>
+              ))
+            }
+          </ol>
+          <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+            <span>{t.pickup} {cityNames.join(locale === 'en' ? ' or ' : ' o ')}.</span>
+            {
+              LAST_MILE.available && (
+                <span class="font-semibold text-heading">
+                  {t.homeDelivery}
+                  {LAST_MILE.extraCharge && <ServiceBadge kind="extra" />}
+                </span>
+              )
+            }
+          </p>
+          <a class:list={['mt-2', linkClass]} href={href('/sucursales')}>{t.branches}</a>
+        </article>
+
+        <article id="tus-pagos" class={cardClass}>
+          <h3 class={titleClass}>
+            <Icon name={part('pagos').icon} class="h-7 w-7 text-primary" />
+            {part('pagos').title}
+          </h3>
+          <p class="mt-2 text-muted">{part('pagos').summary}</p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            {
+              t.paymentFacts.map((fact) => (
+                <li class={factClass}>
+                  <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{fact}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </article>
+      </div>
+      <p class="mt-8 flex flex-wrap items-center justify-center gap-x-1.5 text-muted">
+        <span>{t.noAccount}</span>
+        <a class={linkClass} href={href(CTA.signup.path)}>{CTA.signup.text}</a>
+      </p>
+    </WidgetWrapper>
+
+    <ClosingCta
+      title={t.closing.title}
+      subtitle={t.closing.subtitle}
+      whatsapp={WA_MESSAGES.accountClosing}
+      whatsappLead={t.closing.lead}
+    />
+  </div>
 </Layout>

@@ -1,0 +1,93 @@
+---
+// "Sabé en qué etapa va tu envío" (home page), the tracking section of the prototype. The site
+// tracks packages inside the customer's account, so this section shows the stages a package goes
+// through (PACKAGE_STAGES, the same ones the account shows) and leads there: a visitor signs in (the
+// dialog opens), a customer goes straight to their packages. There is no search by Carinova ID: the
+// number of an account is not a key to anybody's packages.
+import { Icon } from 'astro-icon/components';
+import { PACKAGE_STAGES, SIGNIN_DIALOG_ID } from '~/data/account';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA } = data;
+
+const t = {
+  es: {
+    eyebrow: 'Seguimiento',
+    title: 'Sabé en qué etapa va tu envío.',
+    intro:
+      'El Carinova ID identifica tu cuenta. Al iniciar sesión ves los envíos asociados, cada uno con su referencia y sus estados.',
+    boxTitle: 'Rastreo de paquetes',
+    stages: 'Las etapas de un paquete',
+    signin: 'Ingresá para ver tus paquetes',
+    mine: 'Ver mis paquetes',
+    noAccount: '¿Todavía no tenés cuenta?',
+    privacy: 'Por seguridad, el Carinova ID por sí solo no autoriza a consultar datos privados.',
+  },
+  en: {
+    eyebrow: 'Tracking',
+    title: 'Know which stage your shipment is at.',
+    intro:
+      'The Carinova ID identifies your account. When you sign in you see the shipments linked to it, each one with its reference and its statuses.',
+    boxTitle: 'Package tracking',
+    stages: 'The stages of a package',
+    signin: 'Sign in to see your packages',
+    mine: 'See my packages',
+    noAccount: 'Do you not have an account yet?',
+    privacy: 'For security, the Carinova ID alone does not authorise anyone to look up private data.',
+  },
+}[locale];
+---
+
+<section id="rastreo" class="scroll-mt-20 bg-[#f3f7fb]">
+  <div
+    class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-2 lg:items-center lg:gap-20 lg:py-24"
+  >
+    <div>
+      <p class="eyebrow">{t.eyebrow}</p>
+      <h2 class="display-title mt-4">{t.title}</h2>
+      <p class="mt-5 text-lg leading-relaxed text-muted">{t.intro}</p>
+    </div>
+
+    <div
+      class="rounded-2xl border border-t-[5px] border-[#dfe7f0] border-t-cta bg-white p-6 shadow-[0_24px_70px_rgb(18_40_76/0.06)] sm:p-9"
+    >
+      <h3 class="font-heading text-2xl font-extrabold text-heading">{t.boxTitle}</h3>
+      <p class="mt-4 text-xs font-bold tracking-[0.14em] text-secondary uppercase">{t.stages}</p>
+      <ol class="mt-3 space-y-4 border-l-2 border-[#e1e7f0] pl-5">
+        {
+          PACKAGE_STAGES.map((stage) => (
+            <li class="relative">
+              <span
+                class="absolute top-1.5 -left-[1.6rem] h-2.5 w-2.5 rounded-full bg-cta ring-4 ring-cta/20"
+                aria-hidden="true"
+              />
+              <b class="block text-heading">{stage[locale].name}</b>
+              <span class="text-sm text-muted">{stage[locale].text}</span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="mt-7">
+        <div data-auth="out">
+          <a class="btn-primary w-full" href={href(CTA.signin.path)} data-dialog-open={SIGNIN_DIALOG_ID}>
+            {t.signin}
+            <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+          </a>
+          <p class="mt-3 flex flex-wrap justify-center gap-x-1.5 text-sm text-muted">
+            <span>{t.noAccount}</span>
+            <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.signup.path)}>
+              {CTA.signup.text}
+            </a>
+          </p>
+        </div>
+        <a class="btn-primary w-full" href={href(CTA.track.path)} data-auth="in">
+          {t.mine}
+          <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+        </a>
+      </div>
+      <p class="mt-4 text-xs leading-relaxed text-slate-600">{t.privacy}</p>
+    </div>
+  </div>
+</section>

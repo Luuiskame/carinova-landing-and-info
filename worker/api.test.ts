@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  ACCOUNT_LIST_LIMIT,
   LOGIN_CODES_PER_15_MINUTES,
   LOGIN_CODE_ATTEMPTS,
   LOGIN_CODE_MINUTES,
@@ -10,7 +11,7 @@ import {
 import { handleApi, type Deps } from './api.ts';
 import type { Email, SendResult } from './mailer.ts';
 import { sealToken } from './signup/token.ts';
-import { memoryStore, type Store } from './store.ts';
+import { memoryStore, type AccountActivity, type AccountInvoice, type AccountPackage, type Store } from './store.ts';
 
 const ORIGIN = 'https://carinova.test';
 const SECRET = 'a-secret-for-the-tests-that-is-long-enough';
@@ -128,7 +129,7 @@ test('sign-up, confirmation and welcome', async () => {
   });
   assert.equal(sent.length, 2);
   assert.equal(sent[1].to, 'paul@example.com');
-  assert.equal(sent[1].subject, 'Tu casillero Carinova está listo: CNV-00001');
+  assert.equal(sent[1].subject, 'Tu cuenta Carinova está lista: CNV-00001');
   assert.ok(sent[1].text.includes('Carinova Paul') && sent[1].text.includes('Palacios Aéreo'));
   assert.deepEqual(logs, []);
 });
@@ -140,12 +141,12 @@ test('a sign-up from the English site is answered in English', async () => {
   assert.equal(invalid.body.fields.email, 'Check your e-mail: it does not look valid.');
 
   await post('/api/signup', { ...form, lang: 'en' });
-  assert.equal(sent[0].subject, 'Confirm your e-mail to open your Carinova mailbox');
+  assert.equal(sent[0].subject, 'Confirm your e-mail to create your Carinova account');
   const link = linkIn(sent[0]);
   assert.equal(link.origin + link.pathname, `${ORIGIN}/en/sign-up/confirm`);
 
   await post('/api/signup/confirm', { token: tokenIn(sent[0]) });
-  assert.equal(sent[1].subject, 'Your Carinova mailbox is ready: CNV-00001');
+  assert.equal(sent[1].subject, 'Your Carinova account is ready: CNV-00001');
   assert.ok(sent[1].text.includes(`${ORIGIN}/en/quote`) && sent[1].text.includes(`${ORIGIN}/en/sign-in`));
 });
 
@@ -221,7 +222,7 @@ test('the team is notified when an inbox is configured', async () => {
   assert.equal(sent.length, 3);
   assert.equal(sent[2].to, 'equipo@carinova.test');
   assert.equal(sent[2].replyTo, 'paul@example.com');
-  assert.equal(sent[2].subject, 'Nuevo casillero CNV-00001: Paul Palacios');
+  assert.equal(sent[2].subject, 'Nueva cuenta CNV-00001: Paul Palacios');
 });
 
 test('with waitUntil, the e-mails go out after the response', async () => {
@@ -607,6 +608,106 @@ test('the form for companies needs the owner’s inbox and a mailer', async () =
   assert.equal(honeypot.sent.length, 0);
 });
 
+// ───────────────────────────── Packages and payments ─────────────────────────────
+
+const parcel: AccountPackage = {
+  reference: 'PKG-000012',
+  description: 'Zapatos Nike, caja mediana',
+  store: 'Nike',
+  carrier: 'UPS',
+  carrierTracking: '1Z999AA10123456784',
+  service: 'air',
+  status: 'in_transit',
+  warehouse: 'MIA',
+  branch: 'bluefields',
+  deliveryMethod: 'pickup',
+  weightLb: 3.4,
+  pieces: 1,
+  receivedAt: '2026-11-09T15:00:00.000Z',
+  shippedAt: '2026-11-10T09:00:00.000Z',
+  readyAt: null,
+  deliveredAt: null,
+  events: [
+    { status: 'received', at: '2026-11-09T15:00:00.000Z', note: '' },
+    { status: 'in_transit', at: '2026-11-10T09:00:00.000Z', note: 'Salió hacia Nicaragua' },
+  ],
+};
+
+const bill: AccountInvoice = {
+  number: 'INV-000007',
+  state: 'in_review',
+  issuedAt: '2026-11-10T10:00:00.000Z',
+  dueAt: null,
+  total: 22.1,
+  paid: 0,
+  pending: 22.1,
+  balance: 22.1,
+  notes: '',
+  items: [{ description: 'Envío aéreo, 3.4 lb × US$6.50', amount: 22.1, packageReference: 'PKG-000012' }],
+  payments: [
+    {
+      amount: 22.1,
+      method: 'bank_transfer',
+      status: 'pending',
+      paidAt: '2026-11-10T11:00:00.000Z',
+      reference: 'BAC 8841',
+    },
+  ],
+};
+
+test('a customer sees their own packages and invoices, and only with a session', async () => {
+  const activity: AccountActivity = { packages: [parcel], invoices: [bill] };
+  // Only Paul has something: whose rows come back is decided by the session, not by the request.
+  const store = memoryStore({
+    activity: (account) => (account.email === form.email ? activity : { packages: [], invoices: [] }),
+  });
+  const { register, get } = setup({ store });
+
+  const paul = await register();
+  const answer = await get('/api/account/activity', cookieHeader(paul.cookies));
+  assert.equal(answer.status, 200);
+  assert.deepEqual(answer.body, { ok: true, ...activity });
+
+  const ana = await register({ ...form, email: 'ana@example.com', firstName: 'Ana' });
+  const empty = await get('/api/account/activity?customer=CNV-00001', cookieHeader(ana.cookies));
+  assert.deepEqual([empty.status, empty.body], [200, { ok: true, packages: [], invoices: [] }]);
+
+  // Without a session: no data, and the cookies that said "signed in" go.
+  const without: Array<Record<string, string>> = [
+    {},
+    { Cookie: '__Host-cnv_session=not-a-token' },
+    { Cookie: `${SESSION_FLAG_COOKIE}=1` },
+  ];
+  for (const headers of without) {
+    const refused = await get('/api/account/activity', headers);
+    assert.deepEqual([refused.status, refused.body], [401, { ok: false, error: 'signed_out' }]);
+    assert.ok(refused.cookies.length === 2 && refused.cookies.every((cookie) => cookie.includes('Max-Age=0')));
+  }
+});
+
+test('the account lists stop at the most recent ones, and end with the session', async () => {
+  const many = Array.from({ length: ACCOUNT_LIST_LIMIT + 5 }, (_, index) => ({
+    ...parcel,
+    reference: `PKG-${String(index + 1).padStart(6, '0')}`,
+  }));
+  const store = memoryStore({ activity: () => ({ packages: many, invoices: [] }) });
+  const { register, get, post } = setup({ store });
+  const { cookies } = await register();
+
+  const answer = await get('/api/account/activity', cookieHeader(cookies));
+  assert.equal(answer.body.packages.length, ACCOUNT_LIST_LIMIT);
+  assert.equal(answer.body.packages[0].reference, 'PKG-000001');
+
+  await post('/api/logout', {}, cookieHeader(cookies));
+  assert.equal((await get('/api/account/activity', cookieHeader(cookies))).status, 401);
+});
+
+test('without a database the account answers that it is not available', async () => {
+  const { get, logs } = setup({ store: undefined });
+  assert.equal((await get('/api/account/activity')).status, 503);
+  assert.match(logs[0], /DATABASE_URL/);
+});
+
 // ───────────────────────────── Every endpoint ─────────────────────────────
 
 test('only JSON posted by the site itself is accepted', async () => {
@@ -616,6 +717,8 @@ test('only JSON posted by the site itself is accepted', async () => {
   assert.equal(wrongMethod.status, 405);
   assert.equal(wrongMethod.headers.get('Allow'), 'POST');
   assert.equal((await post('/api/account', {})).status, 405);
+  assert.equal((await post('/api/account/activity', {})).status, 405);
+  assert.equal((await get('/api/account/activity', { 'Sec-Fetch-Site': 'cross-site' })).status, 403);
   assert.equal((await post('/api/signup', form, { Origin: 'https://evil.example' })).status, 403);
   assert.equal((await post('/api/signup', form, { 'Sec-Fetch-Site': 'cross-site' })).status, 403);
   assert.equal((await post('/api/login', { email: form.email }, { 'Sec-Fetch-Site': 'same-site' })).status, 403);

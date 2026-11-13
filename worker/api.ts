@@ -6,8 +6,9 @@
  *   POST /api/login           e-mails a one-time code to the customer of an address
  *   POST /api/login/verify    checks the code and signs the customer in
  *   POST /api/logout          ends the session
- *   GET  /api/account         the account of the customer who is signed in
- *   POST /api/business        e-mails a company's request to Carinova's owner
+ *   GET  /api/account           the account of the customer who is signed in
+ *   GET  /api/account/activity  their packages and their invoices, for "Mi cuenta"
+ *   POST /api/business          e-mails a company's request to Carinova's owner
  *
  * Nothing is stored between the two steps of a sign-up: the link carries it, encrypted (token.ts).
  * A session is a random token in a cookie that scripts cannot read; the database keeps its hash
@@ -17,6 +18,7 @@
  * Cloudflare Worker (index.ts), inside `astro dev` (dev-plugin.ts) and in the tests.
  */
 import {
+  ACCOUNT_LIST_LIMIT,
   LOGIN_CODES_PER_15_MINUTES,
   LOGIN_CODES_PER_DAY,
   LOGIN_CODE_ATTEMPTS,
@@ -282,7 +284,7 @@ const account: Handler = async ({ request, deps, log }) => {
     log(`[account] not configured, missing: ${missing(deps, ['store'])}`);
     return unavailable();
   }
-  // Without a live session the cookies go too, so the pages stop showing "Mi casillero".
+  // Without a live session the cookies go too, so the pages stop showing "Mi cuenta".
   const signedOut = () =>
     json(401, { ok: false, error: 'signed_out' }, { cookies: expiredSessionCookies(isSecure(request)) });
 
@@ -290,6 +292,24 @@ const account: Handler = async ({ request, deps, log }) => {
   if (!token) return signedOut();
   const found = await deps.store.findAccount(await hashSessionToken(token));
   return found ? json(200, { ok: true, account: found }) : signedOut();
+};
+
+/**
+ * The packages and the invoices of the customer who is signed in. Whose they are is decided by the
+ * session cookie alone: the request carries no customer number, so there is none to tamper with.
+ */
+const activity: Handler = async ({ request, deps, log }) => {
+  if (!deps.store) {
+    log(`[account] not configured, missing: ${missing(deps, ['store'])}`);
+    return unavailable();
+  }
+  const signedOut = () =>
+    json(401, { ok: false, error: 'signed_out' }, { cookies: expiredSessionCookies(isSecure(request)) });
+
+  const token = sessionTokenOf(request);
+  if (!token) return signedOut();
+  const found = await deps.store.findActivity(await hashSessionToken(token), ACCOUNT_LIST_LIMIT);
+  return found ? json(200, { ok: true, ...found }) : signedOut();
 };
 
 // ───────────────────────────── Companies ─────────────────────────────
@@ -323,6 +343,7 @@ const ROUTES = new Map<string, { method: 'GET' | 'POST'; handler: Handler }>([
   ['/api/login/verify', { method: 'POST', handler: verify }],
   ['/api/logout', { method: 'POST', handler: logout }],
   ['/api/account', { method: 'GET', handler: account }],
+  ['/api/account/activity', { method: 'GET', handler: activity }],
   ['/api/business', { method: 'POST', handler: business }],
 ]);
 

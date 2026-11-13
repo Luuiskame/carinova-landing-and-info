@@ -1,0 +1,246 @@
+---
+// "¿Puede ingresar a Nicaragua?" (home page): the section with what Carinova cannot bring. On top,
+// in the format of the prototype's checker, a search: the visitor writes what they want to bring and
+// reads which of Carinova's three lists it is on, or that it is on none, with the way to ask about
+// it. Under it, the three lists themselves, always in view (Restrictions.astro), so the answer does
+// not depend on the search or on JavaScript.
+//
+// The search only knows Carinova's lists (RESTRICTED_ITEMS and the words each item answers to): it
+// never says an item is allowed. Whole words are compared, without accents.
+import { Icon } from 'astro-icon/components';
+import Restrictions from '~/components/carinova/Restrictions.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { RESTRICTED_EXAMPLES, RESTRICTED_ITEMS, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    eyebrow: 'Antes de comprar',
+    title: '¿Puede ingresar a Nicaragua?',
+    intro:
+      'Buscá el artículo que querés traer. El resultado es una orientación inicial, no una autorización de importación ni de transporte.',
+    note: 'No sustituye la validación aduanera, los permisos ni la confirmación de Carinova.',
+    label: '¿Qué querés traer?',
+    placeholder: 'Ej.: laptop, perfume, zapatos…',
+    examples: 'Probá con:',
+    ask: 'Consultar por WhatsApp',
+    listsTitle: 'Artículos que no podemos traer',
+    page: 'Abrir la página de artículos restringidos',
+    // For the script.
+    script: {
+      idleTitle: 'Consultá antes de comprar.',
+      idleText: 'Escribí el nombre del artículo para recibir una orientación.',
+      unknownTitle: 'No aparece en nuestras listas',
+      unknownText:
+        'Eso no significa que pueda ingresar: hay artículos que necesitan permisos o una revisión. Consultanos antes de comprarlo.',
+    },
+  },
+  en: {
+    eyebrow: 'Before you buy',
+    title: 'Can it enter Nicaragua?',
+    intro:
+      'Search for the item you want to bring. The result is initial guidance, not an authorisation to import or to transport it.',
+    note: 'It does not replace customs validation, permits or Carinova’s confirmation.',
+    label: 'What do you want to bring?',
+    placeholder: 'E.g. laptop, perfume, shoes…',
+    examples: 'Try:',
+    ask: 'Ask on WhatsApp',
+    listsTitle: 'Items we cannot bring',
+    page: 'Open the page of restricted items',
+    script: {
+      idleTitle: 'Ask before you buy.',
+      idleText: 'Write the name of the item to get some guidance.',
+      unknownTitle: 'It is not on our lists',
+      unknownText: 'That does not mean it can enter: some items need permits or a review. Ask us before you buy it.',
+    },
+  },
+}[locale];
+
+const config = {
+  // From the strictest list to the mildest: an item that is on two of them gets the strictest answer.
+  groups: (['prohibited', 'notYet', 'seaOnly'] as const).map((id) => ({
+    id,
+    title: RESTRICTED_ITEMS[id].title,
+    summary: RESTRICTED_ITEMS[id].summary,
+    items: RESTRICTED_ITEMS[id].items,
+  })),
+  text: {
+    ...t.script,
+    // The WhatsApp message of this place, with the article still to fill in.
+    whatsapp: WA_MESSAGES.itemCheck('{item}'),
+    whatsappEmpty: WA_MESSAGES.itemCheckEmpty,
+  },
+};
+---
+
+<section id="verificador" class="scroll-mt-20 bg-[#eaf0f8]">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-24">
+    <cn-item-check
+      class="grid gap-8 rounded-2xl border border-[#113a65] bg-[linear-gradient(135deg,#0d315e,#061b39_82%)] p-6 shadow-[0_25px_65px_rgb(6_27_61/0.16)] sm:p-10 lg:grid-cols-2 lg:items-center lg:gap-16 lg:p-12"
+      data-config={JSON.stringify(config)}
+    >
+      <!-- Only this column is `.dark`: the panel beside it is white and keeps the light colours. -->
+      <div class="dark">
+        <p class="eyebrow">{t.eyebrow}</p>
+        <h2
+          class="mt-4 font-heading text-[clamp(2rem,4vw,3.4rem)] leading-[1.05] font-extrabold tracking-[-0.045em] text-balance text-white"
+        >
+          {t.title}
+        </h2>
+        <p class="mt-4 text-lg leading-relaxed text-muted">{t.intro}</p>
+        <p class="mt-3 text-sm text-muted" id="cn-item-note">{t.note}</p>
+      </div>
+
+      <div class="rounded-xl bg-white p-5 text-slate-800 sm:p-6">
+        <!-- The search needs the script: without it the lists below are the answer. -->
+        <div data-cn-search hidden>
+          <label for="cn-item-search" class="block text-sm font-bold text-navy">{t.label}</label>
+          <input
+            id="cn-item-search"
+            type="search"
+            maxlength="120"
+            autocomplete="off"
+            placeholder={t.placeholder}
+            aria-describedby="cn-item-note"
+            class="mt-1.5 block w-full rounded-lg border border-[#cbd7e4] bg-[#fbfcff] px-3 py-2.5 text-base text-navy outline-none transition placeholder:text-slate-500 focus:border-cta focus:ring-2 focus:ring-orange-100"
+          />
+        </div>
+
+        <div
+          class="mt-4 rounded-lg border border-[#d7e1ed] bg-[#f1f5fb] p-4 text-sm leading-relaxed text-[#173a60] data-[kind=notYet]:border-amber-300 data-[kind=notYet]:bg-amber-50 data-[kind=notYet]:text-amber-950 data-[kind=prohibited]:border-red-300 data-[kind=prohibited]:bg-red-50 data-[kind=prohibited]:text-red-950 data-[kind=seaOnly]:border-blue-300 data-[kind=seaOnly]:bg-blue-50 data-[kind=seaOnly]:text-blue-950"
+          aria-live="polite"
+          data-cn-result
+          data-kind="idle"
+        >
+          <strong class="block text-base" data-cn-result-title>{t.script.idleTitle}</strong>
+          <span data-cn-result-text>{t.script.idleText}</span>
+        </div>
+        <WhatsAppHelp class="mt-1 text-sm" message={WA_MESSAGES.itemCheckEmpty} text={t.ask} data-cn-ask />
+
+        <div class="mt-3 flex flex-wrap items-center gap-2" data-cn-examples hidden>
+          <span class="text-xs font-semibold text-slate-600">{t.examples}</span>
+          {
+            RESTRICTED_EXAMPLES.map((example) => (
+              <button
+                type="button"
+                class="min-h-9 rounded-md border border-[#dce5ef] bg-[#f1f5fa] px-3 text-xs font-bold text-[#22476d] transition hover:bg-[#ffeedc] focus-visible:outline-2 focus-visible:outline-brand"
+                data-query={example}
+              >
+                {example}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </cn-item-check>
+
+    <div class="mt-10">
+      <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <h3 class="font-heading text-2xl font-extrabold text-heading">{t.listsTitle}</h3>
+        <a
+          class="inline-flex items-center gap-1 font-semibold text-link underline underline-offset-4"
+          href={href('/articulos-prohibidos')}
+        >
+          {t.page}
+          <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+        </a>
+      </div>
+      <Restrictions headingTag="h4" />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { CONTACT } from '~/data/carinova';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  interface Group {
+    id: string;
+    title: string;
+    summary: string;
+    items: Array<{ name: string; match: Array<string> }>;
+  }
+
+  interface Config {
+    groups: Array<Group>;
+    text: Record<'idleTitle' | 'idleText' | 'unknownTitle' | 'unknownText' | 'whatsapp' | 'whatsappEmpty', string>;
+  }
+
+  /** Lower case, no accents, words separated by one space: how the lists' words are written. */
+  const plain = (text: string): string =>
+    text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9ñ]+/g, ' ')
+      .trim();
+
+  class CnItemCheck extends HTMLElement {
+    private config!: Config;
+
+    connectedCallback() {
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+      const input = this.querySelector<HTMLInputElement>('#cn-item-search');
+      if (!input) return;
+
+      input.addEventListener('input', () => this.check(input.value));
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-query]')) {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.query ?? '';
+          this.check(input.value);
+          input.focus();
+        });
+      }
+      for (const part of this.querySelectorAll<HTMLElement>('[data-cn-search], [data-cn-examples]'))
+        part.hidden = false;
+    }
+
+    /** The strictest list the article is on, and the item it matched: the longest of the words that fit. */
+    private find(query: string): { group: Group; name: string } | null {
+      const words = ` ${plain(query)} `;
+      for (const group of this.config.groups) {
+        let best: { name: string; length: number } | null = null;
+        for (const item of group.items) {
+          for (const word of item.match) {
+            if (words.includes(` ${word} `) && word.length > (best?.length ?? 0))
+              best = { name: item.name, length: word.length };
+          }
+        }
+        if (best) return { group, name: best.name };
+      }
+      return null;
+    }
+
+    private check(query: string) {
+      const { text } = this.config;
+      const typed = query.trim();
+      const found = typed ? this.find(typed) : null;
+
+      const kind = !typed ? 'idle' : found ? found.group.id : 'unknown';
+      const title = !typed ? text.idleTitle : found ? found.group.title : text.unknownTitle;
+      const body = !typed ? text.idleText : found ? `${found.name}. ${found.group.summary}` : text.unknownText;
+
+      const result = this.querySelector<HTMLElement>('[data-cn-result]');
+      if (result) result.dataset.kind = kind;
+      const set = (selector: string, value: string) => {
+        const element = this.querySelector(selector);
+        if (element) element.textContent = value;
+      };
+      set('[data-cn-result-title]', title);
+      set('[data-cn-result-text]', body);
+
+      // The lists below show where the answer comes from.
+      for (const list of document.querySelectorAll<HTMLElement>('#verificador [data-restricted-group]')) {
+        list.classList.toggle('ring-4', found?.group.id === list.dataset.restrictedGroup);
+      }
+
+      const message = typed ? fill(text.whatsapp, { item: typed }) : text.whatsappEmpty;
+      this.querySelector('[data-cn-ask]')?.setAttribute('href', whatsappLink(CONTACT.whatsapp, message));
+    }
+  }
+
+  if (!customElements.get('cn-item-check')) customElements.define('cn-item-check', CnItemCheck);
+</script>

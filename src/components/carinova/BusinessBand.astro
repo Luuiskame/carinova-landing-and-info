@@ -1,0 +1,64 @@
+---
+// "Carinova para negocios" (home page), as in the prototype: what Carinova explores with a company
+// (BUSINESS_SOLUTIONS) and the way to its page, /empresas, where the form is.
+import { Icon } from 'astro-icon/components';
+import { BUSINESS_DISCLAIMER, BUSINESS_SOLUTIONS } from '~/data/business';
+import { i18n } from '~/i18n';
+
+const { locale, href } = i18n(Astro);
+
+const t = {
+  es: {
+    eyebrow: 'Carinova para negocios',
+    title: 'Tus operaciones también merecen moverse mejor.',
+    intro:
+      'Desde el primer abastecimiento hasta el crecimiento de tu empresa, exploramos soluciones logísticas adaptadas a las características de tu carga.',
+    button: 'Explorá nuestras soluciones B2B',
+  },
+  en: {
+    eyebrow: 'Carinova for business',
+    title: 'Your operations deserve to move better too.',
+    intro:
+      'From your first supply run to the growth of your company, we explore logistics solutions adapted to the characteristics of your cargo.',
+    button: 'Explore our B2B solutions',
+  },
+}[locale];
+---
+
+<section id="empresas" class="dark relative isolate scroll-mt-20 overflow-hidden bg-[#031328]">
+  <div
+    class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_10%_105%,#0e3768_0,transparent_52%)]"
+    aria-hidden="true"
+  >
+  </div>
+  <div class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-24">
+    <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-20">
+      <div>
+        <p class="eyebrow">{t.eyebrow}</p>
+        <h2 class="display-title mt-4">{t.title}</h2>
+        <p class="mt-5 text-lg leading-relaxed text-muted">{t.intro}</p>
+        <a class="btn-primary mt-7 w-full sm:w-auto" href={href('/empresas')}>
+          {t.button}
+          <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+        </a>
+      </div>
+
+      <ul class="space-y-3">
+        {
+          BUSINESS_SOLUTIONS.map((solution) => (
+            <li class="flex gap-4 rounded-xl border border-white/15 bg-white/5 p-5 sm:p-6">
+              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-cta/30 bg-cta/10 text-secondary">
+                <Icon name={solution.icon} class="h-6 w-6" />
+              </span>
+              <div>
+                <h3 class="font-heading text-base font-bold text-heading">{solution[locale].title}</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">{solution[locale].text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <p class="mt-8 text-sm leading-relaxed text-muted">{BUSINESS_DISCLAIMER[locale]}</p>
+  </div>
+</section>

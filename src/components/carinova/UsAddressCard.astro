@@ -1,0 +1,133 @@
+---
+// The customer's address in the United States: the warehouses packages are received at
+// (RECEPTION_POINTS), one option each. Miami shows its address as the fields of a store checkout
+// (Carinova's "Tu dirección en Miami" graphic), with the notes that go under it. Los Ángeles is not
+// open yet: the option is there, marked "Próximamente", and says so instead of an address. Shown
+// when a sign-up is confirmed and in the customer's account.
+//
+// The two name rows depend on the customer, and the pages are static: the page's script fills them
+// in ([data-cn-fill="firstName"] and [data-cn-fill="lastName"]) with MIAMI_ADDRESS.firstName() and
+// .lastName().
+//
+// When Los Ángeles opens: set it `available` in RECEPTION_POINTS, give it its address in
+// src/data/carinova.ts and in the `warehouses` table, and show its rows here like Miami's.
+import { Icon } from 'astro-icon/components';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
+import { i18n } from '~/i18n';
+
+const { locale, data } = i18n(Astro);
+const { MIAMI_ADDRESS, RECEPTION_POINTS, miamiAddressRows } = data;
+
+const rows = miamiAddressRows('', '');
+const personal = ['firstName', 'lastName'];
+
+const t = {
+  es: {
+    title: 'Tu dirección en Estados Unidos',
+    intro: 'Usala como dirección de envío cuando compres en tiendas de Estados Unidos.',
+    warehouse: 'Bodega',
+    soonTitle: (city: string) => `${city}: próximamente`,
+    soonText: (city: string, state: string) =>
+      `Pronto vas a poder recibir tus compras también en ${city}, ${state}. Cuando la bodega esté habilitada, su dirección va a aparecer aquí.`,
+    meanwhile: (city: string) => `Mientras tanto, usá tu dirección de ${city}.`,
+  },
+  en: {
+    title: 'Your address in the United States',
+    intro: 'Use it as the shipping address when you buy at stores in the United States.',
+    warehouse: 'Warehouse',
+    soonTitle: (city: string) => `${city}: coming soon`,
+    soonText: (city: string, state: string) =>
+      `Soon you will also be able to receive your purchases in ${city}, ${state}. When the warehouse is open, its address will appear here.`,
+    meanwhile: (city: string) => `In the meantime, use your ${city} address.`,
+  },
+}[locale];
+
+const [first] = RECEPTION_POINTS;
+const open = RECEPTION_POINTS.find((point) => point.available) ?? first;
+---
+
+<cn-us-address class="block rounded-2xl bg-white p-6 text-left shadow-lg ring-1 ring-slate-200 sm:p-8">
+  <h2 class="font-heading text-2xl font-bold text-heading">{t.title}</h2>
+  <p class="mt-1 text-muted">{t.intro}</p>
+
+  <fieldset class="mt-5">
+    <legend class="sr-only">{t.warehouse}</legend>
+    <div class="grid grid-cols-2 gap-1 rounded-lg bg-[#eaf0f7] p-1">
+      {
+        RECEPTION_POINTS.map((point) => (
+          <label class="relative block cursor-pointer">
+            <input
+              type="radio"
+              name="cn-warehouse"
+              value={point.id}
+              checked={point.id === open.id}
+              class="peer sr-only"
+            />
+            <span class="flex min-h-11 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-md px-2 py-1.5 text-center text-sm font-extrabold text-[#516b86] transition peer-checked:bg-navy peer-checked:text-white peer-checked:shadow-md peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2">
+              {point.city}
+              {!point.available && <ServiceBadge kind="soon" />}
+            </span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  {
+    RECEPTION_POINTS.map((point) =>
+      point.available ? (
+        <div data-cn-warehouse={point.id} hidden={point.id !== open.id}>
+          <dl class="mt-5 divide-y divide-slate-100">
+            {rows.map((row) => (
+              <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+                <dt class="text-sm text-muted">{row.label}</dt>
+                <dd
+                  class="font-semibold text-heading select-all sm:text-right"
+                  data-cn-fill={personal.includes(row.id) ? row.id : undefined}
+                >
+                  {personal.includes(row.id) ? '' : row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <ul class="mt-5 space-y-2 text-sm">
+            {MIAMI_ADDRESS.notes.map((note) => (
+              <li class="flex gap-2">
+                <Icon name="tabler:info-circle" class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>{note}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div
+          class="mt-5 rounded-xl border-2 border-dashed border-slate-300 p-5 text-center sm:p-8"
+          data-cn-warehouse={point.id}
+          hidden={point.id !== open.id}
+        >
+          <Icon name="tabler:building-warehouse" class="mx-auto h-10 w-10 text-slate-400" />
+          <p class="mt-3 font-heading text-lg font-bold text-heading">{t.soonTitle(point.city)}</p>
+          <p class="mx-auto mt-2 max-w-md text-sm text-muted">{t.soonText(point.city, point.state)}</p>
+          <p class="mt-2 text-sm font-semibold text-heading">{t.meanwhile(open.city)}</p>
+        </div>
+      )
+    )
+  }
+</cn-us-address>
+
+<script>
+  // Choosing a warehouse shows its panel. Without the script the first open warehouse is the one shown.
+  class CnUsAddress extends HTMLElement {
+    connectedCallback() {
+      this.addEventListener('change', (event) => {
+        const chosen = event.target as HTMLInputElement | null;
+        if (chosen?.name !== 'cn-warehouse') return;
+        for (const panel of this.querySelectorAll<HTMLElement>('[data-cn-warehouse]')) {
+          panel.hidden = panel.dataset.cnWarehouse !== chosen.value;
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('cn-us-address')) customElements.define('cn-us-address', CnUsAddress);
+</script>

@@ -1,0 +1,74 @@
+---
+// The end of the home page, as in the prototype: the strip for people who want to work at Carinova
+// (they write on WhatsApp, with a message of its own) and the orange band with the last call to
+// action. On orange the button is navy: an orange one would not show. A customer who is signed in
+// gets their account in the place of "Crear cuenta".
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { CTA, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    careersTitle: 'Formá parte de nuestro equipo.',
+    careersText: 'Buscamos personas comprometidas con el servicio y la excelencia operativa.',
+    careersLink: 'Conocé cómo postularte',
+    eyebrow: 'Tu próximo paquete empieza aquí',
+    title: '¿Qué esperás para enviar?',
+    text: 'Tu conexión con Estados Unidos, en un solo lugar.',
+  },
+  en: {
+    careersTitle: 'Join our team.',
+    careersText: 'We are looking for people committed to service and operational excellence.',
+    careersLink: 'Find out how to apply',
+    eyebrow: 'Your next package starts here',
+    title: 'What are you waiting for to ship?',
+    text: 'Your connection with the United States, in one place.',
+  },
+}[locale];
+---
+
+<section id="equipo" class="border-t border-[#cfdae6] bg-[#dfeaf5]">
+  <div class="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-9 sm:px-6 md:flex-row md:items-center md:justify-between">
+    <div class="flex items-start gap-4">
+      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cta/15 text-secondary">
+        <Icon name="tabler:users-group" class="h-7 w-7" />
+      </span>
+      <div>
+        <h2 class="font-heading text-xl font-extrabold text-heading sm:text-2xl">{t.careersTitle}</h2>
+        <p class="mt-1 text-[#4f6884]">{t.careersText}</p>
+      </div>
+    </div>
+    <WhatsAppHelp class="shrink-0" message={WA_MESSAGES.careers} text={t.careersLink} />
+  </div>
+</section>
+
+<section class="relative overflow-hidden bg-[linear-gradient(120deg,#ff8a12,#ffad3f)] text-navy">
+  <div
+    class="pointer-events-none absolute -top-20 -right-20 h-[28rem] w-[28rem] rounded-full border-2 border-navy/10 shadow-[0_0_0_4.25rem_rgb(7_24_45/0.045),0_0_0_8.5rem_rgb(7_24_45/0.04)]"
+    aria-hidden="true"
+  >
+  </div>
+  <div class="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-24">
+    <!-- On orange the label and its line are navy (the brown of the prototype is 4.8:1; navy is 7.6:1). -->
+    <p class="eyebrow !text-navy before:!bg-navy">{t.eyebrow}</p>
+    <h2
+      class="mt-4 max-w-4xl font-heading text-[clamp(3rem,7.2vw,6.2rem)] leading-none font-black tracking-[-0.07em] text-balance"
+    >
+      {t.title}
+    </h2>
+    <p class="mt-5 text-lg font-medium">{t.text}</p>
+    <div class="mt-8 flex">
+      <a class="btn-navy w-full sm:w-auto" href={href(CTA.signup.path)} data-auth="out">
+        {CTA.signup.text}
+        <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+      </a>
+      <a class="btn-navy w-full sm:w-auto" href={href(CTA.account.path)} data-auth="in">
+        {CTA.account.text}
+        <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+      </a>
+    </div>
+  </div>
+</section>

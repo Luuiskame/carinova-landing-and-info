@@ -1,5 +1,5 @@
 ---
-// Cotizador: where "Cotizar mi envío" leads. The calculator, then the rates and how each price is
+// Cotizador ("Tarifas" in the header): where "Cotizá tu envío" leads. The calculator, then the rates and how each price is
 // worked out. The address can fill the calculator in (see QuoteCalculator.astro).
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
@@ -16,26 +16,26 @@ const { air, sea } = RATES;
 
 const t = {
   es: {
-    tagline: 'Cotizador',
+    tagline: 'Tarifas',
     metaTitle: 'Cotizador de envíos y tarifas',
-    description: `Calculá cuánto cuesta traer tu compra de Estados Unidos a Nicaragua: aéreo ${formatUSD(air.pricePerLb)} la libra, marítimo ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie³, electrónicos con impuestos.`,
+    description: `Calculá cuánto cuesta traer tu compra de Estados Unidos a Nicaragua: aéreo ${formatUSD(air.pricePerLb)} la libra, marítimo ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie³, y electrónicos con tarifa por unidad.`,
     title: 'Cotizá tu envío',
     subtitle: 'Calculá cuánto cuesta traer tu compra o tu encomienda, sin registrarte.',
     closing: {
       title: '¿Ya sabés cuánto te sale?',
-      subtitle: 'Abrí tu casillero y recibí tu dirección en Miami para empezar a comprar.',
+      subtitle: 'Creá tu cuenta y recibí tu Carinova ID y tu dirección en Estados Unidos para empezar a comprar.',
       lead: '¿Tu envío es especial?',
     },
   },
   en: {
-    tagline: 'Quote',
+    tagline: 'Rates',
     metaTitle: 'Shipping quote calculator and rates',
-    description: `Work out what it costs to bring your purchase from the United States to Nicaragua: air ${formatUSD(air.pricePerLb)} per pound, sea ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³, electronics with taxes included.`,
+    description: `Work out what it costs to bring your purchase from the United States to Nicaragua: air ${formatUSD(air.pricePerLb)} per pound, sea ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³, and electronics at a rate per unit.`,
     title: 'Quote your shipment',
     subtitle: 'Work out what it costs to bring your purchase or your package, without signing up.',
     closing: {
       title: 'Now you know what it costs?',
-      subtitle: 'Open your mailbox and get your address in Miami to start buying.',
+      subtitle: 'Create your account and get your Carinova ID and your address in the United States to start buying.',
       lead: 'Is your shipment a special one?',
     },
   },

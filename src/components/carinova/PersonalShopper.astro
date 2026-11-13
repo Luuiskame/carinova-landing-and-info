@@ -1,0 +1,443 @@
+---
+// "¡Realizamos tus compras por vos!" (home page), as in Carinova's prototype: on the left, the
+// visitor pastes the link of a product and gets their request for an assisted purchase ready to
+// send on WhatsApp; on the right, "Explorá tiendas": the stores one at a time, by category, each
+// opening its card (what it sells, a button to its site and the way to ask Carinova to buy there).
+//
+// The stores are a list that scrolls sideways and snaps to one store at a time, so it works by
+// touch and without JavaScript, where each store is a plain link to its site and the form sends the
+// pasted link to WhatsApp as it is. The script adds the arrows, the counter, the filters, the card
+// and the full message. Names only (no logos): the stores' logos are trademarks of their owners.
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { CONTACT, type StoreCategoryId } from '~/data/carinova';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { STORES, STORE_CATEGORIES, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    eyebrow: 'Personal shopper',
+    title: '¡Realizamos tus compras por vos!',
+    intro:
+      'Elegí una tienda, copiá el enlace del producto y prepará tu solicitud. El costo de compra, los impuestos y el flete se confirman antes de gestionar la operación.',
+    linkLabel: 'Enlace del producto',
+    placeholder: 'Pegá aquí el enlace del producto',
+    submit: 'Preparar solicitud',
+    linkHint:
+      'Se abre WhatsApp con tu solicitud lista para enviar. Nada se compra hasta que confirmemos el costo total.',
+    explore: 'Explorá tiendas',
+    all: 'Todas',
+    filter: 'Filtrar tiendas',
+    disclosure:
+      'Tiendas seleccionadas como ejemplos por categoría, sin convenio ni aval implícito. Precios y disponibilidad se consultan en el sitio externo.',
+    hint: 'Tocá la tienda para conocer más.',
+    previous: 'Tienda anterior',
+    next: 'Tienda siguiente',
+    notice:
+      'Visitá la tienda, elegí tu producto y compartinos el enlace. La compra, la admisibilidad y la tarifa se verifican antes de gestionar la operación.',
+    visit: 'Ir al sitio de la tienda',
+    assist: 'Pedir que compremos por vos',
+    restricted: 'Antes de comprar, revisá si el artículo puede ingresar',
+    close: 'Cerrar',
+    // For the script, with {placeholders}.
+    script: {
+      status: '{name}, tienda {index} de {total}.',
+      invalidLink: 'Pegá el enlace completo del producto: empieza con https://',
+    },
+  },
+  en: {
+    eyebrow: 'Personal shopper',
+    title: 'We make your purchases for you!',
+    intro:
+      'Choose a store, copy the link to the product and prepare your request. The cost of the purchase, the taxes and the freight are confirmed before we handle the operation.',
+    linkLabel: 'Link to the product',
+    placeholder: 'Paste the link to the product here',
+    submit: 'Prepare request',
+    linkHint: 'WhatsApp opens with your request ready to send. Nothing is bought until we confirm the total cost.',
+    explore: 'Explore stores',
+    all: 'All',
+    filter: 'Filter stores',
+    disclosure:
+      'Stores chosen as examples by category, with no agreement or endorsement implied. Prices and availability are checked on the external site.',
+    hint: 'Tap the store to learn more.',
+    previous: 'Previous store',
+    next: 'Next store',
+    notice:
+      'Visit the store, choose your product and share the link with us. The purchase, its admissibility and the rate are verified before we handle the operation.',
+    visit: 'Go to the store’s site',
+    assist: 'Ask us to buy for you',
+    restricted: 'Before you buy, check whether the item can enter',
+    close: 'Close',
+    script: {
+      status: '{name}, store {index} of {total}.',
+      invalidLink: 'Paste the full link to the product: it starts with https://',
+    },
+  },
+}[locale];
+
+/** A soft colour per category behind the store's name, as each store has in the prototype. */
+const TINTS: Record<StoreCategoryId, string> = {
+  moda: '#f9e6e8',
+  tecnologia: '#f7eab9',
+  hogar: '#e3edfa',
+  marketplaces: '#eaf0df',
+  belleza: '#f1e2e5',
+};
+
+const categoryName = Object.fromEntries(STORE_CATEGORIES.map((category) => [category.id, category.name]));
+const two = (value: number) => String(value).padStart(2, '0');
+
+const config = {
+  text: {
+    ...t.script,
+    // The WhatsApp messages of this place, with the link or the store still to fill in.
+    shopper: WA_MESSAGES.shopper('{link}'),
+    assist: WA_MESSAGES.storeAssist('{store}'),
+  },
+};
+
+const chipClass =
+  'min-h-10 rounded-md border border-white/20 bg-white/10 px-3.5 text-xs font-bold text-[#c7d6e9] transition hover:bg-white/20 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta aria-pressed:border-cta aria-pressed:bg-cta aria-pressed:text-navy';
+const arrowClass =
+  'flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition hover:border-cta hover:bg-cta hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta';
+---
+
+<!-- The store's card is outside the navy section: a dialog keeps the colours of where it is written. -->
+<cn-shopper class="block" data-config={JSON.stringify(config)}>
+  <section
+    id="compras"
+    class="dark relative scroll-mt-20 overflow-hidden bg-[radial-gradient(circle_at_83%_18%,#1c4272,#082043_47%,#06162f_87%)]"
+  >
+    <div
+      class="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-20 lg:py-24"
+    >
+      <div class="min-w-0">
+        <p class="eyebrow">{t.eyebrow}</p>
+        <h2 class="display-title mt-4">{t.title}</h2>
+        <p class="mt-5 text-lg leading-relaxed text-muted">{t.intro}</p>
+
+        <!-- Without the script the link goes to WhatsApp as the whole message; with it, inside the request. -->
+        <form
+          class="mt-7 flex flex-col gap-1.5 rounded-xl bg-white p-1.5 shadow-xl sm:flex-row"
+          action={`https://wa.me/${CONTACT.whatsapp}`}
+          method="get"
+          target="_blank"
+          data-cn-link-form
+        >
+          <label class="sr-only" for="cn-product-link">{t.linkLabel}</label>
+          <input
+            id="cn-product-link"
+            name="text"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="2048"
+            required
+            placeholder={t.placeholder}
+            aria-describedby="cn-product-link-hint cn-product-link-error"
+            class="min-h-11 min-w-0 flex-1 rounded-lg bg-transparent px-3 text-base text-navy outline-none placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-brand"
+          />
+          <button type="submit" class="btn-primary min-h-11 px-5 py-2.5 whitespace-nowrap">
+            {t.submit}
+            <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
+          </button>
+        </form>
+        <p id="cn-product-link-error" class="mt-2 text-sm font-semibold text-secondary" role="alert" hidden></p>
+        <p id="cn-product-link-hint" class="mt-3 text-sm text-muted">{t.linkHint}</p>
+      </div>
+
+      <div class="min-w-0 rounded-2xl border border-white/20 bg-white/5 p-4 shadow-2xl sm:p-7">
+        <div class="flex items-center justify-between gap-4">
+          <p class="eyebrow">{t.explore}</p>
+          <p
+            class="text-xs font-extrabold tracking-[0.13em] text-secondary tabular-nums"
+            aria-hidden="true"
+            data-cn-counter
+          >
+            {`${two(1)} / ${two(STORES.length)}`}
+          </p>
+        </div>
+        <p class="sr-only" role="status" aria-live="polite" data-cn-status></p>
+
+        <div class="mt-4 flex flex-wrap gap-1.5" role="group" aria-label={t.filter} data-cn-filters hidden>
+          <button type="button" class={chipClass} aria-pressed="true" data-category="">{t.all}</button>
+          {
+            STORE_CATEGORIES.map((category) => (
+              <button type="button" class={chipClass} aria-pressed="false" data-category={category.id}>
+                {category.name}
+              </button>
+            ))
+          }
+        </div>
+
+        <ul
+          class="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          data-cn-track
+        >
+          {
+            STORES.map((store) => (
+              <li class="w-full shrink-0 snap-center" data-category={store.category}>
+                <a
+                  href={store.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cn-store={JSON.stringify({
+                    name: store.name,
+                    url: store.url,
+                    about: store.about,
+                    category: categoryName[store.category],
+                  })}
+                  style={`background-color:${TINTS[store.category]}`}
+                  class="group flex min-h-56 flex-col justify-between rounded-xl p-6 text-left text-navy focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand sm:min-h-64 sm:p-8"
+                >
+                  <strong class="font-heading text-[clamp(3rem,5.6vw,5rem)] leading-none font-black tracking-[-0.07em] break-words">
+                    {store.name}
+                  </strong>
+                  <span class="mt-6 flex items-end justify-between gap-4">
+                    <span class="text-[#334f6a]">{store.tagline}</span>
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#09264b] text-white transition group-hover:bg-cta group-hover:text-navy">
+                      <Icon name="tabler:arrow-up-right" class="h-5 w-5" />
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <p class="mt-3 text-xs leading-relaxed text-muted">{t.disclosure}</p>
+
+        <div class="mt-4 flex items-center justify-between gap-4" data-cn-controls hidden>
+          <p class="text-sm text-muted">{t.hint}</p>
+          <div class="flex shrink-0 gap-2">
+            <button type="button" class={arrowClass} aria-label={t.previous} data-cn-step="-1">
+              <Icon name="tabler:arrow-left" class="h-5 w-5" />
+            </button>
+            <button type="button" class={arrowClass} aria-label={t.next} data-cn-step="1">
+              <Icon name="tabler:arrow-right" class="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="cn-store-dialog" class="cn-dialog" aria-labelledby="cn-store-name">
+    <div class="relative p-6 sm:p-9">
+      <button
+        type="button"
+        class="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-navy focus-visible:outline-2 focus-visible:outline-brand"
+        aria-label={t.close}
+        data-cn-dialog-close
+      >
+        <Icon name="tabler:x" class="h-5 w-5" />
+      </button>
+      <p class="eyebrow" data-cn-category></p>
+      <h2 id="cn-store-name" class="mt-3 pr-10 font-heading text-4xl font-extrabold text-navy" data-cn-name></h2>
+      <p class="mt-3 text-lg text-slate-700" data-cn-about></p>
+      <p class="mt-5 rounded-xl bg-[#eef4fb] p-4 text-sm leading-relaxed text-[#375777]">{t.notice}</p>
+      <a class="btn-primary mt-6 w-full" target="_blank" rel="noopener noreferrer" data-cn-visit>
+        {t.visit}
+        <Icon name="tabler:external-link" class="h-5 w-5 shrink-0" />
+      </a>
+      <div class="mt-3 flex flex-col gap-1 text-sm">
+        <WhatsAppHelp message={WA_MESSAGES.storeAssist('…')} text={t.assist} data-cn-assist />
+        <a
+          class="inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4"
+          href={href('/articulos-prohibidos')}
+        >
+          <Icon name="tabler:search" class="h-5 w-5 shrink-0" />
+          {t.restricted}
+        </a>
+      </div>
+    </div>
+  </dialog>
+</cn-shopper>
+
+<script>
+  import { CONTACT } from '~/data/carinova';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  /** What each store link carries (STORES in src/data/carinova.ts). */
+  interface Store {
+    name: string;
+    url: string;
+    about: string;
+    category: string;
+  }
+
+  interface Config {
+    text: Record<'status' | 'invalidLink' | 'shopper' | 'assist', string>;
+  }
+
+  class CnShopper extends HTMLElement {
+    private config!: Config;
+    private track!: HTMLElement;
+    private items: Array<HTMLElement> = [];
+    private index = 0;
+    private frame = 0;
+
+    connectedCallback() {
+      const track = this.querySelector<HTMLElement>('[data-cn-track]');
+      if (!track) return;
+      this.track = track;
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+      this.items = Array.from(track.children) as Array<HTMLElement>;
+
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-cn-step]')) {
+        button.addEventListener('click', () => this.go(this.index + Number(button.dataset.cnStep), true));
+      }
+      for (const chip of this.querySelectorAll<HTMLButtonElement>('[data-category]')) {
+        if (chip instanceof HTMLButtonElement) chip.addEventListener('click', () => this.filter(chip));
+      }
+      // The store being shown follows the scroll, whoever moved it: a finger, the arrows, the keyboard.
+      track.addEventListener('scroll', () => {
+        window.cancelAnimationFrame(this.frame);
+        this.frame = window.requestAnimationFrame(() => this.follow());
+      });
+      track.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        this.go(this.index + (event.key === 'ArrowRight' ? 1 : -1), true);
+      });
+
+      // A store's link opens its card; with Ctrl, ⌘, Shift or Alt it still opens the store, as links do.
+      for (const link of this.querySelectorAll<HTMLAnchorElement>('[data-cn-store]')) {
+        link.addEventListener('click', (event) => {
+          if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          this.open(link);
+        });
+      }
+
+      const form = this.querySelector<HTMLFormElement>('[data-cn-link-form]');
+      if (form) {
+        // With the script, what is wrong with the link is said by the page, in the page's language:
+        // the browser's own notice would be in the browser's. Without it, the browser still checks.
+        form.noValidate = true;
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          this.request(form);
+        });
+      }
+      this.querySelector('#cn-product-link')?.addEventListener('input', () => this.showError(''));
+
+      for (const part of this.querySelectorAll<HTMLElement>('[data-cn-filters], [data-cn-controls]'))
+        part.hidden = false;
+    }
+
+    disconnectedCallback() {
+      window.cancelAnimationFrame(this.frame);
+    }
+
+    private visible(): Array<HTMLElement> {
+      return this.items.filter((item) => !item.hidden);
+    }
+
+    private setCounter(announce: boolean) {
+      const stores = this.visible();
+      const two = (value: number) => String(value).padStart(2, '0');
+      const counter = this.querySelector('[data-cn-counter]');
+      if (counter) counter.textContent = `${two(this.index + 1)} / ${two(stores.length)}`;
+      if (!announce) return;
+      const link = stores[this.index]?.querySelector<HTMLAnchorElement>('[data-cn-store]');
+      const status = this.querySelector('[data-cn-status]');
+      if (link && status) {
+        const { name } = JSON.parse(link.dataset.cnStore ?? '{}') as Store;
+        status.textContent = fill(this.config.text.status, { name, index: this.index + 1, total: stores.length });
+      }
+    }
+
+    /** Shows a store of the ones the filter leaves; past either end it goes round. */
+    private go(index: number, announce: boolean) {
+      const stores = this.visible();
+      if (stores.length === 0) return;
+      this.index = (index + stores.length) % stores.length;
+      const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this.track.scrollTo({
+        left: stores[this.index].offsetLeft - this.track.offsetLeft,
+        behavior: calm ? 'auto' : 'smooth',
+      });
+      this.setCounter(announce);
+    }
+
+    /** After a scroll: the store nearest to the left edge is the one being shown. */
+    private follow() {
+      const stores = this.visible();
+      const at = this.track.scrollLeft + this.track.offsetLeft;
+      let nearest = 0;
+      stores.forEach((item, position) => {
+        if (Math.abs(item.offsetLeft - at) < Math.abs(stores[nearest].offsetLeft - at)) nearest = position;
+      });
+      if (nearest === this.index) return;
+      this.index = nearest;
+      this.setCounter(false);
+    }
+
+    private filter(chip: HTMLButtonElement) {
+      const category = chip.dataset.category ?? '';
+      for (const other of this.querySelectorAll<HTMLButtonElement>('button[data-category]')) {
+        other.setAttribute('aria-pressed', String(other === chip));
+      }
+      for (const item of this.items) item.hidden = category !== '' && item.dataset.category !== category;
+      this.index = 0;
+      this.track.scrollTo({ left: 0, behavior: 'auto' });
+      this.setCounter(true);
+    }
+
+    private open(link: HTMLAnchorElement) {
+      const dialog = this.querySelector<HTMLDialogElement>('#cn-store-dialog');
+      if (!dialog) return;
+      const store = JSON.parse(link.dataset.cnStore ?? '{}') as Store;
+      const set = (selector: string, value: string) => {
+        const element = dialog.querySelector(selector);
+        if (element) element.textContent = value;
+      };
+      set('[data-cn-category]', store.category);
+      set('[data-cn-name]', store.name);
+      set('[data-cn-about]', store.about);
+      dialog.querySelector('[data-cn-visit]')?.setAttribute('href', store.url);
+      dialog
+        .querySelector('[data-cn-assist]')
+        ?.setAttribute('href', whatsappLink(CONTACT.whatsapp, fill(this.config.text.assist, { store: store.name })));
+      if (!dialog.open) dialog.showModal();
+    }
+
+    private showError(message: string) {
+      const error = this.querySelector<HTMLElement>('#cn-product-link-error');
+      const input = this.querySelector<HTMLInputElement>('#cn-product-link');
+      if (!error || !input) return;
+      error.textContent = message;
+      error.hidden = message === '';
+      if (message) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    }
+
+    /** The pasted link becomes the request, ready to send: WhatsApp opens with it in another tab. */
+    private request(form: HTMLFormElement) {
+      const input = form.querySelector<HTMLInputElement>('#cn-product-link');
+      let link: URL | undefined;
+      try {
+        link = new URL((input?.value ?? '').trim());
+      } catch {
+        link = undefined;
+      }
+      // A product page: https, a real host, and no user name or password in it.
+      if (!link || link.protocol !== 'https:' || !link.hostname.includes('.') || link.username || link.password) {
+        this.showError(this.config.text.invalidLink);
+        input?.focus();
+        return;
+      }
+      this.showError('');
+      const message = fill(this.config.text.shopper, { link: link.href });
+      window.open(whatsappLink(CONTACT.whatsapp, message), '_blank', 'noopener');
+    }
+  }
+
+  if (!customElements.get('cn-shopper')) customElements.define('cn-shopper', CnShopper);
+</script>

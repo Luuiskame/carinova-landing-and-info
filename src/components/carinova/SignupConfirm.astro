@@ -5,11 +5,11 @@
 // because e-mail scanners open links on their own.
 //
 // The confirmation that creates the account also signs the customer in on this browser (the Worker
-// sets the session cookie), so their casillero is one click away. Opening the same link again shows
+// sets the session cookie), so their account is one click away. Opening the same link again shows
 // the Carinova ID but signs nobody in.
 import { Icon } from 'astro-icon/components';
 import CtaGroup from '~/components/carinova/CtaGroup.astro';
-import MiamiAddressCard from '~/components/carinova/MiamiAddressCard.astro';
+import UsAddressCard from '~/components/carinova/UsAddressCard.astro';
 import Restrictions from '~/components/carinova/Restrictions.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { CONFIRM_LINK_HOURS } from '~/data/signup';
@@ -21,63 +21,66 @@ const { CTA, WA_MESSAGES } = data;
 const t = {
   es: {
     readyTitle: 'Confirmá tu correo',
-    readyText: 'Un paso más: confirmá tu correo para abrir tu casillero y ver tu Carinova ID y tu dirección en Miami.',
-    confirm: 'Confirmar y abrir mi casillero',
-    confirming: 'Abriendo tu casillero…',
+    readyText:
+      'Un paso más: confirmá tu correo para crear tu cuenta y ver tu Carinova ID y tu dirección en Estados Unidos.',
+    confirm: 'Confirmar y crear mi cuenta',
+    confirming: 'Creando tu cuenta…',
     noscript: 'Para confirmar tu correo necesitás activar JavaScript en tu navegador.',
-    doneTitle: '¡Tu casillero está listo!',
+    doneTitle: '¡Tu cuenta está lista!',
     doneIntro: 'Este es tu Carinova ID. Guardalo: con él identificamos tu cuenta.',
     emailed: 'También te enviamos estos datos por correo.',
     beforeTitle: 'Antes de comprar',
     beforeText: 'Revisá lo que no podemos traer.',
     nextTitle: '¿Y ahora?',
-    nextText: 'Cotizá tu primer envío o mirá cómo comprar, con ejemplos.',
-    howToBuy: 'Ver cómo comprar',
-    signedIn: 'Ya ingresaste en este navegador: en tu casillero encontrás siempre tu Carinova ID y tu dirección.',
-    signedOut: 'Para ver estos datos cuando quieras, ingresá a tu casillero con tu correo.',
+    nextText: 'Cotizá tu primer envío o mirá cómo funciona, con ejemplos.',
+    howToBuy: 'Ver cómo funciona',
+    signedIn:
+      'Ya ingresaste en este navegador: en tu cuenta encontrás siempre tu Carinova ID, tu dirección, tus paquetes y tus pagos.',
+    signedOut: 'Para ver estos datos cuando quieras, ingresá a tu cuenta con tu correo.',
     invalidTitle: 'Este enlace no es válido',
     invalidText: 'Puede que esté incompleto. Abrilo otra vez desde el correo que te mandamos o registrate de nuevo.',
     expiredTitle: 'Este enlace ya venció',
     expiredText: `Los enlaces de confirmación duran ${CONFIRM_LINK_HOURS} horas. Registrate de nuevo y te mandamos otro.`,
     signupAgain: 'Registrarme de nuevo',
-    errorTitle: 'No pudimos abrir tu casillero',
+    errorTitle: 'No pudimos crear tu cuenta',
     errorText: 'El problema es nuestro, no tuyo. Intentalo de nuevo y, si sigue fallando, escribinos por WhatsApp.',
     retry: 'Intentar de nuevo',
     retrying: 'Intentando…',
     // For the script.
-    existingTitle: 'Ya tenés un casillero',
+    existingTitle: 'Ya tenés una cuenta',
     existingIntro: 'Este correo ya tiene una cuenta en Carinova. Este es tu Carinova ID:',
-    documentTitle: 'Tu casillero {code} | Carinova',
+    documentTitle: 'Tu cuenta {code} | Carinova',
   },
   en: {
     readyTitle: 'Confirm your e-mail',
     readyText:
-      'One more step: confirm your e-mail to open your mailbox and see your Carinova ID and your address in Miami.',
-    confirm: 'Confirm and open my mailbox',
-    confirming: 'Opening your mailbox…',
+      'One more step: confirm your e-mail to create your account and see your Carinova ID and your address in the United States.',
+    confirm: 'Confirm and create my account',
+    confirming: 'Creating your account…',
     noscript: 'To confirm your e-mail you need to turn on JavaScript in your browser.',
-    doneTitle: 'Your mailbox is ready!',
+    doneTitle: 'Your account is ready!',
     doneIntro: 'This is your Carinova ID. Keep it: it is how we identify your account.',
     emailed: 'We also sent you these details by e-mail.',
     beforeTitle: 'Before you buy',
     beforeText: 'Check what we cannot bring.',
     nextTitle: 'What now?',
-    nextText: 'Get a quote for your first shipment or see how to buy, with examples.',
-    howToBuy: 'See how to buy',
-    signedIn: 'You are signed in on this browser: your mailbox always has your Carinova ID and your address.',
-    signedOut: 'To see these details whenever you want, sign in to your mailbox with your e-mail.',
+    nextText: 'Get a quote for your first shipment or see how it works, with examples.',
+    howToBuy: 'See how it works',
+    signedIn:
+      'You are signed in on this browser: your account always has your Carinova ID, your address, your packages and your payments.',
+    signedOut: 'To see these details whenever you want, sign in to your account with your e-mail.',
     invalidTitle: 'This link is not valid',
     invalidText: 'It may be incomplete. Open it again from the e-mail we sent you, or sign up again.',
     expiredTitle: 'This link has expired',
     expiredText: `Confirmation links last ${CONFIRM_LINK_HOURS} hours. Sign up again and we will send you another one.`,
     signupAgain: 'Sign up again',
-    errorTitle: 'We could not open your mailbox',
+    errorTitle: 'We could not create your account',
     errorText: 'The problem is on our side, not yours. Try again and, if it keeps failing, write to us on WhatsApp.',
     retry: 'Try again',
     retrying: 'Trying…',
-    existingTitle: 'You already have a mailbox',
+    existingTitle: 'You already have an account',
     existingIntro: 'This e-mail already has a Carinova account. This is your Carinova ID:',
-    documentTitle: 'Your mailbox {code} | Carinova',
+    documentTitle: 'Your account {code} | Carinova',
   },
 }[locale];
 
@@ -116,7 +119,7 @@ const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link und
       <h1 class={titleClass} tabindex="-1" data-cn-done-title>{t.doneTitle}</h1>
       <p class={textClass} data-cn-done-intro>{t.doneIntro}</p>
       <p
-        class="mt-6 inline-block select-all rounded-2xl bg-[#011028] px-7 py-3 font-heading text-4xl font-extrabold tracking-wide text-white"
+        class="mt-6 inline-block select-all rounded-2xl bg-navy px-7 py-3 font-heading text-4xl font-extrabold tracking-wide text-white"
         data-cn-code
       >
       </p>
@@ -124,7 +127,7 @@ const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link und
     </div>
 
     <div class="mt-10">
-      <MiamiAddressCard />
+      <UsAddressCard />
     </div>
 
     <div class="mt-12">
@@ -146,8 +149,8 @@ const linkClass = 'inline-flex min-h-11 items-center font-semibold text-link und
       </p>
       <p class="mx-auto mt-6 max-w-xl text-sm text-muted" data-auth="in">
         {t.signedIn}{' '}
-        <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.mailbox.path)}
-          >{CTA.mailbox.text}</a
+        <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.account.path)}
+          >{CTA.account.text}</a
         >
       </p>
       <p class="mx-auto mt-6 max-w-xl text-sm text-muted" data-auth="out">

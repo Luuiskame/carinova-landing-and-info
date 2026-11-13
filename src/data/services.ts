@@ -1,11 +1,12 @@
 /**
  * What Carinova offers, organised the way the site presents it (docs/INFORMATION-ARCHITECTURE.md):
  *
- * - SERVICES: six services on three independent axes (how a package travels, who sends it to the
- *   casillero, how the customer receives it). Every shipment is one choice on each axis.
- * - PROCESS_STEPS: the four steps of "Cómo comprar" (summary on the home page, details on the page).
- * - ACCOUNT_PARTS: what a Carinova account is made of ("Mi cuenta").
- * - SHOPPING_EXAMPLES: the worked examples of "Cómo comprar", one per kind of purchase, and
+ * - SERVICES: six services on three independent axes (how a package travels, who makes the
+ *   purchase, how the customer receives it). Every shipment is one choice on each axis.
+ * - PROCESS_STEPS: the five steps of "¿Cómo funciona?" (summary on the home page, details on
+ *   /como-comprar), as in Carinova's prototype.
+ * - ACCOUNT_PARTS: what a customer finds in their account ("Mi cuenta").
+ * - SHOPPING_EXAMPLES: the worked examples of "¿Cómo funciona?", one per kind of purchase, and
  *   FORMULA_EXAMPLE, the cubic-foot example of Carinova's brief (on the calculator page).
  *
  * Prices and times come from carinova.ts and are worked out with utils/rates.ts, so no page can
@@ -17,43 +18,46 @@
  * icons, numbers and links of this file (content.ts picks the language).
  */
 import type { Locale } from '../i18n/locales.ts';
+import { BRANCHES, CTA, RATES, RECEPTION_POINTS, RESTRICTED_ITEMS, describeHours, sentence } from './carinova.ts';
 import {
-  BRANCHES,
-  CTA,
-  LAST_MILE,
-  RATES,
-  RECEPTION_POINTS,
-  RESTRICTED_ITEMS,
-  describeHours,
-  sentence,
-} from './carinova.ts';
-import {
-  describeSea,
   describeUnitLine,
+  describeVolume,
   describeWeight,
   formatUSD,
+  quoteByVolume,
   quoteByWeight,
-  quoteSea,
   quoteUnits,
   type Dimensions,
+  type LengthUnit,
 } from '../utils/rates.ts';
 
 const { air, sea, electronics } = RATES;
 const cities = BRANCHES.map((branch) => branch.city);
 const [branchHours] = BRANCHES[0].hours;
-const lowestUnitPrice = Math.min(...electronics.items.map((item) => item.price));
 
 /** "a, b y c" */
 const listOf = (items: Array<string>): string =>
   items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
 const lowercaseFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
-/** The calculator with its fields filled in: it reads the same names from the address (QuoteCalculator.astro). */
+/** "celulares US$30, tablets US$40, …" */
+const devicePrices = electronics.items
+  .map((item) => `${item.brand ? item.plural : item.plural.toLowerCase()} ${formatUSD(item.price)}`)
+  .join(', ');
+
+/**
+ * The calculator with its fields filled in: it reads the same names from the address
+ * (QuoteCalculator.astro): tarifa (aereo | maritimo), base (peso | volumen | a device's id), lb,
+ * paquetes, largo, ancho, alto, unidad (cm | pulg), bultos, unidades.
+ */
 export const quotePath = (fields: Record<string, string | number | undefined>): string => {
   const query = new URLSearchParams();
   for (const [name, value] of Object.entries(fields)) if (value !== undefined) query.set(name, String(value));
   return `${CTA.quote.path}?${query}`;
 };
+
+/** How the calculator's address names the unit of the measurements. */
+export const UNIT_PARAM: Record<LengthUnit, string> = { cm: 'cm', in: 'pulg' };
 
 export type ServiceAxisId = 'transporte' | 'solucion' | 'distribucion';
 
@@ -72,19 +76,19 @@ export const SERVICE_AXES: Array<ServiceAxis> = [
     id: 'transporte',
     name: 'Modalidad de transporte',
     question: '¿Cómo viaja tu paquete?',
-    rule: 'Rapidez o ahorro: vos elegís.',
+    rule: 'Dos caminos, un mismo destino: rapidez o ahorro, vos elegís.',
   },
   {
     id: 'solucion',
     name: 'Solución comercial',
-    question: '¿Quién lo manda a tu casillero?',
+    question: '¿Quién hace la compra?',
     rule: 'Lo comprás vos o te lo manda tu familia, o lo compramos nosotros por vos.',
   },
   {
     id: 'distribucion',
     name: 'Distribución final',
     question: '¿Cómo lo recibís en Nicaragua?',
-    rule: 'En nuestras sucursales o, próximamente, en tu casa.',
+    rule: 'En nuestras sucursales o en tu casa, con un cargo adicional.',
   },
 ];
 
@@ -94,14 +98,14 @@ export interface Service {
   axis: ServiceAxisId;
   name: string;
   icon: string;
-  /** One line, for the services overview on the home page. */
+  /** One line, for summaries. */
   summary: string;
   /** One paragraph, for /servicios. */
   description: string;
   facts: Array<string>;
   available: boolean;
-  /** ServiceBadge.astro writes it in the page's language: "Gratis" / "Próximamente". */
-  badge?: 'free' | 'soon';
+  /** ServiceBadge.astro writes it in the page's language: "Próximamente" / "Cargo adicional". */
+  badge?: 'soon' | 'extra';
   /** The next step besides WhatsApp. */
   link?: { text: string; path: string };
   /** Label of the WhatsApp link when WhatsApp is how the service is requested. */
@@ -115,15 +119,17 @@ export const SERVICES: Array<Service> = [
     name: 'Aéreo',
     icon: air.icon,
     summary: `${formatUSD(air.pricePerLb)} la libra · ${air.transit}`,
-    description: 'Para lo que necesitás pronto: ropa, zapatos, accesorios, electrónicos y compras pequeñas.',
+    description:
+      'Pensado para lo que querés recibir pronto. Usa una tarifa base por libra y, en determinados electrónicos, una tarifa fija por unidad.',
     facts: [
-      `${formatUSD(air.pricePerLb)} por libra.`,
       `Entrega estimada: ${air.transit}, ${RATES.transitFrom}.`,
-      `Celulares, tablets, laptops y consolas: tarifa fija desde ${formatUSD(lowestUnitPrice)} por unidad, con impuestos incluidos.`,
-      `No viajan en avión: ${listOf(RESTRICTED_ITEMS.noAir.items.map(lowercaseFirst))}.`,
+      `Tarifa base: ${formatUSD(air.pricePerLb)} por libra.`,
+      `Electrónicos por unidad: ${devicePrices}.`,
+      `No viajan en avión, pero sí por marítimo: ${listOf(RESTRICTED_ITEMS.seaOnly.items.map((item) => lowercaseFirst(item.name)))}.`,
+      'La tarifa aplicable se confirma según el tipo de mercancía, el embalaje y las condiciones del servicio.',
     ],
     available: true,
-    link: { text: 'Cotizar aéreo', path: quotePath({ tarifa: air.id }) },
+    link: { text: 'Calcular envío aéreo', path: quotePath({ tarifa: air.id }) },
   },
   {
     id: 'maritimo',
@@ -131,47 +137,48 @@ export const SERVICES: Array<Service> = [
     name: 'Marítimo',
     icon: sea.icon,
     summary: `${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie³ · ${sea.transit}`,
-    description: 'Para lo pesado o voluminoso: cosas para la casa, muebles, electrodomésticos y cajas grandes.',
+    description:
+      'Ideal para cargas grandes, compras planificadas y envíos donde priorizás el costo. Se cotiza por peso o por volumen.',
     facts: [
-      `${formatUSD(sea.pricePerLb)} por libra o ${formatUSD(sea.pricePerCubicFoot)} por pie cúbico: se cobra el que resulte mayor.`,
-      'Pie cúbico: largo × ancho × alto, en pulgadas, ÷ 1,728.',
       `Entrega estimada: ${sea.transit}, ${RATES.transitFrom}.`,
+      `Tarifa base por peso: ${formatUSD(sea.pricePerLb)} por libra.`,
+      `Tarifa por volumen: ${formatUSD(sea.pricePerCubicFoot)} por pie cúbico.`,
+      'La base por peso o por volumen se determina según la carga, su empaque y las condiciones del servicio.',
     ],
     available: true,
-    link: { text: 'Cotizar marítimo', path: quotePath({ tarifa: sea.id }) },
+    link: { text: 'Calcular envío marítimo', path: quotePath({ tarifa: sea.id }) },
   },
   {
     id: 'encomiendas',
     axis: 'solucion',
     name: 'Encomiendas',
     icon: 'tabler:package',
-    summary: 'Lo que vos o tu familia mandan a tu casillero.',
+    summary: 'Lo que vos o tu familia mandan a nuestra bodega.',
     description:
-      'Traemos cualquier paquete que llegue a tu casillero en Miami: tus compras en línea o la caja que te manda tu familia desde Estados Unidos.',
+      'Traemos cualquier paquete que llegue a nuestra bodega a tu nombre: tus compras en línea o la caja que te manda tu familia desde Estados Unidos.',
     facts: [
       'Comprá en cualquier tienda que envíe dentro de Estados Unidos.',
       'Tu familia o tus amigos también pueden mandarte una caja a tu dirección de Miami.',
       'Viaja por aéreo o por marítimo, como prefieras.',
     ],
     available: true,
-    link: { text: 'Ver cómo comprar', path: '/como-comprar' },
+    link: { text: 'Ver cómo funciona', path: '/como-comprar' },
   },
   {
     id: 'compras-asistidas',
     axis: 'solucion',
     name: 'Compras asistidas',
     icon: 'tabler:shopping-bag',
-    badge: 'free',
-    summary: 'Compramos por vos, sin cobrarte el servicio.',
-    description:
-      '¿No tenés tarjeta o la tienda no acepta la tuya? Mandanos el enlace del producto y lo compramos por vos.',
-    // TODO: confirm with Carinova how customers pay for the product.
+    summary: 'Elegís el producto y nosotros hacemos la compra por vos.',
+    description: 'Elegí la tienda y compartinos el enlace del producto: nosotros realizamos la compra por vos.',
+    // TODO: confirm with Carinova whether the service has a fee and how customers pay for the product.
     facts: [
-      'El servicio es gratis: pagás el producto y el envío.',
-      'Pedila por WhatsApp con el enlace del producto.',
-      'Llega a tu casillero y viaja como cualquier encomienda.',
+      'Antes de comprar confirmamos la disponibilidad, si el artículo puede ingresar y el costo total.',
+      'El costo de la compra, los impuestos y el flete se confirman antes de gestionar la operación.',
+      'Llega a nuestra bodega y viaja como cualquier encomienda.',
     ],
     available: true,
+    link: { text: 'Preparar mi solicitud', path: '/#compras' },
     whatsappText: 'Pedir una compra asistida',
   },
   {
@@ -180,8 +187,7 @@ export const SERVICES: Array<Service> = [
     name: 'Retiro en sucursal',
     icon: 'tabler:building-store',
     summary: `${listOf(cities)} · ${branchHours.days.toLowerCase()}`,
-    // TODO: confirm the notifications Carinova sends.
-    description: 'Te avisamos cuando tu paquete está listo y pasás por él a la sucursal que te quede más cerca.',
+    description: 'Cuando tu paquete está disponible para entrega, pasás por él a la sucursal que te quede más cerca.',
     facts: [`Sucursales en ${listOf(cities)}.`, sentence(`Abrimos de ${describeHours(branchHours)}`)],
     available: true,
     link: { text: 'Ver sucursales', path: '/sucursales' },
@@ -191,14 +197,13 @@ export const SERVICES: Array<Service> = [
     axis: 'distribucion',
     name: 'Entrega a domicilio',
     icon: 'tabler:truck-delivery',
-    badge: LAST_MILE.available ? undefined : 'soon',
-    // The "Próximamente" badge says when; the summary says what.
-    summary: 'Tu paquete hasta tu puerta.',
-    description: LAST_MILE.available
-      ? 'Te llevamos tu paquete hasta tu casa (la última milla).'
-      : 'La entrega hasta tu casa (la última milla) estará disponible próximamente. Mientras tanto, retirás tu paquete en sucursal.',
-    facts: [],
-    available: LAST_MILE.available,
+    badge: 'extra',
+    summary: 'A todo el país, con un cargo adicional.',
+    description:
+      'Realizamos envíos a todo el país, sujetos a coordinación y cobertura. La entrega a domicilio tiene un cargo adicional según el destino y las condiciones operativas.',
+    facts: ['La dirección, la cobertura y el cargo se confirman al coordinar la entrega.'],
+    available: true,
+    whatsappText: 'Consultar entrega a domicilio',
   },
 ];
 
@@ -207,64 +212,78 @@ export const servicesOf = (axis: ServiceAxisId) => SERVICES.filter((service) => 
 export interface ProcessStep {
   icon: string;
   title: string;
-  /** One line, for the home page. */
+  /** One or two sentences, for the home page. */
   summary: string;
   /** For /como-comprar. */
   details: Array<string>;
-  link: { text: string; path: string };
+  /** Where the step leads; without one, the step is something Carinova does. */
+  link?: { text: string; path: string };
+  /** The section of the home page that does the same as `link`, when there is one. */
+  homeAnchor?: string;
 }
+
+const receivingNow = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
+const receivingSoon = RECEPTION_POINTS.filter((point) => !point.available).map((point) => point.city);
+/** " Los Ángeles, próximamente." or nothing, once every warehouse is open. */
+const soonNote = receivingSoon.length ? ` ${listOf(receivingSoon)}, próximamente.` : '';
 
 export const PROCESS_STEPS: Array<ProcessStep> = [
   {
-    icon: 'tabler:id-badge-2',
-    title: 'Abrí tu casillero',
-    summary: 'Registrate en línea y recibí tu Carinova ID y tu dirección en Miami.',
+    icon: 'tabler:user-plus',
+    title: 'Registrate',
+    summary:
+      'Registrate con tu correo y tu número telefónico. Al confirmar tu correo, el sistema te asigna automáticamente tu Carinova ID.',
     details: [
-      'Llenás un formulario corto y confirmás tu correo.',
-      'Al confirmar ves tu Carinova ID y tu dirección en Miami, y también te los mandamos por correo.',
+      'Llenás un formulario corto y confirmás tu correo con el enlace que te mandamos.',
+      'Al confirmar ves tu Carinova ID y tu dirección en Estados Unidos, y también te los mandamos por correo.',
     ],
     link: { text: CTA.signup.text, path: CTA.signup.path },
   },
   {
-    icon: 'tabler:shopping-cart',
-    title: 'Comprá o mandá tu encomienda',
-    summary: 'Usá tu dirección de Miami en cualquier tienda de Estados Unidos, o dásela a tu familia.',
+    icon: 'tabler:layout-dashboard',
+    title: 'Ingresá a tu cuenta',
+    summary: 'Realizá todas tus gestiones desde un mismo lugar.',
     details: [
-      'Al pagar, escribí tu nombre y tu apellido exactamente como aparecen en tu dirección de Miami.',
-      '¿No tenés tarjeta? Pedí una compra asistida: compramos por vos, gratis.',
-      'Antes de comprar, revisá que tu producto no esté en la lista de artículos prohibidos.',
+      'Ingresás con tu correo y un código de un solo uso: no hay contraseña que recordar.',
+      'En tu cuenta están tu Carinova ID, tu dirección en Estados Unidos, tus paquetes y tus pagos.',
     ],
-    link: { text: 'Ver artículos prohibidos', path: '/articulos-prohibidos' },
+    link: { text: CTA.signin.text, path: CTA.signin.path },
   },
   {
-    icon: 'tabler:plane-departure',
-    title: 'Lo traemos a Nicaragua',
-    summary: `Por aéreo en ${air.transit} o por marítimo en ${sea.transit}, ${RATES.transitFrom}.`,
+    icon: 'tabler:search',
+    title: '¿Puede ingresar?',
+    summary: 'Antes de comprar o enviar, revisá si el artículo puede ingresar.',
     details: [
-      `Aéreo: ${formatUSD(air.pricePerLb)} la libra. Marítimo: ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie cúbico.`,
-      'Celulares, tablets, laptops y consolas viajan con tarifa fija por unidad, con impuestos incluidos.',
-      'Las tarifas incluyen seguro e impuestos cuando aplique.',
+      'Hay artículos prohibidos, otros que todavía no estamos autorizados a traer y otros que solo viajan por marítimo.',
+      'Si tu artículo no aparece en las listas, consultanos antes de comprarlo.',
+    ],
+    link: { text: 'Revisar artículo', path: '/articulos-prohibidos' },
+    homeAnchor: '#verificador',
+  },
+  {
+    icon: 'tabler:building-warehouse',
+    title: 'Recibimos',
+    summary: `Envialo a la dirección de nuestra bodega en ${listOf(receivingNow)} indicada en tu cuenta.${soonNote}`,
+    details: [
+      'Al pagar en la tienda, escribí tu nombre y tu apellido exactamente como aparecen en tu dirección.',
+      '¿Preferís que compremos por vos? Pedí una compra asistida.',
+      `Lo traemos por aéreo en ${air.transit} o por marítimo en ${sea.transit}, ${RATES.transitFrom}.`,
     ],
     link: { text: CTA.quote.text, path: CTA.quote.path },
   },
   {
-    icon: 'tabler:building-store',
-    title: 'Retiralo en tu sucursal',
-    summary: `Pasá por tu paquete a ${cities.join(' o ')}.`,
+    icon: 'tabler:home-check',
+    title: 'Lo recibís',
+    summary: `Retirá en ${cities.join(' o ')}. La entrega a domicilio tiene cargo adicional.`,
     details: [
-      // TODO: confirm the notifications Carinova sends.
-      'Te avisamos cuando tu paquete está listo para retirar.',
-      sentence(`Abrimos de ${describeHours(branchHours)}`),
-      LAST_MILE.available ? 'También te lo llevamos a tu casa.' : 'La entrega a domicilio viene próximamente.',
+      sentence(`Nuestras sucursales abren de ${describeHours(branchHours)}`),
+      'La entrega a domicilio se coordina según el destino y la cobertura.',
     ],
     link: { text: 'Ver sucursales', path: '/sucursales' },
   },
 ];
 
-const receivingNow = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
-const receivingSoon = RECEPTION_POINTS.filter((point) => !point.available).map((point) => point.city);
-
-/** The three parts of a Carinova account, from Carinova's brief ("Mi cuenta"). */
+/** What a customer finds in their account ("Mi cuenta"). The ids are the anchors of its sections. */
 export const ACCOUNT_PARTS = [
   {
     id: 'carinova-id',
@@ -273,16 +292,22 @@ export const ACCOUNT_PARTS = [
     summary: 'Uno por persona o empresa, para todos tus envíos.',
   },
   {
-    id: 'recepcion',
+    id: 'direccion',
     icon: 'tabler:building-warehouse',
-    title: 'Recepción en Estados Unidos',
-    summary: `${listOf(receivingNow)}.${receivingSoon.length ? ` ${listOf(receivingSoon)}, próximamente.` : ''}`,
+    title: 'Tu dirección en Estados Unidos',
+    summary: `${listOf(receivingNow)}.${soonNote}`,
   },
   {
-    id: 'retiro',
-    icon: 'tabler:map-pin',
-    title: 'Retiro en Nicaragua',
-    summary: `${listOf(cities)}.`,
+    id: 'paquetes',
+    icon: 'tabler:package',
+    title: 'Tus paquetes',
+    summary: 'Lo que recibimos en bodega y lo que ya enviamos, con el estado de cada uno.',
+  },
+  {
+    id: 'pagos',
+    icon: 'tabler:receipt',
+    title: 'Tus pagos',
+    summary: 'Tus facturas y los pagos que confirmamos.',
   },
 ];
 
@@ -295,25 +320,32 @@ export interface ShoppingExample {
   item: string;
   /** …and where it comes from. */
   source: string;
-  tariff: 'aereo' | 'maritimo' | 'electronicos';
+  tariff: 'aereo' | 'maritimo';
+  /** The one basis the example is quoted on. */
+  basis: 'peso' | 'volumen' | 'unidad';
   pounds?: number;
   dims?: Dimensions;
-  units?: Record<string, number>;
+  /** The unit of `dims`. */
+  unit?: LengthUnit;
+  /** For `unidad`: the id of the device (RATES.electronics.items) and how many. */
+  device?: string;
+  units?: number;
 }
 
 /**
  * One example per kind of purchase, each teaching one way of pricing: air by the pound, flat rate
- * per device, sea where the weight is charged, sea where the volume is charged. Weights and
- * measurements are illustrative; the prices are computed from RATES.
+ * per device, sea by weight, sea by volume. Weights and measurements are illustrative; the prices
+ * are computed from RATES.
  */
 export const SHOPPING_EXAMPLES: Array<ShoppingExample> = [
   {
     id: 'ropa',
     category: 'Ropa y zapatos',
     icon: 'tabler:shirt',
-    item: 'Dos blusas, un pantalón y unos tenis',
-    source: 'En Shein y Nike',
+    item: 'Dos blusas, un pantalón y unos tenis: 3 lb',
+    source: 'En SHEIN y Nike',
     tariff: 'aereo',
+    basis: 'peso',
     pounds: 3,
   },
   {
@@ -322,37 +354,42 @@ export const SHOPPING_EXAMPLES: Array<ShoppingExample> = [
     icon: 'tabler:device-mobile',
     item: 'Un celular nuevo',
     source: 'En Amazon',
-    tariff: 'electronicos',
-    units: { celular: 1 },
+    tariff: 'aereo',
+    basis: 'unidad',
+    device: 'celular',
+    units: 1,
   },
   {
     id: 'laptops',
     category: 'Laptops y consolas',
     icon: 'tabler:device-laptop',
-    item: 'Una laptop y un PlayStation',
-    source: 'En Best Buy y Walmart',
-    tariff: 'electronicos',
-    units: { laptop: 1, playstation: 1 },
+    item: 'Una laptop',
+    source: 'En Best Buy',
+    tariff: 'aereo',
+    basis: 'unidad',
+    device: 'laptop',
+    units: 1,
   },
   {
     id: 'hogar',
     category: 'Hogar y cocina',
     icon: 'tabler:tools-kitchen-2',
-    item: 'Un juego de ollas de 18 lb, en una caja de 16 × 12 × 10 pulgadas',
+    item: 'Un juego de ollas de 18 lb',
     source: 'En Walmart',
     tariff: 'maritimo',
+    basis: 'peso',
     pounds: 18,
-    dims: { length: 16, width: 12, height: 10 },
   },
   {
     id: 'muebles',
     category: 'Muebles',
     icon: 'tabler:armchair',
-    item: 'Una silla de oficina de 40 lb, en una caja de 28 × 26 × 14 pulgadas',
-    source: 'En Costco',
+    item: 'Una silla de oficina, en una caja de 28 × 26 × 14 pulgadas',
+    source: 'En Home Depot',
     tariff: 'maritimo',
-    pounds: 40,
+    basis: 'volumen',
     dims: { length: 28, width: 26, height: 14 },
+    unit: 'in',
   },
   {
     id: 'encomienda',
@@ -361,6 +398,7 @@ export const SHOPPING_EXAMPLES: Array<ShoppingExample> = [
     item: 'Una caja de 8 lb con ropa y regalos',
     source: 'De tu familia en Estados Unidos',
     tariff: 'aereo',
+    basis: 'peso',
     pounds: 8,
   },
 ];
@@ -368,10 +406,8 @@ export const SHOPPING_EXAMPLES: Array<ShoppingExample> = [
 export interface ExampleQuote {
   /** How it is priced, e.g. "Aéreo, por libra". */
   tariff: string;
-  /** The arithmetic, one line per measure. */
+  /** The arithmetic. */
   lines: Array<string>;
-  /** Which measure is charged, when both were worked out. */
-  charged?: string;
   note?: string;
   total: number;
   transit: string;
@@ -379,14 +415,20 @@ export interface ExampleQuote {
   path: string;
 }
 
-const dimsFields = (dims?: Dimensions) => ({ largo: dims?.length, ancho: dims?.width, alto: dims?.height });
+const dimsFields = (dims: Dimensions, unit: LengthUnit) => ({
+  largo: dims.length,
+  ancho: dims.width,
+  alto: dims.height,
+  unidad: UNIT_PARAM[unit],
+});
 
 /** How each way of pricing is called in an example. */
 export interface ExampleWords {
-  air: string;
-  sea: string;
-  electronics: string;
-  electronicsNote: string;
+  airWeight: string;
+  seaWeight: string;
+  seaVolume: string;
+  unit: string;
+  unitNote: string;
 }
 
 /**
@@ -396,47 +438,52 @@ export interface ExampleWords {
 export const exampleQuoter =
   (rates: typeof RATES, words: ExampleWords, locale: Locale) =>
   (example: ShoppingExample): ExampleQuote => {
-    if (example.tariff === 'electronicos') {
-      const quote = quoteUnits(example.units ?? {}, rates.electronics.items);
+    if (example.basis === 'unidad') {
+      const quote = quoteUnits({ [example.device ?? '']: example.units ?? 1 }, rates.electronics.items);
+      if (!quote.units) throw new Error(`Example "${example.id}" names a device that has no rate.`);
       return {
-        tariff: words.electronics,
+        tariff: words.unit,
         lines: quote.lines.map(describeUnitLine),
-        note: words.electronicsNote,
+        note: words.unitNote,
         total: quote.total,
         transit: rates.electronics.transit,
-        path: quotePath({ tarifa: rates.electronics.id, ...example.units }),
+        path: quotePath({ tarifa: rates.air.id, base: example.device, unidades: example.units ?? 1 }),
       };
     }
 
-    if (example.tariff === 'maritimo') {
-      const quote = quoteSea({ pounds: example.pounds, dims: example.dims }, rates.sea, rates.roundUpToPound);
-      if (!quote) throw new Error(`Example "${example.id}" needs a weight or measurements.`);
+    if (example.basis === 'volumen') {
+      if (!example.dims) throw new Error(`Example "${example.id}" needs its measurements.`);
+      const unit = example.unit ?? 'in';
+      const quote = quoteByVolume(example.dims, rates.sea.pricePerCubicFoot, { unit });
       return {
-        tariff: words.sea,
-        ...describeSea(quote, locale),
+        tariff: words.seaVolume,
+        lines: [describeVolume(quote, locale)],
         total: quote.total,
         transit: rates.sea.transit,
-        path: quotePath({ tarifa: rates.sea.id, lb: example.pounds, ...dimsFields(example.dims) }),
+        path: quotePath({ tarifa: rates.sea.id, base: 'volumen', ...dimsFields(example.dims, unit) }),
       };
     }
 
-    const quote = quoteByWeight(example.pounds ?? 0, rates.air.pricePerLb, rates.air.minLb, rates.roundUpToPound);
+    const bySea = example.tariff === 'maritimo';
+    const rate = bySea ? rates.sea : rates.air;
+    const quote = quoteByWeight(example.pounds ?? 0, rate.pricePerLb);
     return {
-      tariff: words.air,
+      tariff: bySea ? words.seaWeight : words.airWeight,
       lines: [describeWeight(quote)],
       total: quote.total,
-      transit: rates.air.transit,
-      path: quotePath({ tarifa: rates.air.id, lb: example.pounds }),
+      transit: rate.transit,
+      path: quotePath({ tarifa: rate.id, lb: example.pounds }),
     };
   };
 
 export const quoteExample = exampleQuoter(
   RATES,
   {
-    air: 'Aéreo, por libra',
-    sea: 'Marítimo, por peso o por volumen',
-    electronics: 'Electrónicos, tarifa fija por unidad',
-    electronicsNote: 'Incluye envío aéreo e impuestos.',
+    airWeight: 'Aéreo, por libra',
+    seaWeight: 'Marítimo, por peso',
+    seaVolume: 'Marítimo, por volumen',
+    unit: 'Aéreo, tarifa por unidad',
+    unitNote: 'La tarifa por unidad no se suma a la tarifa por libra.',
   },
   'es'
 );
@@ -447,5 +494,6 @@ const PALLET: Dimensions = { length: 48, width: 40, height: 72 };
 export const FORMULA_EXAMPLE = {
   item: 'Una tarima (palé) de carga',
   dims: PALLET,
-  path: quotePath({ tarifa: sea.id, ...dimsFields(PALLET) }),
+  unit: 'in' as LengthUnit,
+  path: quotePath({ tarifa: sea.id, base: 'volumen', ...dimsFields(PALLET, 'in') }),
 };

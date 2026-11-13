@@ -2,32 +2,35 @@
 // the calculator's script (in the browser), so both always show the same numbers and formulas.
 // No rates of its own (they come from src/data/carinova.ts) and nothing imported at run time: the
 // unit tests (rates.test.ts) run this file on plain Node.
+//
+// A shipment is quoted on one basis at a time, as in Carinova's prototype: by weight, by volume or
+// per unit. The arithmetic is exact: no minimum weight and no rounding of pounds or cubic feet,
+// because Carinova has stated neither; only the amount is rounded, to cents.
 import type { Locale } from '../i18n/locales.ts';
+
+/** The measurements of a box come in centimetres or in inches. */
+export type LengthUnit = 'cm' | 'in';
 
 /** The few words the formulas are written with. Spanish is the default everywhere. */
 const WORDS = {
-  es: {
-    cubicInches: 'pulg³',
-    cubicFeet: 'pie³',
-    byWeight: 'Por peso: ',
-    byVolume: 'Por volumen: ',
-    charged: (by: 'weight' | 'volume') => `Se cobra por ${by === 'volume' ? 'volumen' : 'peso'}, que es el mayor.`,
-    and: 'y',
-  },
-  en: {
-    cubicInches: 'in³',
-    cubicFeet: 'ft³',
-    byWeight: 'By weight: ',
-    byVolume: 'By volume: ',
-    charged: (by: 'weight' | 'volume') => `Charged by ${by}, which is the higher of the two.`,
-    and: 'and',
-  },
+  es: { cubic: { cm: 'cm³', in: 'pulg³' }, cubicFeet: 'pie³', and: 'y' },
+  en: { cubic: { cm: 'cm³', in: 'in³' }, cubicFeet: 'ft³', and: 'and' },
 } satisfies Record<Locale, unknown>;
 
 /** Cubic inches in a cubic foot (12 × 12 × 12). */
 export const CUBIC_INCHES_PER_CUBIC_FOOT = 1728;
+/** Cubic centimetres in a cubic foot (30.48 × 30.48 × 30.48). */
+export const CUBIC_CM_PER_CUBIC_FOOT = 28316.846592;
 
-const round2 = (value: number): number => Math.round((value + Number.EPSILON) * 100) / 100;
+const DIVISOR: Record<LengthUnit, number> = { cm: CUBIC_CM_PER_CUBIC_FOOT, in: CUBIC_INCHES_PER_CUBIC_FOOT };
+
+const round = (value: number, decimals: number): number => {
+  const factor = 10 ** decimals;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+};
+const round2 = (value: number): number => round(value, 2);
+/** Removes the noise of floating-point products (0.1 × 3 = 0.30000000000000004) without rounding a measure. */
+const tidy = (value: number): number => round(value, 6);
 
 /**
  * "US$6.50", "US$20", "US$1,600": cents only when there are any. "US$" because Nicaragua also
@@ -39,32 +42,31 @@ export const formatUSD = (amount: number): string => {
   return `US$${value.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
 };
 
-/** "138,240", "1.75", "80": thousands with commas and at most two decimals, as Nicaragua writes them. */
-export const formatNumber = (value: number): string =>
-  round2(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+/** "138,240", "1.75", "80": thousands with commas and at most two decimals (or `maxDecimals`), as Nicaragua writes them. */
+export const formatNumber = (value: number, maxDecimals = 2): string =>
+  round(value, maxDecimals).toLocaleString('en-US', { maximumFractionDigits: maxDecimals });
 
-/** Weight that gets billed: never below the minimum, and rounded up to whole pounds when `roundUp` is set. */
-export const billablePounds = (pounds: number, minLb: number, roundUp: boolean): number => {
-  // Subtract a hair before rounding up so 2.0000000001 (float noise) still bills as 2.
-  const weight = roundUp ? Math.ceil(pounds - 1e-9) : round2(pounds);
-  return Math.max(minLb, weight);
-};
+/** A count of packages, pieces or units: a whole number, at least one. */
+const countOf = (count: number | undefined): number =>
+  count !== undefined && Number.isFinite(count) && count >= 1 ? Math.floor(count) : 1;
 
 export interface WeightQuote {
+  /** Pounds of each package. */
   pounds: number;
-  billable: number;
+  packages: number;
+  totalPounds: number;
   pricePerLb: number;
   total: number;
 }
 
-/** Air, or sea by weight: billable pounds × price per pound. */
-export const quoteByWeight = (pounds: number, pricePerLb: number, minLb: number, roundUp: boolean): WeightQuote => {
-  const billable = billablePounds(pounds, minLb, roundUp);
-  return { pounds, billable, pricePerLb, total: round2(billable * pricePerLb) };
+/** By weight (air or sea): pounds of each package × packages × price per pound. */
+export const quoteByWeight = (pounds: number, pricePerLb: number, packages?: number): WeightQuote => {
+  const count = countOf(packages);
+  const totalPounds = tidy(pounds * count);
+  return { pounds, packages: count, totalPounds, pricePerLb, total: round2(totalPounds * pricePerLb) };
 };
 
 export interface Dimensions {
-  /** Inches. */
   length: number;
   width: number;
   height: number;
@@ -72,62 +74,41 @@ export interface Dimensions {
 
 export interface VolumeQuote {
   dims: Dimensions;
-  cubicInches: number;
+  unit: LengthUnit;
+  pieces: number;
+  /** Cubic centimetres or cubic inches of all the pieces. */
+  cubicUnits: number;
   cubicFeet: number;
   pricePerCubicFoot: number;
   total: number;
 }
 
 /**
- * Sea by volume, the formula of Carinova's brief: length × width × height (inches) = cubic inches;
- * ÷ 1,728 = cubic feet; × the price per cubic foot. Cubic feet are rounded to two decimals before
- * the multiplication, so the total matches the formula as it is shown.
+ * By volume (sea), the formula of Carinova's brief: length × width × height = cubic inches;
+ * ÷ 1,728 = cubic feet; × the price per cubic foot. In centimetres the divisor is 28,316.85
+ * (1 foot = 30.48 cm). The cubic feet are not rounded before the multiplication.
  */
-export const quoteByVolume = (dims: Dimensions, pricePerCubicFoot: number): VolumeQuote => {
-  const cubicInches = round2(dims.length * dims.width * dims.height);
-  const cubicFeet = round2(cubicInches / CUBIC_INCHES_PER_CUBIC_FOOT);
-  return { dims, cubicInches, cubicFeet, pricePerCubicFoot, total: round2(cubicFeet * pricePerCubicFoot) };
+export const quoteByVolume = (
+  dims: Dimensions,
+  pricePerCubicFoot: number,
+  { unit = 'in', pieces }: { unit?: LengthUnit; pieces?: number } = {}
+): VolumeQuote => {
+  const count = countOf(pieces);
+  const cubicUnits = tidy(dims.length * dims.width * dims.height * count);
+  const cubicFeet = cubicUnits / DIVISOR[unit];
+  return {
+    dims,
+    unit,
+    pieces: count,
+    cubicUnits,
+    cubicFeet,
+    pricePerCubicFoot,
+    total: round2(cubicFeet * pricePerCubicFoot),
+  };
 };
 
 export const hasDimensions = (dims?: Partial<Dimensions>): dims is Dimensions =>
   !!dims && [dims.length, dims.width, dims.height].every((side) => typeof side === 'number' && side > 0);
-
-export interface SeaRate {
-  pricePerLb: number;
-  pricePerCubicFoot: number;
-  minLb: number;
-}
-
-export interface SeaQuote {
-  byWeight?: WeightQuote;
-  byVolume?: VolumeQuote;
-  /** Which of the two is charged: the higher one (a tie goes to weight). */
-  chargedBy: 'weight' | 'volume';
-  total: number;
-}
-
-/**
- * Sea freight is charged by weight or by volume, whichever costs more (weight/measure, the usual
- * rule for consolidated sea cargo). With only one of the two given, that one is charged.
- * Returns null when neither a weight nor all three measurements are given.
- */
-export const quoteSea = (
-  input: { pounds?: number; dims?: Partial<Dimensions> },
-  rate: SeaRate,
-  roundUp: boolean
-): SeaQuote | null => {
-  const byWeight =
-    input.pounds !== undefined && input.pounds > 0
-      ? quoteByWeight(input.pounds, rate.pricePerLb, rate.minLb, roundUp)
-      : undefined;
-  const byVolume = hasDimensions(input.dims) ? quoteByVolume(input.dims, rate.pricePerCubicFoot) : undefined;
-
-  if (byVolume && (!byWeight || byVolume.total > byWeight.total)) {
-    return { byWeight, byVolume, chargedBy: 'volume', total: byVolume.total };
-  }
-  if (byWeight) return { byWeight, byVolume, chargedBy: 'weight', total: byWeight.total };
-  return null;
-};
 
 export interface UnitItem {
   id: string;
@@ -167,37 +148,29 @@ export const quoteUnits = (quantities: Record<string, number | undefined>, items
 
 // How each quote is written out, in the calculator and in the worked examples.
 
-/** "3 lb × US$6.50 = US$19.50"; "2.3 lb → 3 lb × US$6.50 = US$19.50" when the weight was rounded up. */
+/** "3 lb × US$6.50 = US$19.50"; with several packages, "2 × 5 lb = 10 lb × US$6.50 = US$65". */
 export const describeWeight = (quote: WeightQuote): string => {
-  const weighed = quote.billable === quote.pounds ? '' : `${formatNumber(quote.pounds)} lb → `;
-  return `${weighed}${formatNumber(quote.billable)} lb × ${formatUSD(quote.pricePerLb)} = ${formatUSD(quote.total)}`;
+  const each = quote.packages > 1 ? `${quote.packages} × ${formatNumber(quote.pounds, 5)} lb = ` : '';
+  return `${each}${formatNumber(quote.totalPounds, 5)} lb × ${formatUSD(quote.pricePerLb)} = ${formatUSD(quote.total)}`;
 };
 
-/** "48 × 40 × 72 = 138,240 pulg³ ÷ 1,728 = 80 pie³ × US$20 = US$1,600" ("in³" and "ft³" in English) */
+/** Cubic feet as they are shown: four decimals, more for a very small box. */
+export const formatCubicFeet = (cubicFeet: number): string => formatNumber(cubicFeet, cubicFeet < 0.01 ? 7 : 4);
+
+/**
+ * "48 × 40 × 72 = 138,240 pulg³ ÷ 1,728 = 80 pie³ × US$20 = US$1,600" ("in³" and "ft³" in English);
+ * in centimetres, "50 × 40 × 30 = 60,000 cm³ ÷ 28,316.85 = 2.1189 pie³ × US$20 = US$42.38"; with
+ * several pieces the count goes first: "2 × 50 × 40 × 30 = 120,000 cm³ …".
+ */
 export const describeVolume = (quote: VolumeQuote, locale: Locale = 'es'): string => {
   const { length, width, height } = quote.dims;
   const words = WORDS[locale];
+  const pieces = quote.pieces > 1 ? `${quote.pieces} × ` : '';
   return (
-    `${formatNumber(length)} × ${formatNumber(width)} × ${formatNumber(height)} = ` +
-    `${formatNumber(quote.cubicInches)} ${words.cubicInches} ÷ ${formatNumber(CUBIC_INCHES_PER_CUBIC_FOOT)} = ` +
-    `${formatNumber(quote.cubicFeet)} ${words.cubicFeet} × ${formatUSD(quote.pricePerCubicFoot)} = ${formatUSD(quote.total)}`
+    `${pieces}${formatNumber(length)} × ${formatNumber(width)} × ${formatNumber(height)} = ` +
+    `${formatNumber(quote.cubicUnits)} ${words.cubic[quote.unit]} ÷ ${formatNumber(DIVISOR[quote.unit])} = ` +
+    `${formatCubicFeet(quote.cubicFeet)} ${words.cubicFeet} × ${formatUSD(quote.pricePerCubicFoot)} = ${formatUSD(quote.total)}`
   );
-};
-
-/**
- * A sea quote written out: one line per measure given (labelled when there are two) and, when both
- * were worked out, which one is charged.
- */
-export const describeSea = (quote: SeaQuote, locale: Locale = 'es'): { lines: Array<string>; charged?: string } => {
-  const both = !!(quote.byWeight && quote.byVolume);
-  const words = WORDS[locale];
-  return {
-    lines: [
-      ...(quote.byWeight ? [`${both ? words.byWeight : ''}${describeWeight(quote.byWeight)}`] : []),
-      ...(quote.byVolume ? [`${both ? words.byVolume : ''}${describeVolume(quote.byVolume, locale)}`] : []),
-    ],
-    charged: both ? words.charged(quote.chargedBy) : undefined,
-  };
 };
 
 /** "1 Celular × US$30 = US$30", "2 Laptops × US$80 = US$160" */

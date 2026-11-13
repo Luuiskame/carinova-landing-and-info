@@ -32,7 +32,6 @@ export const ROUTES = {
   signup: { es: '/registro', en: '/en/sign-up', page: 'registro.astro' },
   signupConfirm: { es: '/registro/confirmar', en: '/en/sign-up/confirm', page: 'registro/confirmar.astro' },
   signin: { es: '/ingresar', en: '/en/sign-in', page: 'ingresar.astro' },
-  mailbox: { es: '/mi-casillero', en: '/en/my-mailbox', page: 'mi-casillero.astro' },
   business: { es: '/empresas', en: '/en/business', page: 'empresas.astro' },
   about: { es: '/nosotros', en: '/en/about', page: 'nosotros.astro' },
   terms: { es: '/terminos', en: '/en/terms', page: 'terminos.astro' },

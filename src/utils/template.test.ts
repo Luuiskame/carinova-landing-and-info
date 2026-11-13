@@ -15,11 +15,29 @@ test('fills the placeholders of a sentence', () => {
 
 test('a WhatsApp message handed to a script as a template reads like the message built in one go', () => {
   for (const locale of ['es', 'en'] as const) {
-    const { quote, customer } = content(locale).WA_MESSAGES;
+    const messages = content(locale).WA_MESSAGES;
+    const quote = { shipment: '1 celular', total: 'US$30' };
+    assert.equal(fill(messages.quote('{shipment}', '{total}'), quote), messages.quote('1 celular', 'US$30'));
+    assert.equal(fill(messages.homeQuote('{shipment}', '{total}'), quote), messages.homeQuote('1 celular', 'US$30'));
+    assert.equal(fill(messages.customer('{code}'), { code: 'CNV-00007' }), messages.customer('CNV-00007'));
+
+    // The home page: the product's link, the store, the article that was searched for.
+    const link = 'https://www.amazon.com/dp/B000000000';
+    assert.equal(fill(messages.shopper('{link}'), { link }), messages.shopper(link));
+    assert.equal(fill(messages.storeAssist('{store}'), { store: 'Best Buy' }), messages.storeAssist('Best Buy'));
+    assert.equal(fill(messages.itemCheck('{item}'), { item: 'un perfume' }), messages.itemCheck('un perfume'));
+
+    // "Mi cuenta": the customer's Carinova ID with the package or the invoice it is about.
+    const account = { code: 'CNV-00007', reference: 'PKG-000012', number: 'INV-000003' };
+    assert.equal(fill(messages.accountPackages('{code}'), account), messages.accountPackages('CNV-00007'));
     assert.equal(
-      fill(quote('{shipment}', '{city}', '{total}'), { shipment: '1 celular', city: 'Managua', total: 'US$30' }),
-      quote('1 celular', 'Managua', 'US$30')
+      fill(messages.accountPackage('{code}', '{reference}'), account),
+      messages.accountPackage('CNV-00007', 'PKG-000012')
     );
-    assert.equal(fill(customer('{code}'), { code: 'CNV-00007' }), customer('CNV-00007'));
+    assert.equal(
+      fill(messages.accountInvoice('{code}', '{number}'), account),
+      messages.accountInvoice('CNV-00007', 'INV-000003')
+    );
+    assert.equal(fill(messages.accountUpdate('{code}'), account), messages.accountUpdate('CNV-00007'));
   }
 });

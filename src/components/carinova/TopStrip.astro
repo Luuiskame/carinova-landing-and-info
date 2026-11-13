@@ -1,0 +1,49 @@
+---
+// The strip above the header, as in Carinova's prototype: what Carinova connects and, from tablets
+// up, the route. The warehouses and the branches come from the data: a warehouse that is not open
+// yet (Los Ángeles) is on the route too, marked "próximamente".
+import { i18n } from '~/i18n';
+
+const { locale, data } = i18n(Astro);
+const { BRANCHES, RECEPTION_POINTS } = data;
+
+const t = {
+  es: {
+    connect: 'Conectamos',
+    usa: 'Estados Unidos',
+    with: 'con',
+    nicaragua: 'Nicaragua',
+    soon: 'próximamente',
+    to: 'a',
+  },
+  en: {
+    connect: 'We connect',
+    usa: 'the United States',
+    with: 'with',
+    nicaragua: 'Nicaragua',
+    soon: 'coming soon',
+    to: 'to',
+  },
+}[locale];
+
+const from = RECEPTION_POINTS.map((point) => (point.available ? point.city : `${point.city} (${t.soon})`)).join(' · ');
+const to = BRANCHES.map((branch) => branch.city).join(' · ');
+---
+
+<div
+  class="border-b border-white/10 bg-[#020b1d] text-[0.6875rem] font-medium tracking-[0.09em] text-[#a8bedc] uppercase"
+>
+  <div class="mx-auto flex min-h-8 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6">
+    <p class="flex items-center gap-2.5">
+      <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-cta ring-4 ring-cta/15" aria-hidden="true"></span>
+      <span>
+        {t.connect}{' '}<b class="font-bold text-white">{t.usa}</b>{' '}{t.with}{' '}<b class="font-bold text-white"
+          >{t.nicaragua}</b
+        >
+      </span>
+    </p>
+    <p class="hidden md:block">
+      {from}{' '}<span aria-hidden="true">→</span><span class="sr-only">{t.to}</span>{' '}{to}
+    </p>
+  </div>
+</div>

@@ -1,206 +1,221 @@
 ---
-// The quote calculator (/cotizador). Three rates: air by the pound, sea by weight or by volume
-// (whichever is more) and electronics at a flat price per unit; plus where the package is picked
-// up, which sets the WhatsApp number and goes into the message.
+// The quote calculator, in the format of Carinova's prototype. It is on the home page ("Sacá
+// cuentas. Sin complicarte.") and on /cotizador, which owns the rates.
 //
-// - Its fields can be filled in from the address, e.g. /cotizador?tarifa=maritimo&largo=48&ancho=40&alto=72
-//   (quotePath in src/data/services.ts builds these links): the home hero's rates, the services and
-//   the worked examples open it that way. Field names are the parameter names, in both languages.
-// - Which fields show depends on the chosen rate through CSS (:has), so the form is right before the
-//   script runs; the first quote (air, 1 lb) is rendered at build time.
-// - The math, and how it is written out, is utils/rates.ts: the same code the rest of the site uses.
+// - One basis at a time: by weight (air or sea), by volume (sea) or per unit (some electronics, by
+//   air). The visitor chooses how the package travels and then the "Tipo de tarifa"; only the fields
+//   of that basis show. Nothing is added up across bases, and the arithmetic is exact (no minimum
+//   weight, no rounding of pounds): Carinova confirms the basis and the amount on reception.
+// - Its fields can be filled in from the address, e.g.
+//   /cotizador?tarifa=maritimo&base=volumen&largo=48&ancho=40&alto=72&unidad=pulg
+//   (quotePath in src/data/services.ts builds these links). Field names are the parameter names, in
+//   both languages: tarifa (aereo | maritimo), base (peso | volumen | a device's id), lb, paquetes,
+//   largo, ancho, alto, unidad (cm | pulg), bultos, unidades.
+// - The first quote (air, 5 lb) is rendered at build time, so the page is right before the script
+//   runs. The math, and how it is written out, is utils/rates.ts: the same code the rest of the
+//   site uses.
 // - The script has no text of its own: the sentences of the page's language travel in `data-config`.
 import { Icon } from 'astro-icon/components';
-import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
-import { LAST_MILE } from '~/data/carinova';
 import { i18n } from '~/i18n';
 import { describeWeight, formatNumber, formatUSD, quoteByWeight } from '~/utils/rates';
 import { fill } from '~/utils/template';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, CTA, RATES, WA_MESSAGES } = data;
+export interface Props {
+  /** Where it is: each place sends its own WhatsApp message. */
+  place?: 'page' | 'home';
+  /** Its title: h2 right under a page title, h3 inside a section that has its own h2. */
+  headingTag?: 'h2' | 'h3';
+}
+
+const { place = 'page', headingTag: Heading = 'h2' } = Astro.props;
+const { locale, data } = i18n(Astro);
+const { RATES, WA_MESSAGES } = data;
 
 const { air, sea, electronics } = RATES;
-const [branch] = BRANCHES;
-const sameMinimum = air.minLb === sea.minLb;
 
 const t = {
   es: {
-    title: 'Calculadora de envío',
-    step1: '1. Elegí la tarifa',
-    step2: '2. Contanos qué enviás',
-    step3: '3. ¿Dónde lo retirás?',
-    perPound: 'por libra',
-    perPoundOrFoot: `por libra o ${formatUSD(sea.pricePerCubicFoot)} por pie³`,
-    flat: 'Tarifa fija por unidad',
-    weight: 'Peso',
+    title: 'Calculá tu envío',
+    mode: '¿Cómo lo querés traer?',
+    basis: 'Tipo de tarifa',
+    basisHint: 'Elegí una sola base de cálculo: el peso, el volumen y la tarifa por unidad no se suman.',
+    byWeight: 'Por peso (libra)',
+    byVolume: 'Por volumen (pie cúbico)',
+    perUnit: (name: string) => `${name} (unidad)`,
+    weightEach: 'Peso de cada paquete (lb)',
+    packages: 'Cantidad de paquetes',
     kilos: '¿Lo tenés en kilos? 1 kg = 2.2 lb.',
-    measurements: 'Medidas de la caja, en pulgadas',
     dimensions: ['Largo', 'Ancho', 'Alto'],
-    measurementsHint:
-      'Llená el peso, las medidas o ambos: en marítimo cobramos el que resulte mayor. ¿Las tenés en centímetros? Dividilas entre 2.54.',
-    each: 'c/u',
-    remove: (name: string) => `Quitar ${name}`,
-    add: (name: string) => `Agregar ${name}`,
-    unitsHint: 'Cada tarifa incluye el envío aéreo y los impuestos.',
-    home: 'A domicilio',
-    total: 'Total estimado',
+    unit: 'Medidas en',
+    units: { cm: 'Centímetros', pulg: 'Pulgadas' },
+    pieces: 'Cantidad de bultos',
+    quantity: 'Cantidad de unidades',
+    estimate: 'Estimación de tarifa base',
+    what: '¿Qué estás cotizando?',
     send: 'Enviar mi cotización por WhatsApp',
-    footnote: `Estimado en dólares (US$). ${
-      RATES.roundUpToPound
-        ? `Cada libra iniciada se cobra completa${sameMinimum ? ` y el peso mínimo es de ${formatNumber(air.minLb)} lb` : ''}. `
-        : ''
-    }El monto final se confirma cuando recibimos tu paquete.`,
+    reset: 'Restablecer',
+    footnote:
+      'Estimación orientativa, no una cotización contractual. El total final depende de la revisión del peso, las dimensiones, el contenido, las tarifas aplicables y los posibles cargos adicionales. No incluye el costo de los productos ni la entrega a domicilio.',
     // For the script, with {placeholders}.
     script: {
       delivery: 'Entrega estimada: {transit}, {from}.',
-      included: 'Incluye seguro e impuestos cuando aplique.',
-      includedUnits: 'Incluye envío aéreo e impuestos.',
-      needWeight: 'Escribí el peso de tu paquete.',
-      needMeasurements: 'Completá largo, ancho y alto para calcular por volumen.',
-      needWeightOrMeasurements: 'Escribí el peso, las medidas o ambos.',
-      needUnits: 'Agregá al menos un equipo.',
-      airShipment: 'un envío aéreo de {weight} lb',
-      seaShipment: 'un envío marítimo de {measures}',
-      inches: '{measurements} pulgadas',
-      and: ' y ',
-      announce: 'Total estimado: {total}',
+      explainWeight:
+        'Peso de cada paquete multiplicado por la cantidad. El peso y la base aplicable se validan en la recepción.',
+      explainVolume:
+        'Largo × ancho × alto, convertido a pies cúbicos (1 pie = 30.48 cm = 12 pulgadas), sin mínimos ni redondeos.',
+      explainUnit: 'Tarifa aérea por unidad del artículo elegido. No se le suma la tarifa por libra.',
+      comparison: 'Solo como comparación: por {mode}, el mismo peso serían {total} ({transit}).',
+      check: 'Revisá los datos',
+      checkHint: 'Usá valores mayores que cero.',
+      needData: 'Escribí el peso, las medidas o la cantidad para ver la estimación.',
+      weightShipment: 'un envío {mode} de {weight} lb',
+      weightShipmentMany: 'un envío {mode} de {count} paquetes de {weight} lb cada uno',
+      volumeShipment: 'un envío {mode} de {count} bulto(s) de {measurements} {unit}',
+      unitShipment: '{units} por {mode}',
+      unitCm: 'cm',
+      unitIn: 'pulgadas',
+      announce: 'Estimación: {total}',
     },
   },
   en: {
-    title: 'Shipping calculator',
-    step1: '1. Choose the rate',
-    step2: '2. Tell us what you are shipping',
-    step3: '3. Where will you pick it up?',
-    perPound: 'per pound',
-    perPoundOrFoot: `per pound or ${formatUSD(sea.pricePerCubicFoot)} per ft³`,
-    flat: 'Flat rate per unit',
-    weight: 'Weight',
+    title: 'Calculate your shipment',
+    mode: 'How do you want to bring it?',
+    basis: 'Type of rate',
+    basisHint: 'Choose one basis only: weight, volume and the rate per unit are not added together.',
+    byWeight: 'By weight (pound)',
+    byVolume: 'By volume (cubic foot)',
+    perUnit: (name: string) => `${name} (per unit)`,
+    weightEach: 'Weight of each package (lb)',
+    packages: 'Number of packages',
     kilos: 'Do you have it in kilos? 1 kg = 2.2 lb.',
-    measurements: 'Measurements of the box, in inches',
     dimensions: ['Length', 'Width', 'Height'],
-    measurementsHint:
-      'Fill in the weight, the measurements or both: by sea we charge whichever is higher. Do you have them in centimeters? Divide them by 2.54.',
-    each: 'each',
-    remove: (name: string) => `Remove one ${name}`,
-    add: (name: string) => `Add one ${name}`,
-    unitsHint: 'Every rate includes air shipping and taxes.',
-    home: 'Home delivery',
-    total: 'Estimated total',
+    unit: 'Measured in',
+    units: { cm: 'Centimeters', pulg: 'Inches' },
+    pieces: 'Number of pieces',
+    quantity: 'Number of units',
+    estimate: 'Estimated base rate',
+    what: 'What are you quoting?',
     send: 'Send my quote on WhatsApp',
-    footnote: `Estimate in US dollars (US$). ${
-      RATES.roundUpToPound
-        ? `Each started pound is charged as a full pound${sameMinimum ? ` and the minimum weight is ${formatNumber(air.minLb)} lb` : ''}. `
-        : ''
-    }The final amount is confirmed when we receive your package.`,
+    reset: 'Reset',
+    footnote:
+      'A guiding estimate, not a contractual quote. The final total depends on the review of the weight, the dimensions, the contents, the rates that apply and any additional charges. It does not include the cost of the products or home delivery.',
     script: {
       delivery: 'Estimated delivery: {transit}, {from}.',
-      included: 'Includes insurance and taxes where applicable.',
-      includedUnits: 'Includes air shipping and taxes.',
-      needWeight: 'Enter the weight of your package.',
-      needMeasurements: 'Fill in length, width and height to calculate by volume.',
-      needWeightOrMeasurements: 'Enter the weight, the measurements or both.',
-      needUnits: 'Add at least one device.',
-      airShipment: 'an air shipment of {weight} lb',
-      seaShipment: 'a sea shipment of {measures}',
-      inches: '{measurements} inches',
-      and: ' and ',
-      announce: 'Estimated total: {total}',
+      explainWeight:
+        'Weight of each package multiplied by the number of packages. The weight and the basis that applies are validated on reception.',
+      explainVolume:
+        'Length × width × height, converted to cubic feet (1 foot = 30.48 cm = 12 inches), with no minimums and no rounding.',
+      explainUnit: 'Air rate per unit of the item you chose. The rate per pound is not added to it.',
+      comparison: 'Only as a comparison: by {mode}, the same weight would be {total} ({transit}).',
+      check: 'Check the details',
+      checkHint: 'Use values greater than zero.',
+      needData: 'Enter the weight, the measurements or the quantity to see the estimate.',
+      weightShipment: 'a shipment by {mode} of {weight} lb',
+      weightShipmentMany: 'a shipment by {mode} of {count} packages of {weight} lb each',
+      volumeShipment: 'a shipment by {mode} of {count} piece(s) measuring {measurements} {unit}',
+      unitShipment: '{units} by {mode}',
+      unitCm: 'cm',
+      unitIn: 'inches',
+      announce: 'Estimate: {total}',
     },
   },
 }[locale];
 
-// Before the script runs: 1 lb by air, picked up at the first branch.
-const pounds = 1;
-const initial = quoteByWeight(pounds, air.pricePerLb, air.minLb, RATES.roundUpToPound);
-const initialMessage = WA_MESSAGES.quote(
-  fill(t.script.airShipment, { weight: formatNumber(pounds) }),
-  branch.city,
+// Before the script runs: 5 lb by air, one package (the prototype's starting point).
+const pounds = 5;
+const initial = quoteByWeight(pounds, air.pricePerLb);
+const messages =
+  place === 'home'
+    ? { quote: WA_MESSAGES.homeQuote, empty: WA_MESSAGES.homeQuoteEmpty }
+    : { quote: WA_MESSAGES.quote, empty: WA_MESSAGES.quoteEmpty };
+const modeWord = (name: string) => name.toLowerCase();
+const initialMessage = messages.quote(
+  fill(t.script.weightShipment, { mode: modeWord(air.name), weight: formatNumber(pounds) }),
   formatUSD(initial.total)
 );
+const initialComparison = fill(t.script.comparison, {
+  mode: modeWord(sea.name),
+  total: formatUSD(quoteByWeight(pounds, sea.pricePerLb).total),
+  transit: sea.transit,
+});
 
-// The ids are also the values of ?tarifa= and of the CSS below.
-const tariffs = [
-  {
-    id: air.id,
-    name: air.name,
-    icon: air.icon,
-    price: `${formatUSD(air.pricePerLb)} ${t.perPound}`,
-    transit: air.transit,
-  },
-  {
-    id: sea.id,
-    name: sea.name,
-    icon: sea.icon,
-    price: `${formatUSD(sea.pricePerLb)} ${t.perPoundOrFoot}`,
-    transit: sea.transit,
-  },
-  {
-    id: electronics.id,
-    name: electronics.name,
-    icon: electronics.icon,
-    price: t.flat,
-    transit: electronics.transit,
-  },
+// The ids are also the values of ?tarifa=.
+const modes = [
+  { id: air.id, name: air.name, icon: air.icon },
+  { id: sea.id, name: sea.name, icon: sea.icon },
 ];
+
+/** The options of "Tipo de tarifa" for each way of travelling: [value, label]. */
+const bases: Record<string, Array<[string, string]>> = {
+  [air.id]: [
+    ['peso', t.byWeight],
+    ...electronics.items.map((item): [string, string] => [
+      item.id,
+      `${t.perUnit(item.name)} · ${formatUSD(item.price)}`,
+    ]),
+  ],
+  [sea.id]: [
+    ['peso', t.byWeight],
+    ['volumen', t.byVolume],
+  ],
+};
 
 const config = {
   locale,
-  roundUp: RATES.roundUpToPound,
   transitFrom: RATES.transitFrom,
-  air: { pricePerLb: air.pricePerLb, minLb: air.minLb, transit: air.transit },
-  sea: { pricePerLb: sea.pricePerLb, pricePerCubicFoot: sea.pricePerCubicFoot, minLb: sea.minLb, transit: sea.transit },
-  electronics: {
-    transit: electronics.transit,
-    items: electronics.items.map(({ id, name, plural, price, brand }) => ({ id, name, plural, price, brand })),
+  rates: {
+    [air.id]: { word: modeWord(air.name), pricePerLb: air.pricePerLb, transit: air.transit },
+    [sea.id]: {
+      word: modeWord(sea.name),
+      pricePerLb: sea.pricePerLb,
+      pricePerCubicFoot: sea.pricePerCubicFoot,
+      transit: sea.transit,
+    },
   },
-  branches: BRANCHES.map(({ id, city, whatsapp }) => ({ id, city, whatsapp })),
+  devices: electronics.items.map(({ id, name, plural, price, brand }) => ({ id, name, plural, price, brand })),
+  deviceTransit: electronics.transit,
+  bases,
   text: {
     ...t.script,
     // The WhatsApp messages of this place, with the quote still to fill in.
-    whatsappQuote: WA_MESSAGES.quote('{shipment}', '{city}', '{total}'),
-    whatsappEmpty: WA_MESSAGES.quoteEmpty,
+    whatsappQuote: messages.quote('{shipment}', '{total}'),
+    whatsappEmpty: messages.empty,
   },
 };
 
 // The field names are the parameter names of the address (/cotizador?largo=48): the same in both languages.
 const dimensions = ['largo', 'ancho', 'alto'].map((name, index) => ({ name, label: t.dimensions[index] }));
-const deviceName = (item: { name: string; brand?: boolean }) => (item.brand ? item.name : item.name.toLowerCase());
 
-const legendClass = 'font-heading text-lg font-bold text-[#011028]';
-const labelClass = 'block text-sm font-semibold text-slate-700';
+const labelClass = 'block text-sm font-bold text-[#173353]';
 const hintClass = 'mt-1.5 text-xs leading-relaxed text-slate-600';
-const numberClass =
-  'w-full min-w-0 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-lg font-semibold text-[#011028] outline-none transition focus:border-[#053A86]';
-const optionClass =
-  'flex h-full rounded-xl border-2 border-slate-200 px-3 py-2.5 transition peer-checked:border-cta peer-checked:bg-orange-50 peer-focus-visible:ring-2 peer-focus-visible:ring-[#053A86] peer-focus-visible:ring-offset-2';
-const stepClass =
-  'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 border-slate-200 text-xl font-bold text-[#011028] transition hover:border-[#053A86] focus-visible:outline-2 focus-visible:outline-[#053A86]';
+const fieldClass =
+  'mt-1.5 block w-full min-w-0 rounded-lg border border-[#cbd7e4] bg-[#fbfcff] px-3 py-2.5 text-base font-semibold text-navy outline-none transition focus:border-cta focus:ring-2 focus:ring-orange-100';
 ---
 
 <cn-quote data-config={JSON.stringify(config)} class="block">
   <form
-    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    class="relative overflow-hidden rounded-2xl border border-[#d9e3ef] bg-white p-5 text-left text-slate-800 shadow-[0_32px_70px_rgb(11_43_80/0.1)] sm:p-9"
     novalidate
     aria-labelledby="cn-quote-title"
   >
-    <h2 id="cn-quote-title" class="sr-only">{t.title}</h2>
+    <div
+      class="absolute inset-x-0 top-0 h-[5px] bg-[linear-gradient(90deg,#ff8a00,#ffbd67_40%,#06366a_40%,#06366a_100%)]"
+      aria-hidden="true"
+    >
+    </div>
+    <Heading id="cn-quote-title" class="font-heading text-2xl font-extrabold text-navy">{t.title}</Heading>
 
-    <fieldset>
-      <legend class={legendClass}>{t.step1}</legend>
-      <div class="mt-3 grid gap-2 sm:grid-cols-3">
+    <fieldset class="mt-5">
+      <legend class={labelClass}>{t.mode}</legend>
+      <div class="mt-2 grid grid-cols-2 gap-1 rounded-lg bg-[#eaf0f7] p-1">
         {
-          tariffs.map((tariff, index) => (
+          modes.map((mode, index) => (
             <label class="relative block cursor-pointer">
-              <input type="radio" name="tarifa" value={tariff.id} checked={index === 0} class="peer sr-only" />
-              <span class:list={[optionClass, 'flex-col gap-0.5']}>
-                <span class="flex items-center gap-1.5 font-semibold text-[#011028]">
-                  <Icon name={tariff.icon} class="h-5 w-5" />
-                  {tariff.name}
-                </span>
-                <span class="text-sm text-slate-700">{tariff.price}</span>
-                <span class="text-xs text-slate-600">{tariff.transit}</span>
+              <input type="radio" name="tarifa" value={mode.id} checked={index === 0} class="peer sr-only" />
+              <span class="flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-extrabold text-[#516b86] transition peer-checked:bg-navy peer-checked:text-white peer-checked:shadow-md peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2">
+                <Icon name={mode.icon} class="h-5 w-5" />
+                {mode.name}
               </span>
             </label>
           ))
@@ -208,14 +223,18 @@ const stepClass =
       </div>
     </fieldset>
 
-    <fieldset class="mt-7">
-      <legend class={legendClass}>{t.step2}</legend>
+    <div class="mt-5">
+      <label for="cn-base" class={labelClass}>{t.basis}</label>
+      <select id="cn-base" name="base" class={fieldClass} aria-describedby="cn-base-hint">
+        {bases[air.id].map(([value, label]) => <option value={value}>{label}</option>)}
+      </select>
+      <p id="cn-base-hint" class={hintClass}>{t.basisHint}</p>
+    </div>
 
-      <div data-show="aereo maritimo" class="mt-3">
-        <label for="cn-lb" class={labelClass}>{t.weight}</label>
-        <div
-          class="mt-1.5 flex items-center rounded-xl border-2 border-slate-200 transition focus-within:border-[#053A86]"
-        >
+    <div data-show="peso" class="mt-5">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="cn-lb" class={labelClass}>{t.weightEach}</label>
           <input
             id="cn-lb"
             name="lb"
@@ -225,205 +244,175 @@ const stepClass =
             step="any"
             value={pounds}
             aria-describedby="cn-lb-hint"
-            class="w-full rounded-xl bg-transparent px-3 py-2.5 text-lg font-semibold text-[#011028] outline-none"
+            class={fieldClass}
           />
-          <span class="pr-4 font-semibold text-slate-600">lb</span>
         </div>
-        <p id="cn-lb-hint" class={hintClass}>{t.kilos}</p>
-      </div>
-
-      <div data-show="maritimo" class="mt-5">
-        <p id="cn-dims-label" class={labelClass}>{t.measurements}</p>
-        <div
-          class="mt-1.5 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-end gap-2"
-          role="group"
-          aria-labelledby="cn-dims-label"
-          aria-describedby="cn-dims-hint"
-        >
-          {
-            dimensions.map((dimension, index) => (
-              <>
-                {index > 0 && (
-                  <span class="pb-3 text-lg text-slate-500" aria-hidden="true">
-                    ×
-                  </span>
-                )}
-                <label class="block min-w-0">
-                  <span class="text-xs font-semibold text-slate-600">{dimension.label}</span>
-                  <input
-                    name={dimension.name}
-                    type="number"
-                    inputmode="decimal"
-                    min="0"
-                    step="any"
-                    class:list={[numberClass, 'mt-1']}
-                  />
-                </label>
-              </>
-            ))
-          }
+        <div>
+          <label for="cn-paquetes" class={labelClass}>{t.packages}</label>
+          <input
+            id="cn-paquetes"
+            name="paquetes"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            value="1"
+            class={fieldClass}
+          />
         </div>
-        <p id="cn-dims-hint" class={hintClass}>{t.measurementsHint}</p>
       </div>
+      <p id="cn-lb-hint" class={hintClass}>{t.kilos}</p>
+    </div>
 
-      <div data-show="electronicos" class="mt-2">
-        <ul class="divide-y divide-slate-100">
-          {
-            electronics.items.map((item) => (
-              <li class="flex items-center gap-3 py-2.5">
-                <Icon name={item.icon} class="h-6 w-6 shrink-0 text-[#053A86]" />
-                <label for={`cn-${item.id}`} class="min-w-0 flex-1">
-                  <span class="block font-semibold text-[#011028]">{item.plural}</span>
-                  <span class="block text-sm text-slate-600">{`${formatUSD(item.price)} ${t.each}`}</span>
-                </label>
-                <div class="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    class={stepClass}
-                    data-step="-1"
-                    data-for={item.id}
-                    aria-label={t.remove(deviceName(item))}
-                  >
-                    −
-                  </button>
-                  <input
-                    id={`cn-${item.id}`}
-                    name={item.id}
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    step="1"
-                    value="0"
-                    class="w-14 rounded-lg border-2 border-slate-200 py-1.5 text-center text-lg font-semibold text-[#011028] outline-none focus:border-[#053A86]"
-                  />
-                  <button
-                    type="button"
-                    class={stepClass}
-                    data-step="1"
-                    data-for={item.id}
-                    aria-label={t.add(deviceName(item))}
-                  >
-                    +
-                  </button>
-                </div>
-              </li>
-            ))
-          }
-        </ul>
-        <p class={hintClass}>{t.unitsHint}</p>
-      </div>
-    </fieldset>
-
-    <fieldset class="mt-7">
-      <legend class={legendClass}>{t.step3}</legend>
-      <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <div data-show="volumen" class="mt-5" hidden>
+      <div class="grid grid-cols-3 gap-3">
         {
-          BRANCHES.map((option, index) => (
-            <label class="relative block cursor-pointer">
-              <input type="radio" name="sucursal" value={option.id} checked={index === 0} class="peer sr-only" />
-              <span class:list={[optionClass, 'items-center gap-1.5 font-semibold text-[#011028]']}>
-                <Icon name="tabler:map-pin" class="h-5 w-5" />
-                {option.city}
-              </span>
-            </label>
+          dimensions.map((dimension) => (
+            <div class="min-w-0">
+              <label for={`cn-${dimension.name}`} class={labelClass}>
+                {dimension.label}
+              </label>
+              <input
+                id={`cn-${dimension.name}`}
+                name={dimension.name}
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="any"
+                class={fieldClass}
+              />
+            </div>
           ))
         }
-        {
-          !LAST_MILE.available && (
-            <p class="col-span-2 flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-slate-200 px-3 py-2.5 text-slate-600 sm:col-span-1">
-              <Icon name="tabler:truck-delivery" class="h-5 w-5 shrink-0" />
-              <span class="font-semibold">{t.home}</span>
-              <ServiceBadge kind="soon" />
-            </p>
-          )
-        }
       </div>
-    </fieldset>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="cn-unidad" class={labelClass}>{t.unit}</label>
+          <select id="cn-unidad" name="unidad" class={fieldClass}>
+            {Object.entries(t.units).map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="cn-bultos" class={labelClass}>{t.pieces}</label>
+          <input
+            id="cn-bultos"
+            name="bultos"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            value="1"
+            class={fieldClass}
+          />
+        </div>
+      </div>
+    </div>
 
-    <div class="mt-7 rounded-xl bg-slate-100 p-4 sm:p-5">
-      <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <p class="text-sm font-semibold text-slate-700">{t.total}</p>
-        <p class="font-heading text-4xl font-extrabold text-[#011028] tabular-nums" data-cn-total>
-          {formatUSD(initial.total)}
-        </p>
-      </div>
-      <ul class="mt-3 space-y-1 text-sm break-words text-slate-700 tabular-nums" data-cn-lines>
-        <li>{describeWeight(initial)}</li>
-      </ul>
-      <p class="mt-1 text-sm font-semibold text-[#011028]" data-cn-charged hidden></p>
-      <p class="mt-3 flex gap-2 text-sm text-slate-700">
-        <Icon name="tabler:clock" class="mt-0.5 h-4 w-4 shrink-0" />
-        <span data-cn-transit>{fill(t.script.delivery, { transit: air.transit, from: RATES.transitFrom })}</span>
+    <div data-show="unidad" class="mt-5 sm:w-1/2 sm:pr-2" hidden>
+      <label for="cn-unidades" class={labelClass}>{t.quantity}</label>
+      <input
+        id="cn-unidades"
+        name="unidades"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        step="1"
+        value="1"
+        class={fieldClass}
+      />
+    </div>
+
+    <div
+      class="mt-6 rounded-xl border border-[#0e3766] bg-[linear-gradient(135deg,#092a52,#05162f)] p-5 text-white sm:p-6"
+    >
+      <p class="text-sm text-[#adc3dc]">{t.estimate}</p>
+      <p
+        class="mt-1 font-heading text-4xl font-extrabold tracking-[-0.05em] text-[#ffac49] tabular-nums sm:text-5xl"
+        data-cn-total
+      >
+        {formatUSD(initial.total)}
       </p>
-      <p class="mt-1 flex gap-2 text-sm text-slate-700">
-        <Icon name="tabler:shield-check" class="mt-0.5 h-4 w-4 shrink-0" />
-        <span data-cn-included>{t.script.included}</span>
-      </p>
+      <p class="mt-2 text-sm break-words text-[#adc3dc] tabular-nums" data-cn-formula>{describeWeight(initial)}</p>
     </div>
     <p class="sr-only" aria-live="polite" data-cn-status></p>
 
-    <div class="mt-6 flex flex-col items-center gap-2">
-      <a class="btn-primary w-full" href={href(CTA.signup.path)} data-auth="out">{CTA.signup.text}</a>
-      <a class="btn-primary w-full" href={href(CTA.mailbox.path)} data-auth="in">{CTA.mailbox.text}</a>
-      <WhatsAppHelp message={initialMessage} phone={branch.whatsapp} text={t.send} data-cn-whatsapp />
+    <div class="mt-4 rounded-xl border border-[#dfe6ef] bg-[#f4f7fb] p-4 text-sm text-[#48607c]">
+      <p class="font-bold text-[#183b5d]">{t.what}</p>
+      <p class="mt-1.5" data-cn-explain>{t.script.explainWeight}</p>
+      <p class="mt-2 border-t border-[#dce6f0] pt-2" data-cn-comparison>{initialComparison}</p>
+      <p class="mt-2 flex gap-2">
+        <Icon name="tabler:clock" class="mt-0.5 h-4 w-4 shrink-0" />
+        <span data-cn-transit>{fill(t.script.delivery, { transit: air.transit, from: RATES.transitFrom })}</span>
+      </p>
+    </div>
+
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+      <WhatsAppHelp message={initialMessage} text={t.send} data-cn-whatsapp />
+      <button
+        type="button"
+        class="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-slate-600 underline underline-offset-4 hover:text-navy"
+        data-cn-reset
+      >
+        <Icon name="tabler:rotate" class="h-4 w-4" />
+        {t.reset}
+      </button>
     </div>
     <p class="mt-3 text-xs leading-relaxed text-slate-600">{t.footnote}</p>
   </form>
 </cn-quote>
 
-<style is:global>
-  /* Only the fields of the chosen rate show, before the script runs too. The values are the
-     tariff ids of src/data/carinova.ts. Without :has every field shows until the script hides them. */
-  @supports selector(:has(*)) {
-    cn-quote [data-show] {
-      display: none;
-    }
-    cn-quote:has(input[name='tarifa'][value='aereo']:checked) [data-show~='aereo'],
-    cn-quote:has(input[name='tarifa'][value='maritimo']:checked) [data-show~='maritimo'],
-    cn-quote:has(input[name='tarifa'][value='electronicos']:checked) [data-show~='electronicos'] {
-      display: block;
-    }
-  }
-</style>
-
 <script>
   import type { Locale } from '~/i18n/locales';
   import {
-    describeSea,
     describeUnitLine,
+    describeVolume,
     describeWeight,
     formatNumber,
     formatUSD,
     listUnits,
+    quoteByVolume,
     quoteByWeight,
-    quoteSea,
     quoteUnits,
+    type LengthUnit,
     type UnitItem,
   } from '~/utils/rates';
   import { fill } from '~/utils/template';
   import { whatsappLink } from '~/utils/whatsapp';
+  import { CONTACT } from '~/data/carinova';
+
+  interface Rate {
+    /** The way of travelling inside a sentence: "aéreo", "sea". */
+    word: string;
+    pricePerLb: number;
+    pricePerCubicFoot?: number;
+    transit: string;
+  }
 
   interface Config {
     locale: Locale;
-    roundUp: boolean;
     transitFrom: string;
-    air: { pricePerLb: number; minLb: number; transit: string };
-    sea: { pricePerLb: number; pricePerCubicFoot: number; minLb: number; transit: string };
-    electronics: { transit: string; items: Array<UnitItem> };
-    branches: Array<{ id: string; city: string; whatsapp: string }>;
+    /** By the value of ?tarifa=. */
+    rates: Record<string, Rate>;
+    devices: Array<UnitItem>;
+    deviceTransit: string;
+    /** The options of "Tipo de tarifa" for each way of travelling. */
+    bases: Record<string, Array<[string, string]>>;
     /** The sentences of the page's language; {placeholders} are filled in here. */
     text: Record<
       | 'delivery'
-      | 'included'
-      | 'includedUnits'
-      | 'needWeight'
-      | 'needMeasurements'
-      | 'needWeightOrMeasurements'
-      | 'needUnits'
-      | 'airShipment'
-      | 'seaShipment'
-      | 'inches'
-      | 'and'
+      | 'explainWeight'
+      | 'explainVolume'
+      | 'explainUnit'
+      | 'comparison'
+      | 'check'
+      | 'checkHint'
+      | 'needData'
+      | 'weightShipment'
+      | 'weightShipmentMany'
+      | 'volumeShipment'
+      | 'unitShipment'
+      | 'unitCm'
+      | 'unitIn'
       | 'announce'
       | 'whatsappQuote'
       | 'whatsappEmpty',
@@ -433,14 +422,17 @@ const stepClass =
 
   interface Result {
     total?: number;
-    /** The arithmetic, or what is missing to do it. */
-    lines: Array<string>;
-    charged?: string;
+    formula: string;
+    explain: string;
+    comparison?: string;
     transit: string;
-    included: string;
-    /** For the WhatsApp message: "un envío aéreo de 3 lb", "1 celular y 1 laptop". */
+    /** For the WhatsApp message: "un envío aéreo de 3 lb", "1 celular por aéreo". */
     shipment?: string;
   }
+
+  /** What a field can hold: no weight of a million pounds, no ten thousand and one packages. */
+  const MAX_MEASURE = 100_000;
+  const MAX_COUNT = 10_000;
 
   class CnQuote extends HTMLElement {
     private config!: Config;
@@ -457,11 +449,12 @@ const stepClass =
       this.config = JSON.parse(this.dataset.config ?? '{}');
 
       form.addEventListener('input', () => this.update());
-      form.addEventListener('change', () => this.update());
+      form.addEventListener('change', (event) => {
+        if ((event.target as HTMLInputElement | null)?.name === 'tarifa') this.setBases();
+        this.update();
+      });
       form.addEventListener('submit', (event) => event.preventDefault());
-      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-step]')) {
-        button.addEventListener('click', () => this.step(button));
-      }
+      this.querySelector('[data-cn-reset]')?.addEventListener('click', () => this.reset());
 
       // With client-side navigation the address changes only after the new page is in place, so
       // fill the fields again once it has (astro:page-load); on a normal load, right away.
@@ -474,7 +467,38 @@ const stepClass =
       window.clearTimeout(this.announceTimer);
     }
 
-    /** Fields from the address (/cotizador?tarifa=maritimo&largo=48…), on top of the defaults. */
+    private field(name: string): HTMLInputElement | HTMLSelectElement | null {
+      const field = this.form.elements.namedItem(name);
+      return field instanceof HTMLInputElement || field instanceof HTMLSelectElement ? field : null;
+    }
+
+    private mode(): string {
+      const chosen = String(new FormData(this.form).get('tarifa') ?? '');
+      return chosen in this.config.rates ? chosen : Object.keys(this.config.rates)[0];
+    }
+
+    /** "Tipo de tarifa" offers what the chosen way of travelling has; the choice stays if it still applies. */
+    private setBases(wanted?: string) {
+      const select = this.field('base');
+      if (!(select instanceof HTMLSelectElement)) return;
+      const options = this.config.bases[this.mode()] ?? [];
+      const keep = wanted ?? select.value;
+      select.replaceChildren(
+        ...options.map(([value, label]) =>
+          Object.assign(document.createElement('option'), { value, textContent: label })
+        )
+      );
+      select.value = options.some(([value]) => value === keep) ? keep : (options[0]?.[0] ?? '');
+    }
+
+    private reset() {
+      this.form.reset();
+      this.setBases('peso');
+      this.update();
+      this.field('lb')?.focus();
+    }
+
+    /** Fields from the address (/cotizador?tarifa=maritimo&base=volumen&largo=48…), on top of the defaults. */
     private fill() {
       const { search } = window.location;
       if (search === this.filledFrom) return;
@@ -482,129 +506,161 @@ const stepClass =
       this.filledFrom = search;
 
       const params = new URLSearchParams(search);
+      const device = this.config.devices.find((item) => params.has(item.id));
+
+      // How it travels first: the options of "Tipo de tarifa" depend on it. Devices travel by air.
+      const mode = params.get('tarifa') ?? '';
+      const tariff = mode in this.config.rates ? mode : device || mode === 'electronicos' ? 'aereo' : '';
+      for (const option of this.form.querySelectorAll<HTMLInputElement>('input[name="tarifa"]')) {
+        if (tariff && option.value === tariff) option.checked = true;
+      }
+
+      // Then the basis: the one named, or the one the other fields imply.
+      const implied = device ? device.id : mode === 'electronicos' ? this.config.devices[0]?.id : undefined;
+      this.setBases(params.get('base') ?? implied ?? (params.has('largo') ? 'volumen' : 'peso'));
+
       for (const [name, value] of params) {
-        const field = this.form.elements.namedItem(name);
-        if (field instanceof RadioNodeList) {
-          for (const option of field) {
-            if (option instanceof HTMLInputElement && option.value === value) option.checked = true;
-          }
-        } else if (field instanceof HTMLInputElement && field.type === 'number') {
+        const field = this.field(name);
+        if (field instanceof HTMLInputElement && field.type === 'number') {
           const number = Number(value);
           if (Number.isFinite(number) && number >= 0) field.value = String(number);
+        } else if (field instanceof HTMLSelectElement && name !== 'base') {
+          if (Array.from(field.options).some((option) => option.value === value)) field.value = value;
         }
       }
-      // Measurements without a weight: no default pound next to them.
-      const weight = this.form.elements.namedItem('lb');
-      if (params.has('largo') && !params.has('lb') && weight instanceof HTMLInputElement) weight.value = '';
+      // A device named with its quantity, as links did before the basis had a name: ?celular=2.
+      if (device && !params.has('unidades')) {
+        const units = this.field('unidades');
+        const quantity = Number(params.get(device.id));
+        if (units && Number.isFinite(quantity) && quantity >= 1) units.value = String(Math.floor(quantity));
+      }
 
       this.update();
     }
 
-    private number(name: string): number {
-      const field = this.form.elements.namedItem(name);
-      const value = field instanceof HTMLInputElement ? Number(field.value.replace(',', '.')) : NaN;
-      return Number.isFinite(value) && value > 0 ? value : 0;
+    /** A measure: greater than zero, or nothing. */
+    private measure(name: string): number {
+      const value = Number((this.field(name)?.value ?? '').replace(',', '.'));
+      return Number.isFinite(value) && value > 0 && value <= MAX_MEASURE ? value : 0;
     }
 
-    private step(button: HTMLButtonElement) {
-      const field = this.form.elements.namedItem(button.dataset.for ?? '');
-      if (!(field instanceof HTMLInputElement)) return;
-      field.value = String(Math.max(0, Math.floor(Number(field.value) || 0) + Number(button.dataset.step)));
-      this.update();
+    /** A count: a whole number of at least one, or nothing. */
+    private count(name: string): number {
+      const value = Number(this.field(name)?.value ?? '');
+      return Number.isInteger(value) && value >= 1 && value <= MAX_COUNT ? value : 0;
     }
 
-    private air(): Result {
-      const { air, roundUp, text } = this.config;
-      const base = { transit: air.transit, included: text.included };
-      const pounds = this.number('lb');
-      if (!pounds) return { ...base, lines: [text.needWeight] };
+    private invalid(transit: string): Result {
+      const { text } = this.config;
+      return { formula: text.checkHint, explain: text.needData, transit };
+    }
 
-      const quote = quoteByWeight(pounds, air.pricePerLb, air.minLb, roundUp);
+    private byWeight(mode: string): Result {
+      const { rates, text } = this.config;
+      const rate = rates[mode];
+      const pounds = this.measure('lb');
+      const packages = this.count('paquetes');
+      if (!pounds || !packages) return this.invalid(rate.transit);
+
+      const quote = quoteByWeight(pounds, rate.pricePerLb, packages);
+      const [other] = Object.entries(rates).filter(([id]) => id !== mode);
       return {
-        ...base,
         total: quote.total,
-        lines: [describeWeight(quote)],
-        shipment: fill(text.airShipment, { weight: formatNumber(pounds) }),
+        formula: describeWeight(quote),
+        explain: text.explainWeight,
+        comparison:
+          other &&
+          fill(text.comparison, {
+            mode: other[1].word,
+            total: formatUSD(quoteByWeight(pounds, other[1].pricePerLb, packages).total),
+            transit: other[1].transit,
+          }),
+        transit: rate.transit,
+        shipment: fill(packages > 1 ? text.weightShipmentMany : text.weightShipment, {
+          mode: rate.word,
+          count: packages,
+          weight: formatNumber(pounds, 5),
+        }),
       };
     }
 
-    private sea(): Result {
-      const { sea, roundUp, text, locale } = this.config;
-      const base = { transit: sea.transit, included: text.included };
-      const pounds = this.number('lb');
-      const dims = { length: this.number('largo'), width: this.number('ancho'), height: this.number('alto') };
-      const sides = [dims.length, dims.width, dims.height].filter(Boolean).length;
-      const incomplete = sides > 0 && sides < 3 ? [text.needMeasurements] : [];
+    private byVolume(mode: string): Result {
+      const { rates, text, locale } = this.config;
+      const rate = rates[mode];
+      const dims = { length: this.measure('largo'), width: this.measure('ancho'), height: this.measure('alto') };
+      const pieces = this.count('bultos');
+      if (!rate.pricePerCubicFoot || !dims.length || !dims.width || !dims.height || !pieces) {
+        return this.invalid(rate.transit);
+      }
 
-      const quote = quoteSea({ pounds, dims }, sea, roundUp);
-      if (!quote) return { ...base, lines: incomplete.length ? incomplete : [text.needWeightOrMeasurements] };
-
-      const { lines, charged } = describeSea(quote, locale);
-      const measures = [
-        quote.byWeight ? `${formatNumber(pounds)} lb` : '',
-        quote.byVolume
-          ? fill(text.inches, { measurements: [dims.length, dims.width, dims.height].map(formatNumber).join(' × ') })
-          : '',
-      ].filter(Boolean);
+      const unit: LengthUnit = this.field('unidad')?.value === 'pulg' ? 'in' : 'cm';
+      const quote = quoteByVolume(dims, rate.pricePerCubicFoot, { unit, pieces });
       return {
-        ...base,
         total: quote.total,
-        lines: [...lines, ...incomplete],
-        charged,
-        shipment: fill(text.seaShipment, { measures: measures.join(text.and) }),
+        formula: describeVolume(quote, locale),
+        explain: text.explainVolume,
+        transit: rate.transit,
+        shipment: fill(text.volumeShipment, {
+          mode: rate.word,
+          count: pieces,
+          measurements: [dims.length, dims.width, dims.height].map((side) => formatNumber(side)).join(' × '),
+          unit: unit === 'in' ? text.unitIn : text.unitCm,
+        }),
       };
     }
 
-    private electronics(): Result {
-      const { electronics, text, locale } = this.config;
-      const base = { transit: electronics.transit, included: text.includedUnits };
-      const quantities = Object.fromEntries(electronics.items.map((item) => [item.id, this.number(item.id)]));
-      const quote = quoteUnits(quantities, electronics.items);
-      if (!quote.units) return { ...base, lines: [text.needUnits] };
+    private byUnit(mode: string, device: UnitItem): Result {
+      const { rates, deviceTransit, text, locale } = this.config;
+      const quantity = this.count('unidades');
+      if (!quantity) return this.invalid(deviceTransit);
 
+      const quote = quoteUnits({ [device.id]: quantity }, [device]);
       return {
-        ...base,
         total: quote.total,
-        lines: quote.lines.map(describeUnitLine),
-        shipment: listUnits(quote.lines, locale),
+        formula: quote.lines.map(describeUnitLine).join(' · '),
+        explain: text.explainUnit,
+        transit: deviceTransit,
+        shipment: fill(text.unitShipment, { units: listUnits(quote.lines, locale), mode: rates[mode].word }),
       };
     }
 
     private update() {
-      const { text } = this.config;
-      const data = new FormData(this.form);
-      const tariff = String(data.get('tarifa') ?? '');
-      const branch = this.config.branches.find((item) => item.id === data.get('sucursal')) ?? this.config.branches[0];
-      const result = tariff === 'electronicos' ? this.electronics() : tariff === 'maritimo' ? this.sea() : this.air();
+      const { text, devices } = this.config;
+      const mode = this.mode();
+      const base = this.field('base')?.value ?? 'peso';
+      const device = devices.find((item) => item.id === base);
+      const kind = device ? 'unidad' : base === 'volumen' ? 'volumen' : 'peso';
+      const result =
+        kind === 'unidad' && device
+          ? this.byUnit(mode, device)
+          : kind === 'volumen'
+            ? this.byVolume(mode)
+            : this.byWeight(mode);
 
-      // Fields of the other rates hide (CSS already does it where :has is supported).
-      for (const block of this.querySelectorAll<HTMLElement>('[data-show]')) {
-        block.hidden = !(block.dataset.show ?? '').split(' ').includes(tariff);
-      }
+      // Only the fields of the chosen basis show.
+      for (const block of this.querySelectorAll<HTMLElement>('[data-show]')) block.hidden = block.dataset.show !== kind;
 
       const total = result.total === undefined ? undefined : formatUSD(result.total);
-      this.setText('[data-cn-total]', total ?? '—');
-      this.querySelector('[data-cn-lines]')?.replaceChildren(
-        ...result.lines.map((line) => Object.assign(document.createElement('li'), { textContent: line }))
-      );
-      const charged = this.querySelector<HTMLElement>('[data-cn-charged]');
-      if (charged) {
-        charged.hidden = !result.charged;
-        charged.textContent = result.charged ?? '';
+      this.setText('[data-cn-total]', total ?? text.check);
+      this.setText('[data-cn-formula]', result.formula);
+      this.setText('[data-cn-explain]', result.explain);
+      const comparison = this.querySelector<HTMLElement>('[data-cn-comparison]');
+      if (comparison) {
+        comparison.hidden = !result.comparison;
+        comparison.textContent = result.comparison ?? '';
       }
       this.setText(
         '[data-cn-transit]',
         fill(text.delivery, { transit: result.transit, from: this.config.transitFrom })
       );
-      this.setText('[data-cn-included]', result.included);
 
       const link = this.querySelector<HTMLAnchorElement>('[data-cn-whatsapp]');
       if (link) {
         const message =
           total && result.shipment
-            ? fill(text.whatsappQuote, { shipment: result.shipment, city: branch.city, total })
+            ? fill(text.whatsappQuote, { shipment: result.shipment, total })
             : text.whatsappEmpty;
-        link.href = whatsappLink(branch.whatsapp, message);
+        link.href = whatsappLink(CONTACT.whatsapp, message);
       }
 
       // Screen readers hear the total once typing pauses, not on every key.
