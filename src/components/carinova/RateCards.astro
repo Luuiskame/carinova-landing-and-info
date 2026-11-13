@@ -1,7 +1,8 @@
 ---
 // The rates (/cotizador): one card per rate, the conditions under them, and how each price is worked
 // out, with the cubic-foot example of Carinova's brief. Everything comes from RATES and is computed
-// with utils/rates.ts, like the calculator above it.
+// with utils/rates.ts, like the calculator above it. A shipment is quoted on one basis at a time and
+// the arithmetic is exact: which basis applies is confirmed by Carinova on reception.
 import { Icon } from 'astro-icon/components';
 import Headline from '~/components/ui/Headline.astro';
 import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
@@ -10,6 +11,7 @@ import { LAST_MILE } from '~/data/carinova';
 import { quotePath } from '~/data/services';
 import { i18n } from '~/i18n';
 import {
+  CUBIC_CM_PER_CUBIC_FOOT,
   describeUnitLine,
   describeVolume,
   describeWeight,
@@ -28,101 +30,115 @@ const { air, sea, electronics } = RATES;
 const t = {
   es: {
     tagline: 'Tarifas',
-    title: 'Lo que pagás por tu envío',
+    title: 'Dos caminos. Un mismo destino.',
     subtitle:
-      'Las tarifas incluyen seguro e impuestos cuando aplique. La entrega estimada se cuenta desde que recibimos tu paquete.',
+      'Las tarifas contemplan seguro e impuestos cuando correspondan al envío. Los plazos cuentan desde la recepción física de tu paquete.',
     cities: BRANCHES.map((branch) => branch.city).join(' y '),
-    roundUp: 'Cada libra iniciada se cobra completa.',
-    minimum: `Peso mínimo: ${formatNumber(air.minLb)} lb.`,
     perPound: 'por libra',
     perCubicFoot: 'por pie³',
-    airFact: 'Ideal para ropa, zapatos, electrónicos y compras pequeñas.',
-    seaFact: 'Se cobra por peso o por volumen, el que resulte mayor.',
-    calculate: (name: string) => `Calcular ${name.toLowerCase()}`,
-    electronicsNote: 'Tarifa fija por unidad, con envío aéreo e impuestos incluidos.',
+    airFacts: ['Pensado para lo que querés recibir pronto.', 'Algunos electrónicos tienen tarifa fija por unidad.'],
+    seaFacts: [
+      'Ideal para cargas grandes y compras planificadas.',
+      'La base por peso o por volumen se determina según la carga, su empaque y las condiciones del servicio.',
+    ],
+    calculate: (name: string) => `Calcular envío ${name.toLowerCase()}`,
+    calculateUnits: 'Calcular por unidad',
+    electronicsNote: 'Tarifa por unidad en envíos aéreos. No se suma a la tarifa por libra.',
     pickup: 'Retiro en sucursal:',
     homeDelivery: 'Entrega a domicilio',
     howTitle: 'Cómo calculamos',
-    byPound: { title: 'Por libra', applies: 'Aéreo y marítimo', rule: 'Peso en libras × tarifa por libra.' },
+    howIntro: 'Una base de cálculo a la vez: el peso, el volumen y la tarifa por unidad no se suman.',
+    byPound: {
+      title: 'Por libra',
+      applies: 'Aéreo y marítimo',
+      rule: 'Peso en libras × tarifa por libra, sin mínimos ni redondeos. El peso se valida en la recepción.',
+    },
     byCubicFoot: {
       title: 'Por pie cúbico',
       applies: 'Marítimo',
-      rule: `Largo × ancho × alto de la caja, en pulgadas, ÷ 1,728 = pies cúbicos; × ${formatUSD(sea.pricePerCubicFoot)}. Comparamos con el precio por peso y cobramos el mayor.`,
+      rule: `Largo × ancho × alto de la caja ÷ 1,728 si medís en pulgadas, o ÷ ${formatNumber(CUBIC_CM_PER_CUBIC_FOOT)} si medís en centímetros = pies cúbicos; × ${formatUSD(sea.pricePerCubicFoot)}.`,
       link: 'Probalo en el cotizador',
     },
     byUnit: {
       title: 'Por unidad',
-      applies: 'Electrónicos',
-      rule: 'Cantidad × tarifa de cada equipo, con el envío aéreo y los impuestos incluidos.',
+      applies: 'Electrónicos, por aéreo',
+      rule: 'Cantidad × tarifa del equipo. No se le suma la tarifa por libra.',
     },
   },
   en: {
     tagline: 'Rates',
-    title: 'What you pay for your shipment',
+    title: 'Two routes. One destination.',
     subtitle:
-      'Rates include insurance and taxes where applicable. The delivery estimate counts from the moment we receive your package.',
+      'Rates include insurance and taxes where they apply to the shipment. Delivery times count from the physical reception of your package.',
     cities: BRANCHES.map((branch) => branch.city).join(' and '),
-    roundUp: 'Each started pound is charged as a full pound.',
-    minimum: `Minimum weight: ${formatNumber(air.minLb)} lb.`,
     perPound: 'per pound',
     perCubicFoot: 'per ft³',
-    airFact: 'Ideal for clothes, shoes, electronics and small purchases.',
-    seaFact: 'Charged by weight or by volume, whichever is higher.',
+    airFacts: ['Made for what you want to receive soon.', 'Some electronics have a flat rate per unit.'],
+    seaFacts: [
+      'Ideal for large loads and planned purchases.',
+      'Whether weight or volume applies is determined by the cargo, its packaging and the conditions of the service.',
+    ],
     calculate: (name: string) => `Calculate ${name.toLowerCase()} shipping`,
-    electronicsNote: 'Flat rate per unit, with air shipping and taxes included.',
+    calculateUnits: 'Calculate per unit',
+    electronicsNote: 'Rate per unit on air shipments. It is not added to the rate per pound.',
     pickup: 'Branch pickup:',
     homeDelivery: 'Home delivery',
     howTitle: 'How we calculate',
-    byPound: { title: 'Per pound', applies: 'Air and sea', rule: 'Weight in pounds × rate per pound.' },
+    howIntro: 'One basis at a time: weight, volume and the rate per unit are not added together.',
+    byPound: {
+      title: 'Per pound',
+      applies: 'Air and sea',
+      rule: 'Weight in pounds × rate per pound, with no minimums and no rounding. The weight is validated on reception.',
+    },
     byCubicFoot: {
       title: 'Per cubic foot',
       applies: 'Sea',
-      rule: `Length × width × height of the box, in inches, ÷ 1,728 = cubic feet; × ${formatUSD(sea.pricePerCubicFoot)}. We compare it with the price by weight and charge the higher one.`,
+      rule: `Length × width × height of the box ÷ 1,728 if you measure in inches, or ÷ ${formatNumber(CUBIC_CM_PER_CUBIC_FOOT)} if you measure in centimeters = cubic feet; × ${formatUSD(sea.pricePerCubicFoot)}.`,
       link: 'Try it in the calculator',
     },
     byUnit: {
       title: 'Per unit',
-      applies: 'Electronics',
-      rule: 'Quantity × rate of each device, with air shipping and taxes included.',
+      applies: 'Electronics, by air',
+      rule: 'Quantity × rate of the device. The rate per pound is not added to it.',
     },
   },
 }[locale];
-
-const weightRule = [RATES.roundUpToPound ? t.roundUp : '', t.minimum].filter(Boolean);
 
 const cards = [
   {
     id: air.id,
     icon: air.icon,
     name: air.name,
+    badge: air.badge,
     prices: [{ amount: formatUSD(air.pricePerLb), unit: t.perPound }],
     transit: air.transit,
-    facts: [...weightRule, t.airFact],
+    facts: t.airFacts,
   },
   {
     id: sea.id,
     icon: sea.icon,
     name: sea.name,
+    badge: sea.badge,
     prices: [
       { amount: formatUSD(sea.pricePerLb), unit: t.perPound },
       { amount: formatUSD(sea.pricePerCubicFoot), unit: t.perCubicFoot },
     ],
     transit: sea.transit,
-    facts: [t.seaFact, ...weightRule],
+    facts: t.seaFacts,
   },
 ];
 
 // Worked examples of each way of pricing.
-const byWeight = quoteByWeight(2.3, air.pricePerLb, air.minLb, RATES.roundUpToPound);
-const byVolume = quoteByVolume(FORMULA_EXAMPLE.dims, sea.pricePerCubicFoot);
-const byUnit = quoteUnits({ celular: 1, laptop: 1 }, electronics.items);
+const byWeight = quoteByWeight(5, air.pricePerLb);
+const byVolume = quoteByVolume(FORMULA_EXAMPLE.dims, sea.pricePerCubicFoot, { unit: FORMULA_EXAMPLE.unit });
+const byUnit = quoteUnits({ [electronics.items[0].id]: 2 }, electronics.items);
 
 const formulas = [
   {
     icon: 'tabler:scale',
     title: t.byPound.title,
     applies: t.byPound.applies,
-    rule: `${t.byPound.rule} ${weightRule.join(' ')}`,
+    rule: t.byPound.rule,
     example: [describeWeight(byWeight)],
   },
   {
@@ -138,7 +154,7 @@ const formulas = [
     title: t.byUnit.title,
     applies: t.byUnit.applies,
     rule: t.byUnit.rule,
-    example: [...byUnit.lines.map(describeUnitLine), `Total: ${formatUSD(byUnit.total)}`],
+    example: byUnit.lines.map(describeUnitLine),
   },
 ];
 ---
@@ -149,8 +165,11 @@ const formulas = [
   <div class="grid gap-6 md:grid-cols-3">
     {
       cards.map((card) => (
-        <article class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h3 class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
+        <article class="flex flex-col rounded-2xl border-t-[5px] border-cta bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <p class="w-fit rounded-full border border-[#ffdbbb] bg-[#fff5eb] px-3 py-1 text-xs font-bold text-secondary">
+            {card.badge}
+          </p>
+          <h3 class="mt-4 flex items-center gap-2 font-heading text-2xl font-bold text-heading">
             <Icon name={card.icon} class="h-7 w-7 text-primary" />
             {card.name}
           </h3>
@@ -184,7 +203,7 @@ const formulas = [
       ))
     }
 
-    <article class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <article class="flex flex-col rounded-2xl border-t-[5px] border-navy bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <h3 class="flex items-center gap-2 font-heading text-2xl font-bold text-heading">
         <Icon name={electronics.icon} class="h-7 w-7 text-primary" />
         {electronics.name}
@@ -209,9 +228,9 @@ const formulas = [
       </p>
       <a
         class="mt-6 font-semibold text-link underline underline-offset-4"
-        href={href(quotePath({ tarifa: electronics.id }))}
+        href={href(quotePath({ tarifa: air.id, base: electronics.items[0].id }))}
       >
-        {t.calculate(electronics.name)}
+        {t.calculateUnits}
       </a>
     </article>
   </div>
@@ -224,17 +243,17 @@ const formulas = [
       <span><strong class="text-heading">{t.pickup}</strong> {t.cities}.</span>
     </p>
     {
-      !LAST_MILE.available && (
+      LAST_MILE.available && (
         <p class="flex flex-wrap items-center gap-2">
-          <Icon name="tabler:truck-delivery" class="h-5 w-5 shrink-0 text-slate-500" />
+          <Icon name="tabler:truck-delivery" class="h-5 w-5 shrink-0 text-primary" />
           <strong class="text-heading">{t.homeDelivery}</strong>
-          <ServiceBadge kind="soon" />
+          {LAST_MILE.extraCharge && <ServiceBadge kind="extra" />}
         </p>
       )
     }
   </div>
 
-  <ul class="mx-auto mt-6 max-w-3xl space-y-1 text-center text-sm text-muted">
+  <ul class="mx-auto mt-6 max-w-3xl space-y-1.5 text-center text-sm text-muted">
     {RATES.notes.map((note) => <li>{note}</li>)}
   </ul>
 
@@ -244,6 +263,7 @@ const formulas = [
   >
     {t.howTitle}
   </h2>
+  <p class="mx-auto mt-3 max-w-2xl text-center text-muted">{t.howIntro}</p>
   <div class="mt-8 grid gap-6 md:grid-cols-3">
     {
       formulas.map((formula) => (

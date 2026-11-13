@@ -1,26 +1,25 @@
 ---
-// Carinova wordmark: the "o" is the orange globe from the logo. Text colour follows the
-// section (white in the navy header and footer). Swap for the official SVG when Carinova sends it.
+// Carinova's wordmark, as Carinova supplied it with its prototype: white letters with the orange
+// globe in the place of the "o", on a transparent background. It is made for navy: the header and
+// the footer are the only places it is used. (On a light background use the logo image,
+// src/assets/images/carinova-logo.jpeg.)
+import { Image } from 'astro:assets';
 import { SITE } from 'astrowind:config';
+import { twMerge } from 'tailwind-merge';
+import wordmark from '~/assets/images/carinova-wordmark.webp';
+
+export interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
 ---
 
-<span
-  class="inline-flex items-center font-heading text-[1.7rem] font-extrabold leading-none tracking-tight text-heading"
->
-  <span class="sr-only">{SITE?.name}</span>
-  <span aria-hidden="true">Carin</span>
-  <svg
-    aria-hidden="true"
-    viewBox="0 0 24 24"
-    class="mx-[0.03em] h-[0.74em] w-[0.74em] translate-y-[0.04em] text-cta"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.4"
-    stroke-linecap="round"
-  >
-    <circle cx="12" cy="12" r="9.6"></circle>
-    <ellipse cx="12" cy="12" rx="4.3" ry="9.6"></ellipse>
-    <path d="M2.4 12h19.2M3.7 7.2h16.6M3.7 16.8h16.6"></path>
-  </svg>
-  <span aria-hidden="true">va</span>
-</span>
+<Image
+  src={wordmark}
+  alt={SITE?.name ?? 'Carinova'}
+  width={400}
+  densities={[1, 2]}
+  loading="eager"
+  class={twMerge('block h-8 w-auto max-w-none shrink-0 sm:h-9', className)}
+/>

@@ -21,8 +21,9 @@ import { SIGNUP_COUNTRIES as COUNTRIES_ES } from './signup.ts';
 import { SIGNUP_COUNTRIES as COUNTRIES_EN } from './en/signup.ts';
 
 const es = {
+  TAGLINE: carinovaEs.TAGLINE,
+  HEADLINE: carinovaEs.HEADLINE,
   VALUE_PROPOSITION: carinovaEs.VALUE_PROPOSITION,
-  VALUE_PROPOSITION_HIGHLIGHT: carinovaEs.VALUE_PROPOSITION_HIGHLIGHT,
   CTA: carinovaEs.CTA,
   BRANCHES: carinovaEs.BRANCHES,
   formatHours: carinovaEs.formatHours,
@@ -32,6 +33,9 @@ const es = {
   MIAMI_ADDRESS: carinovaEs.MIAMI_ADDRESS,
   miamiAddressRows: carinovaEs.miamiAddressRows,
   RESTRICTED_ITEMS: carinovaEs.RESTRICTED_ITEMS,
+  RESTRICTED_ORDER: carinovaEs.RESTRICTED_ORDER,
+  RESTRICTED_EXAMPLES: carinovaEs.RESTRICTED_EXAMPLES,
+  STORE_CATEGORIES: carinovaEs.STORE_CATEGORIES,
   STORES: carinovaEs.STORES,
   WA_MESSAGES: carinovaEs.WA_MESSAGES,
 
@@ -50,8 +54,9 @@ const es = {
 export type Content = typeof es;
 
 const en: Content = {
+  TAGLINE: carinovaEn.TAGLINE,
+  HEADLINE: carinovaEn.HEADLINE,
   VALUE_PROPOSITION: carinovaEn.VALUE_PROPOSITION,
-  VALUE_PROPOSITION_HIGHLIGHT: carinovaEn.VALUE_PROPOSITION_HIGHLIGHT,
   CTA: carinovaEn.CTA,
   BRANCHES: carinovaEn.BRANCHES,
   formatHours: carinovaEn.formatHours,
@@ -61,6 +66,9 @@ const en: Content = {
   MIAMI_ADDRESS: carinovaEn.MIAMI_ADDRESS,
   miamiAddressRows: carinovaEn.miamiAddressRows,
   RESTRICTED_ITEMS: carinovaEn.RESTRICTED_ITEMS,
+  RESTRICTED_ORDER: carinovaEn.RESTRICTED_ORDER,
+  RESTRICTED_EXAMPLES: carinovaEn.RESTRICTED_EXAMPLES,
+  STORE_CATEGORIES: carinovaEn.STORE_CATEGORIES,
   STORES: carinovaEn.STORES,
   WA_MESSAGES: carinovaEn.WA_MESSAGES,
 

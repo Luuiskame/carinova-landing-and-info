@@ -1,56 +1,63 @@
 ---
-// Carinova brand tokens (colours sampled from the logo). Fonts come from Astro's Fonts API
-// (see `fonts` in astro.config.ts and <Font /> in Layout.astro).
+// Carinova brand tokens. The palette is Carinova's own (2026-11-13): navy #06172F, orange #FF8A00,
+// white #FFFFFF and blue #1164CF. Fonts come from Astro's Fonts API (see `fonts` in astro.config.ts
+// and <Font /> in Layout.astro): Inter for everything, as in Carinova's prototype.
 //
-// Contrast notes (WCAG AA): the logo orange #FA7005 only reaches 2.9:1 with white text, so
-// buttons use navy text on orange (6.7:1) and orange *text* on white uses #B84D00 (5.1:1).
-// `.dark` is used for navy sections (header, hero, CTA, footer), not for a site-wide dark mode.
+// Contrast notes (WCAG AA):
+// - White on the orange is 2.4:1, so orange buttons carry navy text (7.6:1), and orange *text* on a
+//   light background uses the deep orange #A85400 (5.3:1 on white, 4.9:1 on the grey sections).
+// - The blue is 5.6:1 on white (links, icons) and only 3.2:1 on navy: on navy sections links and
+//   highlights are orange (7.6:1) and icons a light blue.
+// `.dark` is used for navy sections (header, hero, bands, footer), not for a site-wide dark mode.
 ---
 
 <style is:inline>
   :root {
     --aw-font-sans: var(--font-inter);
     --aw-font-serif: var(--font-inter);
-    --aw-font-heading: var(--font-montserrat);
+    --aw-font-heading: var(--font-inter);
 
-    --aw-color-primary: rgb(5 58 134); /* brand blue #053A86: icons, links */
-    --aw-color-secondary: rgb(184 77 0); /* deep orange #B84D00: taglines */
-    --aw-color-accent: rgb(184 77 0); /* highlighted words on light backgrounds */
-    --aw-color-link: rgb(5 58 134);
+    --aw-color-navy: rgb(6 23 47); /* #06172F */
+    --aw-color-brand: rgb(17 100 207); /* #1164CF */
 
-    --aw-color-cta: rgb(250 112 5); /* logo orange #FA7005: main buttons */
-    --aw-color-cta-hover: rgb(229 98 0);
-    --aw-color-on-cta: rgb(1 16 40);
+    --aw-color-primary: rgb(17 100 207); /* brand blue: icons, links */
+    --aw-color-secondary: rgb(168 84 0); /* deep orange #A85400: taglines */
+    --aw-color-accent: rgb(168 84 0); /* highlighted words on light backgrounds */
+    --aw-color-link: rgb(17 100 207);
 
-    --aw-color-text-heading: rgb(1 16 40); /* logo navy #011028 */
+    --aw-color-cta: rgb(255 138 0); /* brand orange #FF8A00: main buttons */
+    --aw-color-cta-hover: rgb(255 167 51); /* #FFA733 */
+    --aw-color-on-cta: rgb(6 23 47);
+
+    --aw-color-text-heading: rgb(6 23 47);
     --aw-color-text-default: rgb(30 41 59);
     --aw-color-text-muted: rgb(30 41 59 / 72%);
     --aw-color-bg-page: rgb(255 255 255);
 
-    --aw-color-bg-page-dark: rgb(1 16 40);
+    --aw-color-bg-page-dark: rgb(6 23 47);
 
     ::selection {
-      background-color: rgb(250 112 5 / 25%);
+      background-color: rgb(255 138 0 / 28%);
     }
   }
 
   .dark {
     --aw-font-sans: var(--font-inter);
     --aw-font-serif: var(--font-inter);
-    --aw-font-heading: var(--font-montserrat);
+    --aw-font-heading: var(--font-inter);
 
     --aw-color-primary: rgb(147 197 253);
-    --aw-color-secondary: rgb(253 186 116);
-    --aw-color-accent: rgb(250 112 5); /* logo orange on navy: 6.7:1 */
-    --aw-color-link: rgb(250 112 5);
+    --aw-color-secondary: rgb(255 180 92); /* #FFB45C: taglines on navy, 10:1 */
+    --aw-color-accent: rgb(255 138 0); /* brand orange on navy: 7.6:1 */
+    --aw-color-link: rgb(255 138 0);
 
     --aw-color-text-heading: rgb(255 255 255);
     --aw-color-text-default: rgb(226 232 240);
     --aw-color-text-muted: rgb(226 232 240 / 78%);
-    --aw-color-bg-page: rgb(1 16 40);
+    --aw-color-bg-page: rgb(6 23 47);
 
     ::selection {
-      background-color: rgb(250 112 5 / 35%);
+      background-color: rgb(255 138 0 / 38%);
       color: white;
     }
   }

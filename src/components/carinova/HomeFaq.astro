@@ -1,0 +1,66 @@
+---
+// "Preguntas frecuentes" on the home page, in the prototype's two columns: what the section is on
+// the left, with the way to ask something else, and the ten questions of the prototype on the right
+// (FEATURED_FAQS, in its order), one open at a time. Native <details>: no JavaScript. Every question
+// and the rest of them live on /preguntas-frecuentes.
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { i18n } from '~/i18n';
+
+const { locale, href, data } = i18n(Astro);
+const { FEATURED_FAQS, WA_MESSAGES } = data;
+
+const t = {
+  es: {
+    eyebrow: 'Respuestas sin vueltas',
+    title: 'Preguntas frecuentes',
+    intro: 'Lo esencial para comprar, cotizar, enviar y recibir con tranquilidad.',
+    help: '¿Necesitás ayuda? Escribinos',
+    all: 'Ver todas las preguntas',
+  },
+  en: {
+    eyebrow: 'Straight answers',
+    title: 'Frequently asked questions',
+    intro: 'The essentials to buy, quote, ship and receive with peace of mind.',
+    help: 'Need help? Write to us',
+    all: 'See all the questions',
+  },
+}[locale];
+---
+
+<section id="preguntas" class="scroll-mt-20 bg-[#f1f5fa]">
+  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:py-24">
+    <div>
+      <p class="eyebrow">{t.eyebrow}</p>
+      <h2 class="display-title mt-4">{t.title}</h2>
+      <p class="mt-5 text-lg leading-relaxed text-muted">{t.intro}</p>
+      <div class="mt-5 flex flex-col items-start gap-1">
+        <WhatsAppHelp message={WA_MESSAGES.homeFaq} text={t.help} />
+        <a
+          class="inline-flex min-h-11 items-center gap-1 font-semibold text-link underline underline-offset-4"
+          href={href('/preguntas-frecuentes')}
+        >
+          {t.all}
+          <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+        </a>
+      </div>
+    </div>
+
+    <div class="border-t border-[#d2dce8]">
+      {
+        FEATURED_FAQS.map((item) => (
+          <details name="home-faq" class="group border-b border-[#d2dce8]">
+            <summary class="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 font-heading text-base font-bold text-[#112e51] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand [&::-webkit-details-marker]:hidden">
+              {item.title}
+              <Icon
+                name="tabler:plus"
+                class="h-5 w-5 shrink-0 text-secondary transition group-open:rotate-45 motion-reduce:transition-none"
+              />
+            </summary>
+            <p class="pr-9 pb-5 leading-relaxed text-[#48607c]" set:html={item.description} />
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

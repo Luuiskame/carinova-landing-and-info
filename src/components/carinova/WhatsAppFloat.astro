@@ -19,11 +19,16 @@ const { BRANCHES, CTA, WA_MESSAGES } = data;
 // The messages are kept by the page's Spanish path, whatever language it is read in.
 const message = WA_MESSAGES.floating[spanishPath(Astro.props.path)] ?? WA_MESSAGES.floatingDefault;
 const perBranch = new Set(BRANCHES.map((branch) => branch.whatsapp)).size > 1;
-const whichBranch = { es: '¿Con qué sucursal?', en: 'Which branch?' }[locale];
+const t = {
+  es: { whichBranch: '¿Con qué sucursal?', label: 'Escribinos' },
+  en: { whichBranch: 'Which branch?', label: 'Write to us' },
+}[locale];
 
-// #1DA851: WhatsApp green dark enough for the white icon to reach 3:1.
+// The pill of Carinova's prototype: a deep WhatsApp green (white on it is 6.4:1) with the icon in a
+// light circle; from tablets up it says "Escribinos", on phones it is the icon alone.
 const buttonClass =
-  'flex h-14 w-14 items-center justify-center rounded-full bg-[#1DA851] text-white shadow-lg shadow-black/30 transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1DA851] motion-reduce:transition-none';
+  'flex min-h-14 items-center gap-2.5 rounded-full border border-[#45c18b] bg-[#136c49] p-1.5 text-sm font-extrabold text-white shadow-lg shadow-black/30 ring-4 ring-white/50 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#136c49] motion-reduce:transition-none md:pr-5';
+const iconClass = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e2fff0] text-[#136c49]';
 ---
 
 <!-- z-30: below the header (z-40), so the open mobile menu covers it. -->
@@ -32,11 +37,14 @@ const buttonClass =
     perBranch ? (
       <details class="relative">
         <summary class:list={[buttonClass, 'cursor-pointer list-none [&::-webkit-details-marker]:hidden']}>
-          <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
-          <span class="sr-only">{CTA.help.text}</span>
+          <span class={iconClass}>
+            <Icon name="tabler:brand-whatsapp" class="h-7 w-7" />
+          </span>
+          <span class="sr-only md:not-sr-only">{t.label}</span>
+          <span class="sr-only">({CTA.help.text})</span>
         </summary>
         <div class="absolute right-0 bottom-16 w-56 rounded-xl bg-white p-2 text-slate-800 shadow-xl ring-1 ring-black/5">
-          <p class="px-3 py-2 text-sm font-semibold">{whichBranch}</p>
+          <p class="px-3 py-2 text-sm font-semibold">{t.whichBranch}</p>
           {BRANCHES.map((branch) => (
             <a
               href={whatsappLink(branch.whatsapp, message)}
@@ -52,8 +60,11 @@ const buttonClass =
       </details>
     ) : (
       <a href={whatsappLink(CONTACT.whatsapp, message)} target="_blank" rel="noopener noreferrer" class={buttonClass}>
-        <Icon name="tabler:brand-whatsapp" class="h-8 w-8" />
-        <span class="sr-only">{CTA.help.text}</span>
+        <span class={iconClass}>
+          <Icon name="tabler:brand-whatsapp" class="h-7 w-7" />
+        </span>
+        <span class="sr-only md:not-sr-only">{t.label}</span>
+        <span class="sr-only">({CTA.help.text})</span>
       </a>
     )
   }

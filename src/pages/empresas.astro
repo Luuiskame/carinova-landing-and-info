@@ -1,9 +1,9 @@
 ---
-// Empresas: for companies that want to be looked after personally. What Carinova offers them (the
-// same rates and services as everyone, one Carinova ID for the company, someone who contacts them)
-// and a form with the company's basic details, which is e-mailed to Carinova's owner
-// (BusinessForm.astro → POST /api/business). Part of "Mi cuenta": one Carinova ID per person or
-// company.
+// Empresas ("Carinova para negocios"): for companies that want to be looked after personally. What
+// Carinova explores with them, in the words of its prototype (BUSINESS_SOLUTIONS, the same three the
+// home page shows), what they get as any customer does (the public rates, one Carinova ID for the
+// company) and a form with the company's basic details, which is e-mailed to Carinova's owner
+// (BusinessForm.astro → POST /api/business).
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
@@ -11,6 +11,7 @@ import BusinessForm from '~/components/carinova/BusinessForm.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
+import { BUSINESS_DISCLAIMER, BUSINESS_SOLUTIONS } from '~/data/business';
 import { i18n } from '~/i18n';
 import { formatUSD } from '~/utils/rates';
 
@@ -22,19 +23,16 @@ const cityNames = BRANCHES.map((branch) => branch.city);
 
 const t = {
   es: {
-    tagline: 'Empresas',
+    tagline: 'Carinova para negocios',
     metaTitle: 'Carinova para empresas',
     description:
-      'Envíos de Estados Unidos a Nicaragua para empresas: carga aérea y marítima, un Carinova ID para tu empresa y atención personalizada. Contanos qué necesitás.',
-    title: 'Carinova para tu empresa',
-    subtitle: 'Traé mercadería, repuestos o insumos de Estados Unidos con una atención a la medida de tu empresa.',
-    offers: 'Lo que ofrecemos a tu empresa',
+      'Soluciones logísticas de Estados Unidos a Nicaragua para empresas: importación y abastecimiento, envíos recurrentes y atención corporativa, por aéreo o por marítimo. Contanos qué necesitás.',
+    title: 'Tus operaciones también merecen moverse mejor.',
+    subtitle:
+      'Desde el primer abastecimiento hasta el crecimiento de tu empresa, exploramos soluciones logísticas adaptadas a las características de tu carga.',
+    offers: 'Lo que exploramos con tu empresa',
+    also: 'Y lo que tenés como cualquier cliente',
     benefits: [
-      {
-        icon: 'tabler:headset',
-        title: 'Atención personalizada',
-        text: 'Contanos qué trae tu empresa y cada cuánto: te contactamos para acordar la forma de trabajo que te convenga.',
-      },
       {
         icon: 'tabler:packages',
         title: 'Carga aérea y marítima',
@@ -69,19 +67,16 @@ const t = {
     },
   },
   en: {
-    tagline: 'For companies',
+    tagline: 'Carinova for business',
     metaTitle: 'Carinova for companies',
     description:
-      'Shipping from the United States to Nicaragua for companies: air and sea cargo, one Carinova ID for your company and personal attention. Tell us what you need.',
-    title: 'Carinova for your company',
-    subtitle: 'Bring merchandise, parts or supplies from the United States with attention tailored to your company.',
-    offers: 'What we offer your company',
+      'Logistics solutions from the United States to Nicaragua for companies: importing and supply, recurring shipments and corporate service, by air or by sea. Tell us what you need.',
+    title: 'Your operations deserve to move better too.',
+    subtitle:
+      'From your first supply run to the growth of your company, we explore logistics solutions adapted to the characteristics of your cargo.',
+    offers: 'What we explore with your company',
+    also: 'And what you get like any customer',
     benefits: [
-      {
-        icon: 'tabler:headset',
-        title: 'Personal attention',
-        text: 'Tell us what your company brings and how often: we contact you to agree on the way of working that suits you.',
-      },
       {
         icon: 'tabler:packages',
         title: 'Air and sea cargo',
@@ -127,12 +122,26 @@ const metadata = { title: t.metaTitle, description: t.description };
     <h2 class="sr-only">{t.offers}</h2>
     <ul class="grid gap-5 md:grid-cols-3">
       {
+        BUSINESS_SOLUTIONS.map((solution) => (
+          <li class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <Icon name={solution.icon} class="h-8 w-8 text-primary" />
+            <h3 class="mt-4 font-heading text-lg font-bold text-heading">{solution[locale].title}</h3>
+            <p class="mt-1 flex-1 text-muted">{solution[locale].text}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="mt-4 text-sm text-muted">{BUSINESS_DISCLAIMER[locale]}</p>
+
+    <h2 class="mt-10 font-heading text-xl font-bold text-heading">{t.also}</h2>
+    <ul class="mt-4 grid gap-5 md:grid-cols-2">
+      {
         t.benefits.map((benefit, index) => (
           <li class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <Icon name={benefit.icon} class="h-8 w-8 text-primary" />
             <h3 class="mt-4 font-heading text-lg font-bold text-heading">{benefit.title}</h3>
             <p class="mt-1 flex-1 text-muted">{benefit.text}</p>
-            {index === 1 && (
+            {index === 0 && (
               <a
                 class="mt-3 inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4"
                 href={href(CTA.quote.path)}
@@ -156,7 +165,7 @@ const metadata = { title: t.metaTitle, description: t.description };
           {
             t.steps.map((step, index) => (
               <li class="flex gap-4">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading font-bold text-white">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy font-heading font-bold text-white">
                   {index + 1}
                 </span>
                 <div>

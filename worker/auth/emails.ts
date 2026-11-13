@@ -11,7 +11,7 @@ const LOGIN_CODE = {
     subject: 'Tu código para ingresar a Carinova',
     preheader: (code: string) => `Tu código es ${code}. Vence en ${LOGIN_CODE_MINUTES} minutos.`,
     hello: (name: string) => `Hola, ${name}:`,
-    intro: 'Usá este código para ingresar a tu casillero de Carinova:',
+    intro: 'Usá este código para ingresar a tu cuenta de Carinova:',
     expires: `Vence en ${LOGIN_CODE_MINUTES} minutos y sirve una sola vez.`,
     never:
       'Escribilo solo en nuestro sitio. Nunca te lo vamos a pedir por WhatsApp, por teléfono ni por correo: si alguien te lo pide, no se lo des.',
@@ -21,7 +21,7 @@ const LOGIN_CODE = {
     subject: 'Your code to sign in to Carinova',
     preheader: (code: string) => `Your code is ${code}. It expires in ${LOGIN_CODE_MINUTES} minutes.`,
     hello: (name: string) => `Hi, ${name}:`,
-    intro: 'Use this code to sign in to your Carinova mailbox:',
+    intro: 'Use this code to sign in to your Carinova account:',
     expires: `It expires in ${LOGIN_CODE_MINUTES} minutes and works only once.`,
     never:
       'Type it only on our site. We will never ask you for it on WhatsApp, by phone or by e-mail: if someone asks for it, do not give it to them.',

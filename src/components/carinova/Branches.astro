@@ -57,7 +57,7 @@ const CardHeading = title || subtitle || tagline ? 'h3' : 'h2';
         compact ? (
           <a
             href={href(`/sucursales#${branch.id}`)}
-            class="group flex items-center gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:ring-2 hover:ring-[#053A86]"
+            class="group flex items-center gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:ring-2 hover:ring-brand"
           >
             <Icon name="tabler:building-store" class="h-9 w-9 shrink-0 text-primary" />
             <div class="min-w-0 flex-1">
@@ -68,7 +68,7 @@ const CardHeading = title || subtitle || tagline ? 'h3' : 'h2';
             </div>
             <Icon
               name="tabler:chevron-right"
-              class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#053A86]"
+              class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-brand"
             />
           </a>
         ) : (

@@ -1,8 +1,8 @@
 ---
 // Marks the page as seen by a visitor or by a customer who is signed in: data-session="out" | "in"
 // on <html>. The pages are static files, the same for everyone, so both versions of what depends on
-// it are in the page and CSS shows one (tailwind.css): data-auth="out" for visitors ("Abrir mi
-// casillero", "Ingresar"), data-auth="in" for customers ("Mi casillero").
+// it are in the page and CSS shows one (tailwind.css): data-auth="out" for visitors ("Crear
+// cuenta", "Ingresá"), data-auth="in" for customers ("Mi cuenta").
 //
 // It runs inline in the <head>, before the first paint, so nothing flickers. It only reads the flag
 // cookie (src/data/account.ts), which says a session exists and nothing else; what a customer can

@@ -2,10 +2,13 @@
 import Layout from '~/layouts/Layout.astro';
 import Header from '~/components/widgets/Header.astro';
 import Footer from '~/components/widgets/Footer.astro';
+import DialogKit from '~/components/carinova/DialogKit.astro';
+import SigninDialog from '~/components/carinova/SigninDialog.astro';
+import TopStrip from '~/components/carinova/TopStrip.astro';
 import WhatsAppFloat from '~/components/carinova/WhatsAppFloat.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 
-import { i18n } from '~/i18n';
+import { i18n, spanishPath } from '~/i18n';
 import { getFooterData, getHeaderData } from '~/navigation';
 import { getCanonical } from '~/utils/permalinks';
 
@@ -25,6 +28,9 @@ const { metadata, breadcrumb } = Astro.props;
 // Header and footer in the language of the page (its address decides: src/i18n).
 const page = i18n(Astro);
 const { pathname } = Astro.url;
+
+// "Ingresá" opens the sign-in dialog on every page but the sign-in page, which is the form itself.
+const hasSigninDialog = spanishPath(pathname) !== page.data.CTA.signin.path;
 
 const trail = breadcrumb && {
   '@context': 'https://schema.org',
@@ -52,7 +58,10 @@ const trail = breadcrumb && {
     Astro.slots.has('header') ? (
       <slot name="header" />
     ) : (
-      <Header {...getHeaderData(page, pathname)} isSticky isDark position="right" />
+      <>
+        <TopStrip />
+        <Header {...getHeaderData(page, pathname)} isSticky isDark position="right" />
+      </>
     )
   }
   <main class="flex-1">
@@ -60,4 +69,6 @@ const trail = breadcrumb && {
   </main>
   {Astro.slots.has('footer') ? <slot name="footer" /> : <Footer {...getFooterData(page, pathname)} />}
   <WhatsAppFloat path={pathname} />
+  {hasSigninDialog && <SigninDialog />}
+  <DialogKit />
 </Layout>

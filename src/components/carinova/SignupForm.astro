@@ -17,11 +17,11 @@ const [initial] = SIGNUP_COUNTRIES;
 
 const t = {
   es: {
-    signedIn: 'Ya tenés un casillero abierto en este navegador.',
+    signedIn: 'Ya ingresaste a tu cuenta en este navegador.',
     title: 'Tus datos',
     intro: 'Te toma un par de minutos.',
     noscript:
-      'Para registrarte en línea necesitás activar JavaScript en tu navegador. También podés abrir tu casillero por WhatsApp.',
+      'Para registrarte en línea necesitás activar JavaScript en tu navegador. También podés crear tu cuenta por WhatsApp.',
     country: 'País',
     firstName: 'Nombre',
     lastName: 'Apellido',
@@ -50,7 +50,7 @@ const t = {
       missing: 'Completá este campo.',
       terms: 'Para continuar, aceptá los términos y la política de privacidad.',
       unavailable:
-        'El registro en línea no está disponible en este momento. Escribinos por WhatsApp y abrimos tu casillero.',
+        'El registro en línea no está disponible en este momento. Escribinos por WhatsApp y creamos tu cuenta.',
       busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
       failed: 'No pudimos enviar tu registro. Revisá tu conexión e intentalo de nuevo, o escribinos por WhatsApp.',
       oneError: 'Hay un campo por corregir.',
@@ -58,11 +58,11 @@ const t = {
     },
   },
   en: {
-    signedIn: 'You already have a mailbox open on this browser.',
+    signedIn: 'You are already signed in to your account on this browser.',
     title: 'Your details',
     intro: 'It takes a couple of minutes.',
     noscript:
-      'To sign up online you need to turn on JavaScript in your browser. You can also open your mailbox through WhatsApp.',
+      'To sign up online you need to turn on JavaScript in your browser. You can also create your account through WhatsApp.',
     country: 'Country',
     firstName: 'First name',
     lastName: 'Last name',
@@ -89,7 +89,8 @@ const t = {
     messages: {
       missing: 'Fill in this field.',
       terms: 'To continue, accept the terms and the privacy policy.',
-      unavailable: 'Online sign-up is not available right now. Write to us on WhatsApp and we will open your mailbox.',
+      unavailable:
+        'Online sign-up is not available right now. Write to us on WhatsApp and we will create your account.',
       busy: 'We received too many attempts in a row. Wait a minute and try again.',
       failed: 'We could not send your sign-up. Check your connection and try again, or write to us on WhatsApp.',
       oneError: 'There is one field to correct.',
@@ -100,7 +101,7 @@ const t = {
 
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
-  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-[#011028] outline-none transition placeholder:text-slate-400 focus:border-[#053A86] aria-[invalid=true]:border-red-600';
+  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-navy outline-none transition placeholder:text-slate-400 focus:border-brand aria-[invalid=true]:border-red-600';
 const hintClass = 'mt-1 text-xs text-slate-500';
 const errorClass = 'mt-1 text-sm font-medium text-red-700';
 const legalLinkClass = 'font-medium text-link underline';
@@ -113,7 +114,7 @@ const legalLinkClass = 'font-medium text-link underline';
   >
     <Icon name="tabler:circle-check" class="h-5 w-5 shrink-0 text-green-700" />
     <span>{t.signedIn}</span>
-    <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.mailbox.path)}>{CTA.mailbox.text}</a>
+    <a class="font-semibold text-link underline underline-offset-4" href={href(CTA.account.path)}>{CTA.account.text}</a>
   </p>
 
   <!--
@@ -125,7 +126,7 @@ const legalLinkClass = 'font-medium text-link underline';
     novalidate
     class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
   >
-    <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.title}</h2>
+    <h2 class="font-heading text-2xl font-bold text-navy">{t.title}</h2>
     <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
 
     <noscript>
@@ -333,7 +334,7 @@ const legalLinkClass = 'font-medium text-link underline';
             type="checkbox"
             name="terms"
             required
-            class="mt-0.5 h-5 w-5 shrink-0 accent-[#053A86]"
+            class="mt-0.5 h-5 w-5 shrink-0 accent-brand"
             aria-describedby="cn-terms-error"
           />
           {/* Explicit spaces: line breaks between text and tags are dropped from the output. */}
@@ -398,7 +399,7 @@ const legalLinkClass = 'font-medium text-link underline';
     hidden
   >
     <Icon name="tabler:mail-check" class="h-12 w-12 text-primary" />
-    <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-sent-title>
+    <h2 class="mt-4 font-heading text-2xl font-bold text-navy outline-none" tabindex="-1" data-cn-sent-title>
       {t.sentTitle}
     </h2>
     {

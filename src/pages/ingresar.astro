@@ -1,5 +1,6 @@
 ---
-// Ingresar: where a customer signs in to their casillero, with their e-mail and a one-time code.
+// Ingresar: where a customer signs in to their account, with their e-mail and a one-time code. The
+// same form opens as a dialog from the header of every other page (SigninDialog.astro).
 // Part of "Mi cuenta". The form and its script are SigninForm.astro; what happens on the server is
 // worker/api.ts (login, verify).
 import { Icon } from 'astro-icon/components';
@@ -17,11 +18,12 @@ const { WA_MESSAGES } = data;
 const t = {
   es: {
     tagline: 'Mi cuenta',
-    metaTitle: 'Ingresar a mi casillero',
+    metaTitle: 'Ingresar a mi cuenta',
     description:
-      'Ingresá a tu casillero de Carinova con tu correo: te enviamos un código y entrás sin contraseña. Ahí están tu Carinova ID y tu dirección en Miami.',
-    title: 'Ingresá a tu casillero',
-    subtitle: 'Tu Carinova ID y tu dirección en Miami, siempre a mano.',
+      'Ingresá a tu cuenta de Carinova con tu correo: te enviamos un código y entrás sin contraseña. Ahí están tu Carinova ID, tu dirección en Estados Unidos, tus paquetes y tus pagos.',
+    title: 'Ingresá a tu cuenta',
+    subtitle:
+      'Realizá todas tus gestiones desde un mismo lugar: tu Carinova ID, tu dirección, tus paquetes y tus pagos.',
     howTitle: 'Así funciona',
     how: [
       {
@@ -41,15 +43,15 @@ const t = {
       },
     ],
     helpTitle: '¿No podés ingresar?',
-    helpText: 'Escribinos con tu Carinova ID o con el correo de tu casillero.',
+    helpText: 'Escribinos con tu Carinova ID o con el correo de tu cuenta.',
   },
   en: {
     tagline: 'My account',
-    metaTitle: 'Sign in to my mailbox',
+    metaTitle: 'Sign in to my account',
     description:
-      'Sign in to your Carinova mailbox with your e-mail: we send you a code and you get in without a password. Your Carinova ID and your address in Miami are there.',
-    title: 'Sign in to your mailbox',
-    subtitle: 'Your Carinova ID and your address in Miami, always at hand.',
+      'Sign in to your Carinova account with your e-mail: we send you a code and you get in without a password. Your Carinova ID, your address in the United States, your packages and your payments are there.',
+    title: 'Sign in to your account',
+    subtitle: 'Handle everything from one place: your Carinova ID, your address, your packages and your payments.',
     howTitle: 'How it works',
     how: [
       {
@@ -69,7 +71,7 @@ const t = {
       },
     ],
     helpTitle: 'Can you not sign in?',
-    helpText: 'Write to us with your Carinova ID or with the e-mail of your mailbox.',
+    helpText: 'Write to us with your Carinova ID or with the e-mail of your account.',
   },
 }[locale];
 

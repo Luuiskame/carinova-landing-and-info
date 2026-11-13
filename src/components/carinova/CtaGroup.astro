@@ -1,21 +1,21 @@
 ---
 // The calls to action of a section, in their order of importance (docs/INFORMATION-ARCHITECTURE.md →
-// "Calls to action"): 1. "Abrir mi casillero" (orange button), 2. "Cotizar mi envío" (outlined
-// button), 3. WhatsApp help with this place's own message (link). Buttons are only ever these two;
-// any other link on the page is a text link.
+// "Calls to action"): 1. "Crear cuenta" (orange button), 2. "Cotizá tu envío" (outlined button),
+// 3. WhatsApp help with this place's own message (link). Buttons are only ever these two; any other
+// link on the page is a text link.
 //
-// A customer who is signed in already has a casillero: in the place of "Abrir mi casillero" they get
-// "Ir a mi casillero". Both buttons are in the page and CSS shows one (SessionState.astro).
+// A customer who is signed in already has an account: in the place of "Crear cuenta" they get
+// "Ir a mi cuenta". Both buttons are in the page and CSS shows one (SessionState.astro).
 import { twMerge } from 'tailwind-merge';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { i18n } from '~/i18n';
 
 export interface Props {
-  /** Show "Abrir mi casillero". */
+  /** Show "Crear cuenta". */
   signup?: boolean;
-  /** Show "Cotizar mi envío". */
+  /** Show "Cotizá tu envío". */
   quote?: boolean;
-  /** Where "Cotizar mi envío" goes: the calculator, possibly filled in (quotePath in src/data/services.ts). */
+  /** Where "Cotizá tu envío" goes: the calculator, possibly filled in (quotePath in src/data/services.ts). */
   quotePath?: string;
   /** WhatsApp message of this place (WA_MESSAGES); without one there is no WhatsApp link. */
   whatsapp?: string;
@@ -51,8 +51,8 @@ const justify = align === 'center' ? 'sm:justify-center' : 'sm:justify-center lg
             <a class="btn-primary" href={href(CTA.signup.path)} data-auth="out">
               {CTA.signup.text}
             </a>
-            <a class="btn-primary" href={href(CTA.mailbox.path)} data-auth="in">
-              {CTA.mailbox.text}
+            <a class="btn-primary" href={href(CTA.account.path)} data-auth="in">
+              {CTA.account.text}
             </a>
           </>
         )}

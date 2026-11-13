@@ -3,11 +3,10 @@ import { Icon } from 'astro-icon/components';
 import Logo from '~/components/Logo.astro';
 import ToggleTheme from '~/components/common/ToggleTheme.astro';
 import ToggleMenu from '~/components/common/ToggleMenu.astro';
-import Button from '~/components/ui/Button.astro';
 
+import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 import { trimSlash, getAsset } from '~/utils/permalinks';
-import type { CallToAction } from '~/types';
 
 interface Link {
   text?: string;
@@ -36,9 +35,16 @@ interface LanguageLink {
 export interface Props {
   id?: string;
   links?: Array<MenuLink>;
-  actions?: Array<CallToAction>;
-  /** Carinova: "Ingresar", for visitors; hidden once a customer is signed in. */
+  /**
+   * Carinova: "Ingresá", for visitors (a white button; hidden once a customer is signed in). It opens the sign-in
+   * dialog of the page (SigninDialog.astro); where there is none it is a link to the sign-in page.
+   */
   signin?: { text: string; href: string };
+  /** Carinova: "Rastreá tu paquete", the outlined button from 1280 px: a visitor's and a customer's destination. */
+  track?: { text: string; href: string; accountHref: string };
+  /** Carinova: the orange button for visitors ("Crear cuenta") and for customers ("Mi cuenta"). */
+  primary?: { text: string; href: string };
+  account?: { text: string; href: string };
   language?: LanguageLink;
   isSticky?: boolean;
   isDark?: boolean;
@@ -51,8 +57,10 @@ export interface Props {
 const {
   id = 'header',
   links = [],
-  actions = [],
   signin,
+  track,
+  primary,
+  account,
   language,
   isSticky = false,
   isDark = false,
@@ -86,8 +94,10 @@ const isActive = (href?: string) => typeof href === 'string' && `/${trimSlash(hr
 const persistKey = `header-${Array.from(
   JSON.stringify({
     links,
-    actions,
     signin,
+    track,
+    primary,
+    account,
     language: language?.lang,
     isSticky,
     isDark,
@@ -130,16 +140,31 @@ const persistKey = `header-${Array.from(
         <a class="flex items-center" href={href('/')}>
           <Logo />
         </a>
-        <div class="flex items-center lg:hidden">
+        <div class="flex items-center gap-1 lg:hidden">
+          {
+            /* Carinova: on a phone the sign-in is not hidden in the menu: it is here, beside it. The menu has its own
+               while it is open. */
+            signin && (
+              <a
+                class="btn-light min-h-11 px-3.5 py-2.5 text-sm whitespace-nowrap [.expanded_&]:hidden"
+                href={signin.href}
+                data-auth="out"
+                data-dialog-open={SIGNIN_DIALOG_ID}
+              >
+                <Icon name="tabler:user-circle" class="h-5 w-5 shrink-0" />
+                {signin.text}
+              </a>
+            )
+          }
           <ToggleMenu label={t.menu} />
         </div>
       </div>
       <nav
-        class="items-center w-full lg:w-auto hidden lg:flex lg:mx-2 xl:mx-5 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
+        class="items-center w-full lg:w-auto hidden lg:flex lg:mx-1 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
         aria-label={t.navigation}
       >
         <ul
-          class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto text-xl lg:text-[0.9375rem] tracking-[0.01rem] font-medium lg:justify-center"
+          class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto text-xl lg:text-sm xl:text-[0.9375rem] 2xl:text-sm tracking-[0.01rem] font-semibold lg:justify-center"
         >
           {
             links.map(({ text, href, links, class: className, auth }) => (
@@ -148,7 +173,7 @@ const persistKey = `header-${Array.from(
                   <>
                     <button
                       type="button"
-                      class="hover:text-link dark:hover:text-white px-4 lg:px-3 xl:px-4 py-3 flex items-center whitespace-nowrap"
+                      class="hover:text-link dark:hover:text-white px-4 lg:px-2 xl:px-2.5 py-3 flex items-center whitespace-nowrap"
                     >
                       {text}{' '}
                       <Icon
@@ -175,7 +200,7 @@ const persistKey = `header-${Array.from(
                 ) : (
                   <a
                     class:list={[
-                      'hover:text-link dark:hover:text-white px-4 lg:px-3 xl:px-4 py-3 flex items-center whitespace-nowrap',
+                      'hover:text-link dark:hover:text-white px-4 lg:px-2 xl:px-2.5 py-3 flex items-center whitespace-nowrap',
                       { 'aw-link-active': isActive(href) },
                     ]}
                     href={href}
@@ -200,7 +225,7 @@ const persistKey = `header-${Array.from(
               /* Carinova: the other language of this page. "EN" is what shows; its name is what is read. */
               language && (
                 <a
-                  class="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-base lg:text-[0.9375rem] font-medium text-default hover:text-link dark:hover:text-white"
+                  class="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-base lg:text-sm xl:text-[0.9375rem] 2xl:text-sm font-semibold text-default hover:text-link dark:hover:text-white"
                   href={language.href}
                   hreflang={language.lang}
                   lang={language.lang}
@@ -208,21 +233,23 @@ const persistKey = `header-${Array.from(
                   data-language-switch={language.lang}
                   data-home={language.home}
                 >
-                  <Icon name="tabler:world" class="w-5 h-5" />
+                  <Icon name="tabler:world" class="h-5 w-5 lg:hidden xl:block" />
                   <span aria-hidden="true">{language.code}</span>
                 </a>
               )
             }
             {
-              /* Carinova: sign-in, for visitors. Between 1024 and 1279 px only its icon fits beside the links. */
+              /* Carinova: sign-in, for visitors: a white button, the most visible thing in the bar. It opens the
+                 dialog; the same button sits beside the menu button on a phone (above). */
               signin && (
                 <a
-                  class="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-base lg:text-[0.9375rem] font-medium whitespace-nowrap text-default hover:text-link dark:hover:text-white"
+                  class="btn-light min-h-11 px-3.5 py-2.5 text-sm whitespace-nowrap"
                   href={signin.href}
                   data-auth="out"
+                  data-dialog-open={SIGNIN_DIALOG_ID}
                 >
-                  <Icon name="tabler:user-circle" class="w-5 h-5" />
-                  <span class="lg:sr-only xl:not-sr-only">{signin.text}</span>
+                  <Icon name="tabler:user-circle" class="h-5 w-5 shrink-0" />
+                  {signin.text}
                 </a>
               )
             }
@@ -239,20 +266,51 @@ const persistKey = `header-${Array.from(
               )
             }
           </div>
-          {
-            actions?.length ? (
-              <span class="ml-4 lg:ml-2 xl:ml-4 rtl:ml-0 rtl:mr-4">
-                {actions.map((btnProps) => (
-                  <Button
-                    {...btnProps}
-                    class="ml-2 py-2.5 px-5.5 lg:px-5 xl:px-6 font-semibold shadow-none text-sm w-auto whitespace-nowrap"
-                  />
-                ))}
-              </span>
-            ) : (
-              ''
-            )
-          }
+          <span class="ml-3 flex items-center gap-2 lg:ml-1 xl:ml-2">
+            {
+              /* Carinova: the buttons. Each one is in the page for visitors and for customers (data-auth). */
+              track && (
+                <>
+                  <a
+                    class="btn hidden min-h-11 px-3 py-2.5 text-sm whitespace-nowrap xl:inline-flex"
+                    href={track.href}
+                    data-auth="out"
+                  >
+                    {track.text}
+                  </a>
+                  <a
+                    class="btn hidden min-h-11 px-3 py-2.5 text-sm whitespace-nowrap xl:inline-flex"
+                    href={track.accountHref}
+                    data-auth="in"
+                  >
+                    {track.text}
+                  </a>
+                </>
+              )
+            }
+            {
+              primary && (
+                <a
+                  class="btn-primary min-h-11 px-4 py-2.5 text-sm whitespace-nowrap"
+                  href={primary.href}
+                  data-auth="out"
+                >
+                  {primary.text}
+                </a>
+              )
+            }
+            {
+              account && (
+                <a
+                  class="btn-primary min-h-11 px-4 py-2.5 text-sm whitespace-nowrap"
+                  href={account.href}
+                  data-auth="in"
+                >
+                  {account.text}
+                </a>
+              )
+            }
+          </span>
         </div>
       </div>
     </div>

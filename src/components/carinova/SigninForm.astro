@@ -1,18 +1,27 @@
 ---
-// Signing in (/ingresar), in two steps and without a password: the customer writes the e-mail of
-// their casillero, gets a one-time code there and types it here. POST /api/login sends the code and
+// Signing in, in two steps and without a password: the customer writes the e-mail of their account,
+// gets a one-time code there and types it here. POST /api/login sends the code and
 // POST /api/login/verify opens the session (worker/api.ts); the numbers (digits, minutes, attempts)
 // are in src/data/account.ts.
 //
-// The first step answers the same whether or not the e-mail has a casillero, so the form cannot be
-// used to find out who is a customer: that is why the second step says "si este correo tiene un
-// casillero".
+// The form is in two places, never both in one page: the sign-in page (/ingresar) and the dialog
+// that "Ingresá" opens from the header of every other page (SigninDialog.astro, `inDialog`).
+//
+// The first step answers the same whether or not the e-mail has an account, so the form cannot be
+// used to find out who is a customer: that is why the second step says "si este correo tiene una
+// cuenta".
 import { Icon } from 'astro-icon/components';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, LOGIN_RESEND_SECONDS } from '~/data/account';
 import { SIGNUP_NAME_EXAMPLES } from '~/data/signup';
 import { i18n } from '~/i18n';
 
+export interface Props {
+  /** Inside the sign-in dialog: the dialog is the frame, and the e-mail field takes the focus when it opens. */
+  inDialog?: boolean;
+}
+
+const { inDialog = false } = Astro.props;
 const { locale, href, data } = i18n(Astro);
 const { CTA, WA_MESSAGES } = data;
 
@@ -22,10 +31,10 @@ const t = {
     intro: `Te mandamos un código de ${LOGIN_CODE_DIGITS} dígitos a tu correo. No necesitás contraseña.`,
     noscript: 'Para ingresar necesitás activar JavaScript en tu navegador.',
     email: 'Correo electrónico',
-    emailHint: 'El correo con el que abriste tu casillero.',
+    emailHint: 'El correo con el que creaste tu cuenta.',
     send: 'Enviarme un código',
     sending: 'Enviando…',
-    noMailbox: '¿Todavía no tenés casillero?',
+    noAccount: '¿Todavía no tenés cuenta?',
     codeTitle: 'Escribí tu código',
     code: `Código de ${LOGIN_CODE_DIGITS} dígitos`,
     enter: CTA.signin.text,
@@ -34,8 +43,8 @@ const t = {
       'Puede tardar un par de minutos en llegar. Si no lo ves, revisá la carpeta de spam o correo no deseado.',
       'Nunca te vamos a pedir este código por WhatsApp ni por teléfono.',
     ],
-    notArriving: 'Si no llega, puede que ese correo no tenga casillero.',
-    openYours: 'Abrí el tuyo',
+    notArriving: 'Si no llega, puede que ese correo no tenga una cuenta.',
+    openYours: 'Creá la tuya',
     resend: 'Enviar otro código',
     change: 'Usar otro correo',
     signedIn: 'Ya ingresaste en este navegador.',
@@ -45,7 +54,7 @@ const t = {
       codeMissing: `Escribí el código de ${LOGIN_CODE_DIGITS} dígitos.`,
       codeInvalid: 'El código no es correcto o ya venció. Revisalo o pedí otro.',
       resendIn: 'Enviar otro código ({seconds} s)',
-      resent: 'Listo: si el correo tiene un casillero, le enviamos otro código. El anterior ya no sirve.',
+      resent: 'Listo: si el correo tiene una cuenta, le enviamos otro código. El anterior ya no sirve.',
       unavailable: 'El ingreso no está disponible en este momento. Escribinos por WhatsApp y te ayudamos.',
       busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
       failed: 'No pudimos conectarnos. Revisá tu conexión e intentalo de nuevo.',
@@ -56,10 +65,10 @@ const t = {
     intro: `We send a ${LOGIN_CODE_DIGITS}-digit code to your e-mail. You do not need a password.`,
     noscript: 'To sign in you need to turn on JavaScript in your browser.',
     email: 'E-mail',
-    emailHint: 'The e-mail you opened your mailbox with.',
+    emailHint: 'The e-mail you created your account with.',
     send: 'Send me a code',
     sending: 'Sending…',
-    noMailbox: 'Do you not have a mailbox yet?',
+    noAccount: 'Do you not have an account yet?',
     codeTitle: 'Enter your code',
     code: `${LOGIN_CODE_DIGITS}-digit code`,
     enter: CTA.signin.text,
@@ -68,8 +77,8 @@ const t = {
       'It can take a couple of minutes to arrive. If you do not see it, check your spam or junk folder.',
       'We will never ask you for this code on WhatsApp or by phone.',
     ],
-    notArriving: 'If it does not arrive, that e-mail may not have a mailbox.',
-    openYours: 'Open yours',
+    notArriving: 'If it does not arrive, that e-mail may not have an account.',
+    openYours: 'Create yours',
     resend: 'Send another code',
     change: 'Use another e-mail',
     signedIn: 'You are already signed in on this browser.',
@@ -78,7 +87,7 @@ const t = {
       codeMissing: `Enter the ${LOGIN_CODE_DIGITS}-digit code.`,
       codeInvalid: 'The code is not correct or has expired. Check it or ask for another one.',
       resendIn: 'Send another code ({seconds} s)',
-      resent: 'Done: if the e-mail has a mailbox, we sent it another code. The earlier one no longer works.',
+      resent: 'Done: if the e-mail has an account, we sent it another code. The earlier one no longer works.',
       unavailable: 'Signing in is not available right now. Write to us on WhatsApp and we will help you.',
       busy: 'We received too many attempts in a row. Wait a minute and try again.',
       failed: 'We could not connect. Check your connection and try again.',
@@ -89,16 +98,20 @@ const t = {
 const config = {
   locale,
   /** Where a customer goes once signed in. */
-  mailbox: href(CTA.mailbox.path),
+  account: href(CTA.account.path),
+  /** The sign-in page sends a customer who is already signed in to their account; the dialog does not open for one. */
+  redirectSignedIn: !inDialog,
   resendSeconds: LOGIN_RESEND_SECONDS,
   codeMinutes: LOGIN_CODE_MINUTES,
   messages: t.messages,
 };
 
-const cardClass = 'rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8';
+const cardClass = inDialog
+  ? 'bg-white p-6 pt-12 text-left text-slate-800 sm:p-8 sm:pt-12'
+  : 'rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8';
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
-  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-[#011028] outline-none transition placeholder:text-slate-400 focus:border-[#053A86] aria-[invalid=true]:border-red-600';
+  'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-navy outline-none transition placeholder:text-slate-400 focus:border-brand aria-[invalid=true]:border-red-600';
 const hintClass = 'mt-1 text-xs text-slate-500';
 const errorClass = 'mt-1 text-sm font-medium text-red-700';
 const linkClass = 'font-semibold text-link underline underline-offset-4';
@@ -107,7 +120,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
 <cn-signin class="block" data-config={JSON.stringify(config)}>
   <!-- Step 1: the e-mail. method="dialog": without the script, submitting does nothing (see SignupForm.astro). -->
   <form method="dialog" novalidate class={cardClass} data-cn-step="email">
-    <h2 class="font-heading text-2xl font-bold text-[#011028]">{t.title}</h2>
+    <h2 class="font-heading text-2xl font-bold text-navy">{t.title}</h2>
     <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
 
     <noscript>
@@ -127,6 +140,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
         required
         maxlength="254"
         placeholder={SIGNUP_NAME_EXAMPLES.email}
+        autofocus={inDialog}
         class={inputClass}
         aria-describedby="cn-signin-email-hint cn-signin-email-error"
       />
@@ -136,7 +150,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
 
     <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label={t.sending}>{t.send}</button>
     <p class="mt-4 flex flex-wrap justify-center gap-x-1.5 text-center text-sm text-slate-600">
-      <span>{t.noMailbox}</span>
+      <span>{t.noAccount}</span>
       <a class={linkClass} href={href(CTA.signup.path)}>{CTA.signup.text}</a>
     </p>
   </form>
@@ -144,18 +158,18 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
   <!-- Step 2: the code. -->
   <form method="dialog" novalidate class={cardClass} data-cn-step="code" hidden>
     <Icon name="tabler:mail-check" class="h-12 w-12 text-primary" />
-    <h2 class="mt-4 font-heading text-2xl font-bold text-[#011028] outline-none" tabindex="-1" data-cn-code-title>
+    <h2 class="mt-4 font-heading text-2xl font-bold text-navy outline-none" tabindex="-1" data-cn-code-title>
       {t.codeTitle}
     </h2>
     {
       locale === 'en' ? (
         <p class="mt-2 text-slate-700">
-          If <strong class="break-all" data-cn-email /> has a mailbox, we sent it a {LOGIN_CODE_DIGITS}-digit code. It
+          If <strong class="break-all" data-cn-email /> has an account, we sent it a {LOGIN_CODE_DIGITS}-digit code. It
           expires in {LOGIN_CODE_MINUTES} minutes.
         </p>
       ) : (
         <p class="mt-2 text-slate-700">
-          Si <strong class="break-all" data-cn-email /> tiene un casillero, le enviamos un código de {LOGIN_CODE_DIGITS}{' '}
+          Si <strong class="break-all" data-cn-email /> tiene una cuenta, le enviamos un código de {LOGIN_CODE_DIGITS}{' '}
           dígitos. Vence en {LOGIN_CODE_MINUTES} minutos.
         </p>
       )
@@ -222,11 +236,11 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
     <WhatsAppHelp class="mt-1" message={WA_MESSAGES.signinError} />
   </div>
 
-  <!-- For a customer who is already signed in (the script sends them straight to their casillero). -->
+  <!-- For a customer who is already signed in (the script of the sign-in page sends them straight to their account). -->
   <div class={cardClass} data-cn-step="signed-in" hidden>
     <Icon name="tabler:circle-check" class="h-12 w-12 text-green-700" />
-    <p class="mt-4 text-lg font-semibold text-[#011028]">{t.signedIn}</p>
-    <a class="btn-primary mt-5 w-full" href={href(CTA.mailbox.path)}>{CTA.mailbox.text}</a>
+    <p class="mt-4 text-lg font-semibold text-navy">{t.signedIn}</p>
+    <a class="btn-primary mt-5 w-full" href={href(CTA.account.path)}>{CTA.account.text}</a>
   </div>
 </cn-signin>
 
@@ -239,7 +253,8 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
 
   interface Config {
     locale: Locale;
-    mailbox: string;
+    account: string;
+    redirectSignedIn: boolean;
     resendSeconds: number;
     codeMinutes: number;
     /** The sentences of the page's language. */
@@ -274,7 +289,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
       // Already signed in: nothing to do here.
       if (document.documentElement.dataset.session === 'in') {
         this.show('signed-in');
-        window.location.replace(this.config.mailbox);
+        if (this.config.redirectSignedIn) window.location.replace(this.config.account);
         return;
       }
 
@@ -444,7 +459,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
       if (status === 200 && result?.ok) {
         // Signed in: the session cookie is set. A full page load, so every page shows it from now on.
         this.remember(null);
-        window.location.assign(this.config.mailbox);
+        window.location.assign(this.config.account);
         return;
       }
       this.busy = false;

@@ -20,8 +20,8 @@ if (!logoPath) {
   process.exit(1);
 }
 
-const NAVY = '#011028';
-const ORANGE = '#FA7005';
+const NAVY = '#06172F';
+const ORANGE = '#FF8A00';
 
 const globe = (stroke) => `
   <g fill="none" stroke="${ORANGE}" stroke-width="${stroke}" stroke-linecap="round">

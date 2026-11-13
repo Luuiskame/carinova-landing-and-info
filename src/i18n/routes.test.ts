@@ -38,7 +38,10 @@ test('a Spanish path becomes the address of the language being rendered', () => 
   // Not a page of the site: left alone.
   assert.equal(localizePath('/api/signup', 'en'), '/api/signup');
   assert.equal(localizePath('https://wa.me/50588552956', 'en'), 'https://wa.me/50588552956');
-  assert.equal(localizePath('#tiendas', 'en'), '#tiendas');
+  assert.equal(localizePath('#compras', 'en'), '#compras');
+  // A section of the home page keeps its anchor in either language.
+  assert.equal(localizePath('/#rastreo', 'en'), '/en#rastreo');
+  assert.equal(localizePath('/mi-cuenta#paquetes', 'en'), '/en/my-account#paquetes');
 });
 
 test('each page knows its other language', () => {
@@ -50,8 +53,8 @@ test('each page knows its other language', () => {
   assert.equal(alternatePath('/404', 'en'), undefined);
   assert.equal(alternatePath('/blog/una-entrada', 'en'), undefined);
 
-  assert.equal(pathOf('mailbox', 'es'), '/mi-casillero');
-  assert.equal(pathOf('mailbox', 'en'), '/en/my-mailbox');
+  assert.equal(pathOf('account', 'es'), '/mi-cuenta');
+  assert.equal(pathOf('account', 'en'), '/en/my-account');
 });
 
 test('what is kept per page uses the Spanish address, whatever the language', () => {

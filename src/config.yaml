@@ -8,9 +8,9 @@ site:
 # Default SEO metadata
 metadata:
   title:
-    default: Carinova — Compras y encomiendas de EE. UU. a Nicaragua
+    default: Carinova | Envíos que unen · Estados Unidos a Nicaragua
     template: '%s | Carinova'
-  description: 'Traemos tus compras y encomiendas desde Estados Unidos hasta Nicaragua, por aire o por mar. Abrí tu casillero en línea y retirá en Managua o Bluefields.'
+  description: 'Traemos tus compras personales, encomiendas familiares y carga empresarial desde Estados Unidos hasta Nicaragua, por aire o por mar. Creá tu cuenta en línea y retirá en Managua o Bluefields.'
   robots:
     # Preview: keep search engines out until the placeholder content is replaced.
     # Set both to true at launch (and SITE_STATUS.isPreview to false in src/data/carinova.ts).

@@ -13,8 +13,8 @@ export interface Message {
 
 /** The line under every message. */
 export const TAGLINE: Record<Locale, string> = {
-  es: 'Carinova · Courier de Estados Unidos a Nicaragua',
-  en: 'Carinova · Courier from the United States to Nicaragua',
+  es: 'Carinova · Envíos que unen · De Estados Unidos a Nicaragua',
+  en: 'Carinova · Shipments that bring us together · From the United States to Nicaragua',
 };
 
 const ENTITIES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -34,7 +34,7 @@ export const layout = (preheader: string, content: string, locale: Locale = 'es'
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1e293b;">
-<tr><td style="background:#011028;border-radius:12px 12px 0 0;padding:20px 28px;font-size:24px;font-weight:bold;color:#ffffff;">Carinova</td></tr>
+<tr><td style="background:#06172F;border-radius:12px 12px 0 0;padding:20px 28px;font-size:24px;font-weight:bold;color:#ffffff;">Carinova</td></tr>
 <tr><td style="padding:28px 28px 12px;">
 ${content}
 </td></tr>
@@ -46,23 +46,23 @@ ${content}
 </html>`;
 
 export const h1 = (text: string) =>
-  `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#011028;">${text}</h1>`;
+  `<h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#06172F;">${text}</h1>`;
 export const h2 = (text: string) =>
-  `<h2 style="margin:28px 0 8px;font-size:18px;line-height:1.3;color:#011028;">${text}</h2>`;
+  `<h2 style="margin:28px 0 8px;font-size:18px;line-height:1.3;color:#06172F;">${text}</h2>`;
 export const p = (html: string) => `<p style="margin:0 0 16px;">${html}</p>`;
 export const small = (html: string) => `<p style="margin:0 0 16px;font-size:14px;color:#475569;">${html}</p>`;
-export const link = (href: string, text: string) => `<a href="${escapeHtml(href)}" style="color:#053A86;">${text}</a>`;
+export const link = (href: string, text: string) => `<a href="${escapeHtml(href)}" style="color:#1164CF;">${text}</a>`;
 export const list = (items: Array<string>) =>
   `<ul style="margin:0 0 16px;padding-left:20px;">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
 
 /** A value to read at a glance and copy: the Carinova ID, a sign-in code. */
 export const big = (text: string) =>
-  `<p style="margin:0 0 16px;font-size:30px;font-weight:bold;letter-spacing:2px;color:#011028;">${escapeHtml(text)}</p>`;
+  `<p style="margin:0 0 16px;font-size:30px;font-weight:bold;letter-spacing:2px;color:#06172F;">${escapeHtml(text)}</p>`;
 
 /** Orange with navy text, like the buttons of the site (white on this orange is too faint). */
 export const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;"><tr><td style="background:#FA7005;border-radius:999px;">` +
-  `<a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 28px;font-weight:bold;color:#011028;text-decoration:none;">${label}</a>` +
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;"><tr><td style="background:#FF8A00;border-radius:8px;">` +
+  `<a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 28px;font-weight:bold;color:#06172F;text-decoration:none;">${label}</a>` +
   `</td></tr></table>`;
 
 export interface Row {
@@ -75,7 +75,7 @@ export const table = (rows: Array<Row>) =>
     .map(
       ({ label, value }, index) =>
         `<tr><td style="padding:8px 12px;width:44%;font-size:13px;color:#64748b;vertical-align:top;${index ? 'border-top:1px solid #e2e8f0;' : ''}">${escapeHtml(label)}</td>` +
-        `<td style="padding:8px 12px;font-weight:bold;color:#011028;${index ? 'border-top:1px solid #e2e8f0;' : ''}">${escapeHtml(value).replace(/\n/g, '<br>')}</td></tr>`
+        `<td style="padding:8px 12px;font-weight:bold;color:#06172F;${index ? 'border-top:1px solid #e2e8f0;' : ''}">${escapeHtml(value).replace(/\n/g, '<br>')}</td></tr>`
     )
     .join('')}</table>`;
 

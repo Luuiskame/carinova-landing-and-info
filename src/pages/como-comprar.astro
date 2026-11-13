@@ -1,6 +1,7 @@
 ---
-// Cómo comprar: the process step by step (PROCESS_STEPS) and one worked example per kind of purchase
-// (SHOPPING_EXAMPLES), each one computed with the site's rates and openable in the calculator.
+// "Cómo funciona" (/como-comprar): the five steps of Carinova's prototype with their details
+// (PROCESS_STEPS) and one worked example per kind of purchase (SHOPPING_EXAMPLES), each one computed
+// with the site's rates and openable in the calculator.
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
@@ -9,6 +10,7 @@ import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
+import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 import { formatUSD } from '~/utils/rates';
 
@@ -17,12 +19,12 @@ const { CTA, PROCESS_STEPS, SHOPPING_EXAMPLES, WA_MESSAGES, quoteExample } = dat
 
 const t = {
   es: {
-    tagline: 'Cómo comprar',
+    tagline: 'Cómo funciona',
     title: 'Cómo comprar en Estados Unidos desde Nicaragua',
     description:
       'Paso a paso para comprar en tiendas de Estados Unidos y recibir en Nicaragua, con ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
     subtitle:
-      'Cuatro pasos, y ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
+      'Cinco pasos claros, desde tu primera compra hasta tener tu paquete en Nicaragua, y ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
     steps: 'Los pasos',
     examples: {
       tagline: 'Ejemplos por categoría',
@@ -32,18 +34,18 @@ const t = {
       open: 'Abrir en el cotizador',
     },
     closing: {
-      title: 'Empezá por abrir tu casillero',
-      subtitle: 'Con tu Carinova ID y tu dirección en Miami ya podés comprar en cualquier tienda de Estados Unidos.',
+      title: 'Empezá por crear tu cuenta',
+      subtitle: 'Con tu Carinova ID y tu dirección en Estados Unidos ya podés comprar en cualquier tienda.',
       lead: '¿Querés que te guiemos en tu primera compra?',
     },
   },
   en: {
-    tagline: 'How to buy',
+    tagline: 'How it works',
     title: 'How to buy in the United States from Nicaragua',
     description:
       'Step by step to buy at stores in the United States and receive in Nicaragua, with examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
     subtitle:
-      'Four steps, and examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
+      'Five clear steps, from your first purchase to having your package in Nicaragua, and examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
     steps: 'The steps',
     examples: {
       tagline: 'Examples by category',
@@ -53,9 +55,8 @@ const t = {
       open: 'Open in the calculator',
     },
     closing: {
-      title: 'Start by opening your mailbox',
-      subtitle:
-        'With your Carinova ID and your address in Miami you can already buy at any store in the United States.',
+      title: 'Start by creating your account',
+      subtitle: 'With your Carinova ID and your address in the United States you can already buy at any store.',
       lead: 'Would you like us to guide you through your first purchase?',
     },
   },
@@ -83,7 +84,7 @@ const linkClass = (path: string) =>
       {
         PROCESS_STEPS.map((step, index) => (
           <li class="flex gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:gap-6 sm:p-8">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#011028] font-heading text-xl font-bold text-white">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-navy font-heading text-xl font-bold text-white">
               {index + 1}
             </span>
             <div class="min-w-0">
@@ -100,17 +101,23 @@ const linkClass = (path: string) =>
                   </li>
                 ))}
               </ul>
-              {/* A customer who is signed in already did the first step: their casillero takes its place. */}
-              {step.link.path === CTA.signup.path ? (
+              {/* Signing up and signing in are for visitors; a customer who is signed in gets their account. */}
+              {step.link?.path === CTA.signup.path && (
+                <a class="btn-primary mt-5" href={href(step.link.path)} data-auth="out">
+                  {step.link.text}
+                </a>
+              )}
+              {step.link?.path === CTA.signin.path && (
                 <>
-                  <a class="btn-primary mt-5" href={href(step.link.path)} data-auth="out">
+                  <a class="btn mt-5" href={href(step.link.path)} data-auth="out" data-dialog-open={SIGNIN_DIALOG_ID}>
                     {step.link.text}
                   </a>
-                  <a class="btn-primary mt-5" href={href(CTA.mailbox.path)} data-auth="in">
-                    {CTA.mailbox.text}
+                  <a class="btn-primary mt-5" href={href(CTA.account.path)} data-auth="in">
+                    {CTA.account.text}
                   </a>
                 </>
-              ) : (
+              )}
+              {step.link && step.link.path !== CTA.signup.path && step.link.path !== CTA.signin.path && (
                 <a class:list={['mt-5', linkClass(step.link.path)]} href={href(step.link.path)}>
                   {step.link.text}
                 </a>
@@ -147,7 +154,6 @@ const linkClass = (path: string) =>
                 <li>{line}</li>
               ))}
             </ul>
-            {example.quote.charged && <p class="mt-1 text-sm font-semibold text-heading">{example.quote.charged}</p>}
             {example.quote.note && <p class="mt-1 text-sm text-slate-700">{example.quote.note}</p>}
             <div class="mt-auto pt-5">
               <p class="flex items-baseline justify-between gap-3 border-t border-slate-100 pt-4">
