@@ -1,12 +1,21 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { test } from 'node:test';
-import { LOCALES } from '../i18n/locales.ts';
+import { LOCALES, type Locale } from '../i18n/locales.ts';
 import { WA_MESSAGES } from './carinova.ts';
 import { content } from './content.ts';
 import { FORMULA_EXAMPLE, SHOPPING_EXAMPLES, quoteExample } from './services.ts';
 
-const GREETING = { es: /^Hola Carinova 👋 \S/, en: /^Hi Carinova 👋 \S/ };
+// Every message opens by greeting Carinova, in the customer's language, and then says something.
+const GREETING: Record<Locale, RegExp> = {
+  es: /^Hola Carinova 👋 \S/,
+  en: /^Hi Carinova 👋 \S/,
+  fr: /^Bonjour Carinova 👋 \S/,
+  pt: /^Olá Carinova 👋 \S/,
+  zh: /^你好 Carinova 👋 \S/,
+  ru: /^Здравствуйте, Carinova 👋 \S/,
+  ar: /^مرحبًا Carinova 👋 \S/,
+};
 
 for (const locale of LOCALES) {
   test(`every WhatsApp link has a message of its own, so the team can tell where a lead came from (${locale})`, () => {
@@ -20,6 +29,12 @@ for (const locale of LOCALES) {
       shopper,
       storeAssist,
       itemCheck,
+      homeBranch,
+      storesShopper,
+      storePageAssist,
+      trackItemCheck,
+      trackPackage,
+      trackMissing,
       branch,
       customer,
       welcomeEmail,
@@ -40,6 +55,12 @@ for (const locale of LOCALES) {
       shopper('https://www.amazon.com/dp/B000000000'),
       storeAssist('Amazon'),
       itemCheck('un perfume'),
+      ...BRANCHES.map((item) => homeBranch(item.city)),
+      storesShopper('https://www.amazon.com/dp/B000000000'),
+      storePageAssist('Amazon'),
+      trackItemCheck('un perfume'),
+      trackPackage('CNV-01234', 'PKG-000123'),
+      trackMissing('CNV-01234', 'PKG-000123'),
       customer('CNV-01234'),
       welcomeEmail('CNV-01234'),
       accountPackages('CNV-01234'),

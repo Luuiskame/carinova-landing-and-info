@@ -6,7 +6,8 @@
 import { content } from '../../src/data/content.ts';
 import { SIGNUP_COUNTRIES, type SignupCountry } from '../../src/data/signup.ts';
 import type { Locale } from '../../src/i18n/locales.ts';
-import { EMAIL_MAX, NAME, clean, cleanEmail, isEmail } from '../validation.ts';
+import { textOf } from '../text/index.ts';
+import { NAME, SIGNUP_LIMITS as LIMITS, clean, cleanEmail, isEmail } from '../validation.ts';
 
 export interface SignupData {
   /** ISO 3166-1 alpha-2 code of one of SIGNUP_COUNTRIES. */
@@ -29,51 +30,6 @@ export interface SignupData {
 export type SignupField = keyof SignupData | 'terms';
 export type FieldErrors = Partial<Record<SignupField, string>>;
 export type ValidationResult = { ok: true; data: SignupData } | { ok: false; fields: FieldErrors };
-
-const LIMITS = { name: 60, email: EMAIL_MAX, address1: 120, address2: 60, city: 60 };
-
-const MESSAGES = {
-  es: {
-    country: 'Elegí un país.',
-    labels: { firstName: 'nombre', lastName: 'apellido' },
-    nameMissing: (label: string) => `Escribí tu ${label}.`,
-    nameInvalid: (label: string) => `Usá solo letras en tu ${label} (entre 2 y ${LIMITS.name} caracteres).`,
-    emailMissing: 'Escribí tu correo electrónico.',
-    emailInvalid: 'Revisá tu correo: no parece válido.',
-    phoneMissing: 'Escribí tu teléfono.',
-    phoneInvalid: (example: string) =>
-      `Escribí el número completo, por ejemplo ${example}. Si es de otro país, empezá con + y el código del país.`,
-    addressMissing: 'Escribí tu dirección.',
-    addressShort: 'Tu dirección parece incompleta.',
-    tooLong: (max: number) => `Usá ${max} caracteres como máximo.`,
-    cityMissing: 'Escribí tu ciudad.',
-    cityLength: `Tu ciudad debe tener de 2 a ${LIMITS.city} caracteres.`,
-    state: (label: string) => `Elegí tu ${label.toLowerCase()}.`,
-    postalMissing: 'Escribí tu código postal.',
-    postalInvalid: (example: string) => `Revisá el código postal (ejemplo: ${example}).`,
-    terms: 'Para continuar, aceptá los términos y la política de privacidad.',
-  },
-  en: {
-    country: 'Choose a country.',
-    labels: { firstName: 'first name', lastName: 'last name' },
-    nameMissing: (label: string) => `Enter your ${label}.`,
-    nameInvalid: (label: string) => `Use only letters in your ${label} (between 2 and ${LIMITS.name} characters).`,
-    emailMissing: 'Enter your e-mail.',
-    emailInvalid: 'Check your e-mail: it does not look valid.',
-    phoneMissing: 'Enter your phone number.',
-    phoneInvalid: (example: string) =>
-      `Enter the full number, for example ${example}. If it is from another country, start with + and the country code.`,
-    addressMissing: 'Enter your address.',
-    addressShort: 'Your address looks incomplete.',
-    tooLong: (max: number) => `Use ${max} characters at most.`,
-    cityMissing: 'Enter your city.',
-    cityLength: `Your city must have 2 to ${LIMITS.city} characters.`,
-    state: (label: string) => `Choose your ${label.toLowerCase()}.`,
-    postalMissing: 'Enter your postal code.',
-    postalInvalid: (example: string) => `Check the postal code (example: ${example}).`,
-    terms: 'To continue, accept the terms and the privacy policy.',
-  },
-};
 
 /**
  * Returns the phone as "+<digits>", or null when it cannot be a full number.
@@ -103,7 +59,7 @@ const accepted = (value: unknown): boolean => value === true || value === 'true'
 
 export const validateSignup = (input: unknown, locale: Locale = 'es'): ValidationResult => {
   const body = (typeof input === 'object' && input !== null ? input : {}) as Record<string, unknown>;
-  const t = MESSAGES[locale];
+  const t = textOf(locale).signupForm;
   // The same countries in either language; only their names and what they call their divisions change.
   const countries = content(locale).SIGNUP_COUNTRIES;
   const fields: FieldErrors = {};

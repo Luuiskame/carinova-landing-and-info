@@ -109,12 +109,12 @@ test('the code e-mail carries the code, how long it lasts and who may ask for it
     assert.ok(version.includes(`${LOGIN_CODE_MINUTES} minutos`));
     assert.ok(version.includes('Nunca te lo vamos a pedir'));
   }
-  assert.ok(spanish.html.includes('Hola, D&#39;Angelo:') && spanish.html.includes('<html lang="es">'));
+  assert.ok(spanish.html.includes('Hola, D&#39;Angelo:') && spanish.html.includes('<html lang="es" dir="ltr">'));
   assert.ok(spanish.text.includes("Hola, D'Angelo:"));
   assert.match(spanish.text, /^012345$/m, 'the code has a line of its own');
 
   const english = loginCodeEmail('Paul', '987654', 'en');
   assert.equal(english.subject, 'Your code to sign in to Carinova');
-  assert.ok(english.html.includes('<html lang="en">') && english.html.includes('987654'));
+  assert.ok(english.html.includes('<html lang="en" dir="ltr">') && english.html.includes('987654'));
   assert.ok(english.text.includes(`${LOGIN_CODE_MINUTES} minutes`) && english.text.includes('We will never ask'));
 });

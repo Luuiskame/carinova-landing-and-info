@@ -11,10 +11,25 @@ import type { Locale } from '../i18n/locales.ts';
 /** The measurements of a box come in centimetres or in inches. */
 export type LengthUnit = 'cm' | 'in';
 
-/** The few words the formulas are written with. Spanish is the default everywhere. */
+/**
+ * The few words the formulas are written with. Spanish is the default everywhere.
+ *
+ * - `cubic`, `cubicFeet`: the units of a volume. Arabic uses the international symbols: a formula
+ *   is written from left to right in every language, and a word written from right to left in the
+ *   middle of it would turn the numbers around it.
+ * - `comma`, `and`: how the items of a list are joined ("a, b y c").
+ * - `counted`: whether a quantity goes in front of its noun, which then takes its plural
+ *   ("2 laptops"). Where a noun changes with the number in more ways than that (Russian, Arabic)
+ *   or not at all (Chinese), the noun is not asked to agree: "2 × ноутбук".
+ */
 const WORDS = {
-  es: { cubic: { cm: 'cm³', in: 'pulg³' }, cubicFeet: 'pie³', and: 'y' },
-  en: { cubic: { cm: 'cm³', in: 'in³' }, cubicFeet: 'ft³', and: 'and' },
+  es: { cubic: { cm: 'cm³', in: 'pulg³' }, cubicFeet: 'pie³', comma: ', ', and: ' y ', counted: true },
+  en: { cubic: { cm: 'cm³', in: 'in³' }, cubicFeet: 'ft³', comma: ', ', and: ' and ', counted: true },
+  fr: { cubic: { cm: 'cm³', in: 'po³' }, cubicFeet: 'pi³', comma: ', ', and: ' et ', counted: true },
+  pt: { cubic: { cm: 'cm³', in: 'pol³' }, cubicFeet: 'pé³', comma: ', ', and: ' e ', counted: true },
+  zh: { cubic: { cm: 'cm³', in: 'in³' }, cubicFeet: 'ft³', comma: '、', and: '和', counted: false },
+  ru: { cubic: { cm: 'см³', in: 'дюйм³' }, cubicFeet: 'фут³', comma: ', ', and: ' и ', counted: false },
+  ar: { cubic: { cm: 'cm³', in: 'in³' }, cubicFeet: 'ft³', comma: '، ', and: ' و', counted: false },
 } satisfies Record<Locale, unknown>;
 
 /** Cubic inches in a cubic foot (12 × 12 × 12). */
@@ -173,16 +188,30 @@ export const describeVolume = (quote: VolumeQuote, locale: Locale = 'es'): strin
   );
 };
 
-/** "1 Celular × US$30 = US$30", "2 Laptops × US$80 = US$160" */
-export const describeUnitLine = ({ item, quantity, total }: UnitLine): string =>
-  `${quantity} ${quantity === 1 ? item.name : item.plural} × ${formatUSD(item.price)} = ${formatUSD(total)}`;
+/**
+ * "1 Celular × US$30 = US$30", "2 Laptops × US$80 = US$160"; where the noun is not counted
+ * (WORDS), "2 × Ноутбук × US$80 = US$160".
+ */
+export const describeUnitLine = ({ item, quantity, total }: UnitLine, locale: Locale = 'es'): string => {
+  const words = WORDS[locale];
+  const sum = `× ${formatUSD(item.price)} = ${formatUSD(total)}`;
+  return words.counted
+    ? `${quantity} ${quantity === 1 ? item.name : item.plural} ${sum}`
+    : `${quantity} × ${item.name} ${sum}`;
+};
 
-/** "1 celular, 2 laptops y 1 PlayStation", for the WhatsApp message. */
+/**
+ * "1 celular, 2 laptops y 1 PlayStation", for the WhatsApp message; where the noun is not counted
+ * (WORDS), "ноутбук × 2 и PlayStation × 1".
+ */
 export const listUnits = (lines: Array<UnitLine>, locale: Locale = 'es'): string => {
-  const parts = lines.map(({ item, quantity }) => {
-    const name = quantity === 1 ? item.name : item.plural;
-    return `${quantity} ${item.brand ? name : name.toLowerCase()}`;
-  });
+  const words = WORDS[locale];
+  const lower = (item: UnitLine['item'], name: string) => (item.brand ? name : name.toLowerCase());
+  const parts = lines.map(({ item, quantity }) =>
+    words.counted
+      ? `${quantity} ${lower(item, quantity === 1 ? item.name : item.plural)}`
+      : `${lower(item, item.name)} × ${quantity}`
+  );
   if (parts.length < 2) return parts[0] ?? '';
-  return `${parts.slice(0, -1).join(', ')} ${WORDS[locale].and} ${parts[parts.length - 1]}`;
+  return `${parts.slice(0, -1).join(words.comma)}${words.and}${parts[parts.length - 1]}`;
 };

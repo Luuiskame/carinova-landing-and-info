@@ -9,71 +9,12 @@ import HeroText from '~/components/widgets/HeroText.astro';
 import SigninForm from '~/components/carinova/SigninForm.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
-import { LOGIN_CODE_MINUTES, SESSION_DAYS } from '~/data/account';
 import { i18n } from '~/i18n';
 
-const { locale, data } = i18n(Astro);
+const { data, ui } = i18n(Astro);
 const { WA_MESSAGES } = data;
 
-const t = {
-  es: {
-    tagline: 'Mi cuenta',
-    metaTitle: 'Ingresar a mi cuenta',
-    description:
-      'Ingresá a tu cuenta de Carinova con tu correo: te enviamos un código y entrás sin contraseña. Ahí están tu Carinova ID, tu dirección en Estados Unidos, tus paquetes y tus pagos.',
-    title: 'Ingresá a tu cuenta',
-    subtitle:
-      'Realizá todas tus gestiones desde un mismo lugar: tu Carinova ID, tu dirección, tus paquetes y tus pagos.',
-    howTitle: 'Así funciona',
-    how: [
-      {
-        icon: 'tabler:mail',
-        title: 'Sin contraseña',
-        text: 'No hay nada que recordar ni que te puedan robar: cada vez que ingresás te mandamos un código nuevo a tu correo.',
-      },
-      {
-        icon: 'tabler:clock',
-        title: 'Un código para una vez',
-        text: `Sirve una sola vez y vence a los ${LOGIN_CODE_MINUTES} minutos.`,
-      },
-      {
-        icon: 'tabler:shield-lock',
-        title: 'Tu sesión, en este navegador',
-        text: `Quedás dentro ${SESSION_DAYS} días o hasta que cerrés sesión. En un dispositivo compartido, cerrala al terminar.`,
-      },
-    ],
-    helpTitle: '¿No podés ingresar?',
-    helpText: 'Escribinos con tu Carinova ID o con el correo de tu cuenta.',
-  },
-  en: {
-    tagline: 'My account',
-    metaTitle: 'Sign in to my account',
-    description:
-      'Sign in to your Carinova account with your e-mail: we send you a code and you get in without a password. Your Carinova ID, your address in the United States, your packages and your payments are there.',
-    title: 'Sign in to your account',
-    subtitle: 'Handle everything from one place: your Carinova ID, your address, your packages and your payments.',
-    howTitle: 'How it works',
-    how: [
-      {
-        icon: 'tabler:mail',
-        title: 'No password',
-        text: 'There is nothing to remember and nothing to steal: every time you sign in we send a new code to your e-mail.',
-      },
-      {
-        icon: 'tabler:clock',
-        title: 'A code for one use',
-        text: `It works only once and expires after ${LOGIN_CODE_MINUTES} minutes.`,
-      },
-      {
-        icon: 'tabler:shield-lock',
-        title: 'Your session, on this browser',
-        text: `You stay signed in for ${SESSION_DAYS} days or until you sign out. On a shared device, sign out when you finish.`,
-      },
-    ],
-    helpTitle: 'Can you not sign in?',
-    helpText: 'Write to us with your Carinova ID or with the e-mail of your account.',
-  },
-}[locale];
+const t = ui.signinPage;
 
 const metadata = { title: t.metaTitle, description: t.description };
 ---

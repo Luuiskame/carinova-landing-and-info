@@ -77,7 +77,7 @@ test('the customer’s e-mails are written in the language they signed up in', (
   const url = 'https://carinova.test/en/sign-up/confirm?token=abc';
   const confirmation = verificationEmail('Paul', url, 'en');
   assert.equal(confirmation.subject, 'Confirm your e-mail to create your Carinova account');
-  assert.ok(confirmation.html.includes('<html lang="en">') && confirmation.html.includes(`href="${url}"`));
+  assert.ok(confirmation.html.includes('<html lang="en" dir="ltr">') && confirmation.html.includes(`href="${url}"`));
   assert.ok(confirmation.html.includes('48 hours') && confirmation.text.includes('48 hours'));
   assert.ok(confirmation.text.includes('Hi, Paul:'));
 

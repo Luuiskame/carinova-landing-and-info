@@ -6,7 +6,14 @@
 import { LOGIN_CODE_DIGITS, PACKAGE_STAGES } from '../account.ts';
 import { CARINOVA_ID_EXAMPLE, sentence, type RestrictedItem } from '../carinova.ts';
 import { FAQ_STORE_COUNT, type FaqGroup, type LinkTo } from '../faq.ts';
-import { CUBIC_CM_PER_CUBIC_FOOT, describeVolume, formatNumber, formatUSD, quoteByVolume } from '../../utils/rates.ts';
+import {
+  CUBIC_CM_PER_CUBIC_FOOT,
+  describeVolume,
+  formatNumber,
+  formatUSD,
+  quoteByVolume,
+  quoteByWeight,
+} from '../../utils/rates.ts';
 import { BRANCHES, RATES, RECEPTION_POINTS, RESTRICTED_ITEMS, STORES, describeHours } from './carinova.ts';
 import { FORMULA_EXAMPLE } from './services.ts';
 
@@ -40,6 +47,10 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
         title: 'What is the Carinova ID?',
         description:
           'It is the identifier of your account. There is one per person or per company, and it is the same for all our services: air, sea, packages and assisted purchases.',
+      },
+      {
+        title: `What is a US address in ${receiving.join(' and ')} (a "casillero") and how does it work?`,
+        description: `It is an address in the United States in your name: you write it as the shipping address when you buy online, and what reaches our warehouse we bring to Nicaragua. At Carinova it comes with your account: when you create it you get your Carinova ID and your address. ${link('/casillero-en-miami', 'Learn about the US address')}.`,
       },
       {
         title: 'How do I sign in to my account?',
@@ -84,12 +95,20 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
         title: 'Which stores can I buy from?',
         description: `Any online store that ships within the United States: ${stores} and many more.`,
       },
+      {
+        title: 'How do I shop at Amazon, SHEIN or Temu from Nicaragua?',
+        description: `Create your account, use the address of your account as the shipping address at the store’s checkout and we bring your package to Nicaragua, by air or by sea. If you would rather we buy for you, request an assisted purchase. ${link('/tiendas', 'See stores')}.`,
+      },
     ],
   },
   {
     id: 'tarifas',
     title: 'Rates and payments',
     items: [
+      {
+        title: 'How much does it cost to send a package from the United States to Nicaragua?',
+        description: `By air, ${formatUSD(air.pricePerLb)} per pound; by sea, ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot. For example, a 5-pound package by air is ${formatUSD(quoteByWeight(5, air.pricePerLb).total)}. ${link('/cotizador', 'Calculate your shipment')}.`,
+      },
       {
         title: 'How is the rate calculated?',
         description: `Air: ${formatUSD(air.pricePerLb)} per pound, with rates per unit for specific electronics. Sea: ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot. The basis of the charge is determined by the goods and the conditions of the service. Work it out with our ${link('/cotizador', 'quote calculator')}.`,
@@ -128,6 +147,10 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
     id: 'tiempos',
     title: 'Times and tracking',
     items: [
+      {
+        title: `How long does a shipment from ${receiving.join(' and ')} to Nicaragua take?`,
+        description: `By air, ${air.transit}; by sea, ${sea.transit}. Delivery times count ${RATES.transitFrom} and may vary with transit, customs and destination.`,
+      },
       {
         title: 'When do delivery times start counting?',
         description: `From the physical reception of the package, not from the date of purchase. Air: ${air.transit}. Sea: ${sea.transit}. They are estimates subject to transit, customs and destination.`,
@@ -171,6 +194,10 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
         title: 'Where do I pick up my package?',
         description: `${sentence(`At our branches in ${cities}, ${describeHours(hours)}`)} ${link('/sucursales', 'See addresses and opening hours')}.`,
       },
+      ...BRANCHES.slice(1).map((branch) => ({
+        title: `Do you ship to ${branch.city}?`,
+        description: `Yes: we have a pickup branch in ${branch.city}, besides ${BRANCHES[0].city}. ${link(`/sucursales#${branch.id}`, `See the ${branch.city} branch`)}.`,
+      })),
       {
         title: 'Do you deliver to my home?',
         description:

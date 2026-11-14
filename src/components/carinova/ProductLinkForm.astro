@@ -1,0 +1,108 @@
+---
+// The form of an assisted purchase: the visitor pastes the link of a product and gets their request
+// ready to send on WhatsApp. Nothing is stored and nothing is bought: the request is a message, and
+// Carinova confirms availability, whether the item can enter and the total cost before buying.
+//
+// It is in the dialog of the home page's "Compra asistida" and on /tiendas; each place sends its own
+// message. Without JavaScript the form is a plain one that takes the link to WhatsApp as the whole
+// message. Only an https link to a real host is sent.
+import { Icon } from 'astro-icon/components';
+import { CONTACT } from '~/data/carinova';
+import { i18n } from '~/i18n';
+
+export interface Props {
+  /** Where it is: each place sends its own WhatsApp message. */
+  place: 'home' | 'stores';
+  /** Give the field the focus when it comes into view (inside a dialog). */
+  autofocus?: boolean;
+}
+
+const { place, autofocus = false } = Astro.props;
+const { data, ui } = i18n(Astro);
+const { WA_MESSAGES } = data;
+const t = ui.productLink;
+
+const config = {
+  invalid: t.invalid,
+  // The WhatsApp message of this place, with the link still to fill in.
+  message: (place === 'home' ? WA_MESSAGES.shopper : WA_MESSAGES.storesShopper)('{link}'),
+};
+---
+
+<cn-link-form class="block" data-config={JSON.stringify(config)}>
+  <!-- Without the script the link goes to WhatsApp as the whole message; with it, inside the request. -->
+  <form action={`https://wa.me/${CONTACT.whatsapp}`} method="get" target="_blank">
+    <label class="block text-sm font-bold text-navy" for="cn-product-link">{t.label}</label>
+    <input
+      id="cn-product-link"
+      name="text"
+      type="url"
+      inputmode="url"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      maxlength="2048"
+      required
+      autofocus={autofocus}
+      dir="ltr"
+      placeholder={t.placeholder}
+      aria-describedby="cn-product-link-hint cn-product-link-error"
+      class="mt-1.5 block min-h-12 w-full rounded-lg border border-[#cbd7e4] bg-[#fbfcff] px-3 text-base text-navy outline-none transition placeholder:text-slate-500 focus:border-cta focus:ring-2 focus:ring-orange-100"
+    />
+    <p id="cn-product-link-error" class="mt-2 text-sm font-semibold text-red-700" role="alert" hidden></p>
+    <button type="submit" class="btn-primary mt-4 w-full">
+      <Icon name="tabler:brand-whatsapp" class="h-5 w-5 shrink-0" />
+      {t.submit}
+    </button>
+  </form>
+  <p id="cn-product-link-hint" class="mt-3 text-sm text-slate-600">{t.hint}</p>
+</cn-link-form>
+
+<script>
+  import { CONTACT } from '~/data/carinova';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  class CnLinkForm extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector('form');
+      const input = this.querySelector<HTMLInputElement>('#cn-product-link');
+      if (!form || !input) return;
+      const config = JSON.parse(this.dataset.config ?? '{}') as { invalid: string; message: string };
+
+      // With the script, what is wrong with the link is said by the page, in the page's language:
+      // the browser's own notice would be in the browser's. Without it, the browser still checks.
+      form.noValidate = true;
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        let link: URL | undefined;
+        try {
+          link = new URL(input.value.trim());
+        } catch {
+          link = undefined;
+        }
+        // A product page: https, a real host, and no user name or password in it.
+        if (!link || link.protocol !== 'https:' || !link.hostname.includes('.') || link.username || link.password) {
+          this.showError(input, config.invalid);
+          input.focus();
+          return;
+        }
+        this.showError(input, '');
+        // The pasted link becomes the request, ready to send: WhatsApp opens with it in another tab.
+        window.open(whatsappLink(CONTACT.whatsapp, fill(config.message, { link: link.href })), '_blank', 'noopener');
+      });
+      input.addEventListener('input', () => this.showError(input, ''));
+    }
+
+    private showError(input: HTMLInputElement, message: string) {
+      const error = this.querySelector<HTMLElement>('#cn-product-link-error');
+      if (!error) return;
+      error.textContent = message;
+      error.hidden = message === '';
+      if (message) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    }
+  }
+
+  if (!customElements.get('cn-link-form')) customElements.define('cn-link-form', CnLinkForm);
+</script>

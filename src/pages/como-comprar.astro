@@ -1,5 +1,5 @@
 ---
-// "Cómo funciona" (/como-comprar): the five steps of Carinova's prototype with their details
+// "Cómo funciona" (/como-comprar): the three steps of Carinova's design with their details
 // (PROCESS_STEPS) and one worked example per kind of purchase (SHOPPING_EXAMPLES), each one computed
 // with the site's rates and openable in the calculator.
 import { Icon } from 'astro-icon/components';
@@ -10,57 +10,13 @@ import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
-import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 import { formatUSD } from '~/utils/rates';
 
-const { locale, href, data } = i18n(Astro);
+const { href, data, ui } = i18n(Astro);
 const { CTA, PROCESS_STEPS, SHOPPING_EXAMPLES, WA_MESSAGES, quoteExample } = data;
 
-const t = {
-  es: {
-    tagline: 'Cómo funciona',
-    title: 'Cómo comprar en Estados Unidos desde Nicaragua',
-    description:
-      'Paso a paso para comprar en tiendas de Estados Unidos y recibir en Nicaragua, con ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
-    subtitle:
-      'Cinco pasos claros, desde tu primera compra hasta tener tu paquete en Nicaragua, y ejemplos de cuánto cuesta traer ropa, celulares, laptops, cosas para la casa, muebles y encomiendas.',
-    steps: 'Los pasos',
-    examples: {
-      tagline: 'Ejemplos por categoría',
-      title: '¿Cuánto cuesta traer…?',
-      subtitle:
-        'Seis compras de ejemplo, calculadas con nuestras tarifas. Abrí cualquiera en el cotizador y cambiá los datos por los de tu compra.',
-      open: 'Abrir en el cotizador',
-    },
-    closing: {
-      title: 'Empezá por crear tu cuenta',
-      subtitle: 'Con tu Carinova ID y tu dirección en Estados Unidos ya podés comprar en cualquier tienda.',
-      lead: '¿Querés que te guiemos en tu primera compra?',
-    },
-  },
-  en: {
-    tagline: 'How it works',
-    title: 'How to buy in the United States from Nicaragua',
-    description:
-      'Step by step to buy at stores in the United States and receive in Nicaragua, with examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
-    subtitle:
-      'Five clear steps, from your first purchase to having your package in Nicaragua, and examples of what it costs to bring clothes, cell phones, laptops, household goods, furniture and family packages.',
-    steps: 'The steps',
-    examples: {
-      tagline: 'Examples by category',
-      title: 'How much does it cost to bring…?',
-      subtitle:
-        'Six example purchases, worked out with our rates. Open any of them in the calculator and change the details for those of your purchase.',
-      open: 'Open in the calculator',
-    },
-    closing: {
-      title: 'Start by creating your account',
-      subtitle: 'With your Carinova ID and your address in the United States you can already buy at any store.',
-      lead: 'Would you like us to guide you through your first purchase?',
-    },
-  },
-}[locale];
+const t = ui.howToBuyPage;
 
 const metadata = { title: t.title, description: t.description };
 
@@ -101,15 +57,10 @@ const linkClass = (path: string) =>
                   </li>
                 ))}
               </ul>
-              {/* Signing up and signing in are for visitors; a customer who is signed in gets their account. */}
+              {/* Signing up is for visitors; a customer who is signed in gets their account. */}
               {step.link?.path === CTA.signup.path && (
-                <a class="btn-primary mt-5" href={href(step.link.path)} data-auth="out">
-                  {step.link.text}
-                </a>
-              )}
-              {step.link?.path === CTA.signin.path && (
                 <>
-                  <a class="btn mt-5" href={href(step.link.path)} data-auth="out" data-dialog-open={SIGNIN_DIALOG_ID}>
+                  <a class="btn-primary mt-5" href={href(step.link.path)} data-auth="out">
                     {step.link.text}
                   </a>
                   <a class="btn-primary mt-5" href={href(CTA.account.path)} data-auth="in">
@@ -117,7 +68,7 @@ const linkClass = (path: string) =>
                   </a>
                 </>
               )}
-              {step.link && step.link.path !== CTA.signup.path && step.link.path !== CTA.signin.path && (
+              {step.link && step.link.path !== CTA.signup.path && (
                 <a class:list={['mt-5', linkClass(step.link.path)]} href={href(step.link.path)}>
                   {step.link.text}
                 </a>
@@ -151,13 +102,16 @@ const linkClass = (path: string) =>
             </p>
             <ul class="mt-3 space-y-1 text-sm break-words text-slate-700 tabular-nums">
               {example.quote.lines.map((line) => (
-                <li>{line}</li>
+                <li>
+                  {/* A formula reads from left to right in every language. */}
+                  <span dir="ltr">{line}</span>
+                </li>
               ))}
             </ul>
             {example.quote.note && <p class="mt-1 text-sm text-slate-700">{example.quote.note}</p>}
             <div class="mt-auto pt-5">
               <p class="flex items-baseline justify-between gap-3 border-t border-slate-100 pt-4">
-                <span class="text-sm font-semibold text-slate-700">Total</span>
+                <span class="text-sm font-semibold text-slate-700">{t.total}</span>
                 <span class="font-heading text-3xl font-extrabold text-heading tabular-nums">
                   {formatUSD(example.quote.total)}
                 </span>

@@ -1,0 +1,63 @@
+---
+// The journey of a package, drawn: the five stages a customer sees in their account
+// (PACKAGE_STAGES), each with its icon, joined by a dashed line. A column on phones and wherever it
+// is asked to stay one (`column`); a row from tablets up otherwise. On navy with `dark`.
+import { Icon } from 'astro-icon/components';
+import { PACKAGE_STAGES } from '~/data/account';
+import { i18n } from '~/i18n';
+
+export interface Props {
+  /** Read by screen readers as the name of the list. */
+  label: string;
+  /** Keep the stages one under the other at every width. */
+  column?: boolean;
+  class?: string;
+}
+
+const { label, column = false, class: className } = Astro.props;
+const { ui } = i18n(Astro);
+
+const ICONS: Record<string, string> = {
+  received: 'tabler:building-warehouse',
+  processing: 'tabler:package',
+  in_transit: 'tabler:plane-inflight',
+  ready: 'tabler:building-store',
+  delivered: 'tabler:circle-check',
+};
+
+const stages = PACKAGE_STAGES.map((stage, index) => ({
+  ...ui.statuses.package[stage.id],
+  icon: ICONS[stage.id] ?? 'tabler:package',
+  number: index + 1,
+}));
+---
+
+<ol class:list={['grid', !column && 'md:grid-cols-5', className]} aria-label={label}>
+  {
+    stages.map((stage) => (
+      <li
+        class:list={[
+          'group relative flex gap-4 pb-7 last:pb-0',
+          !column && 'md:flex-col md:items-center md:gap-3 md:pb-0 md:text-center',
+        ]}
+      >
+        {/* The line to the next stage: down the side in a column, across the top in a row. */}
+        <span
+          class:list={[
+            'absolute start-6 top-12 bottom-0 border-s-2 border-dashed border-[#c5d2e2] group-last:hidden rtl:translate-x-px',
+            !column &&
+              'md:start-1/2 md:top-6 md:bottom-auto md:w-full md:border-s-0 md:border-t-2 md:ltr:translate-x-0 md:rtl:translate-x-0',
+          ]}
+          aria-hidden="true"
+        />
+        <span class="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-navy text-cta shadow-[0_0.5rem_1.2rem_rgb(6_23_47/0.18)] ring-4 ring-[#f3f6fb]">
+          <Icon name={stage.icon} class="h-6 w-6" />
+        </span>
+        <span class:list={['block pt-0.5', !column && 'md:px-2 md:pt-0']}>
+          <b class="block font-heading text-base font-extrabold text-heading">{stage.name}</b>
+          <span class="mt-0.5 block text-sm leading-snug text-muted">{stage.text}</span>
+        </span>
+      </li>
+    ))
+  }
+</ol>

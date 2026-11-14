@@ -1,0 +1,157 @@
+---
+// "Tiendas" (/tiendas): the stores people buy from, by category, each with what it sells and how to
+// buy there with Carinova: on your own, with the address of your account, or asking Carinova to buy
+// for you (the form where a product's link becomes a request on WhatsApp).
+//
+// The stores are examples (STORES in src/data/carinova.ts), with no agreement and no endorsement
+// implied, and the page says so. A store's card says what the store is, never what it offers: no
+// prices, no promotions, no promise about the store's own shipping. Names only, no logos.
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import CtaGroup from '~/components/carinova/CtaGroup.astro';
+import ProductLinkForm from '~/components/carinova/ProductLinkForm.astro';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+
+import { i18n } from '~/i18n';
+
+const { href, data, ui } = i18n(Astro);
+const { PROCESS_STEPS, SERVICES, STORES, STORE_CATEGORIES, WA_MESSAGES } = data;
+const t = ui.storesPage;
+
+const metadata = { title: t.metaTitle, description: t.description };
+
+// What an assisted purchase involves: the service's own facts, as on /servicios.
+const assistFacts = SERVICES.find((service) => service.id === 'compras-asistidas')?.facts ?? [];
+
+const categories = STORE_CATEGORIES.map((category) => ({
+  ...category,
+  stores: STORES.filter((store) => store.category === category.id),
+})).filter((category) => category.stores.length > 0);
+
+const sectionClass = 'mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14';
+const titleClass = 'font-heading text-3xl font-extrabold tracking-[-0.03em] text-heading md:text-4xl';
+const linkClass = 'inline-flex min-h-11 items-center gap-1.5 font-semibold text-link underline underline-offset-4';
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+  <CtaGroup class="mx-auto max-w-3xl px-4 pb-6" />
+
+  <section class={sectionClass}>
+    <h2 class={titleClass}>{t.howTitle}</h2>
+    <ol class="mt-7 grid gap-4 md:grid-cols-3">
+      {
+        PROCESS_STEPS.map((step, index) => (
+          <li class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+            <p class="flex items-center justify-between text-sm font-black tracking-[0.12em] text-secondary">
+              {String(index + 1).padStart(2, '0')}
+              <Icon name={step.icon} class="h-7 w-7 text-primary" />
+            </p>
+            <h3 class="mt-4 font-heading text-xl font-bold text-heading">{step.title}</h3>
+            <p class="mt-2 text-muted">{step.summary}</p>
+          </li>
+        ))
+      }
+    </ol>
+    <div class="mt-4 flex flex-col gap-x-6 sm:flex-row sm:flex-wrap">
+      <a class={linkClass} href={href('/como-comprar')}>
+        {t.howLink}
+        <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+      </a>
+      <a class={linkClass} href={href('/articulos-prohibidos')}>
+        {t.restrictedLink}
+        <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+      </a>
+    </div>
+  </section>
+
+  <section class="bg-slate-50">
+    <div class={sectionClass}>
+      <h2 class={titleClass}>{t.storesTitle}</h2>
+      <p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted">{t.storesIntro}</p>
+
+      <nav aria-label={t.categories} class="mt-6">
+        <ul class="flex flex-wrap gap-2">
+          {
+            categories.map((category) => (
+              <li>
+                <a
+                  href={`#${category.id}`}
+                  class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold transition hover:border-primary hover:text-primary"
+                >
+                  {category.name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      {
+        categories.map((category) => (
+          <div id={category.id} class="scroll-mt-28 pt-10">
+            <h3 class="font-heading text-2xl font-extrabold text-heading">{category.name}</h3>
+            <ul class="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {category.stores.map((store) => (
+                <li
+                  id={store.id}
+                  class="flex scroll-mt-28 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+                >
+                  <h4 class="font-heading text-xl font-extrabold text-navy">{t.buyAt(store.name)}</h4>
+                  <p class="mt-1 text-sm font-semibold text-secondary" dir="ltr">
+                    {store.domain}
+                  </p>
+                  <p class="mt-3 font-medium text-heading">{store.tagline}</p>
+                  <p class="mt-1 flex-1 text-muted">{store.about}</p>
+                  <div class="mt-4 flex flex-col border-t border-slate-200 pt-3 text-sm">
+                    <a class={linkClass} href={store.url} target="_blank" rel="noopener noreferrer">
+                      <Icon name="tabler:external-link" class="h-5 w-5 shrink-0" />
+                      {t.visit(store.name)}
+                    </a>
+                    <WhatsAppHelp
+                      message={WA_MESSAGES.storePageAssist(store.name)}
+                      text={t.assist}
+                      context={`(${store.name})`}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+      <p class="mt-8 text-sm leading-relaxed text-muted">{t.disclosure}</p>
+    </div>
+  </section>
+
+  <section id="compra-asistida" class="scroll-mt-24">
+    <div class:list={[sectionClass, 'grid gap-10 lg:grid-cols-2 lg:gap-16']}>
+      <div>
+        <h2 class={titleClass}>{t.assistTitle}</h2>
+        <p class="mt-4 text-lg leading-relaxed text-muted">{t.assistIntro}</p>
+        <ul class="mt-5 space-y-2.5 text-muted">
+          {
+            assistFacts.map((fact) => (
+              <li class="flex gap-2.5">
+                <Icon name="tabler:circle-check-filled" class="mt-1 h-5 w-5 shrink-0 text-primary" />
+                {fact}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <ProductLinkForm place="stores" />
+      </div>
+    </div>
+  </section>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.storesClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

@@ -11,106 +11,13 @@ import BusinessForm from '~/components/carinova/BusinessForm.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
-import { BUSINESS_DISCLAIMER, BUSINESS_SOLUTIONS } from '~/data/business';
+import { BUSINESS_SOLUTIONS } from '~/data/business';
 import { i18n } from '~/i18n';
-import { formatUSD } from '~/utils/rates';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, CTA, RATES, WA_MESSAGES } = data;
+const { href, data, ui } = i18n(Astro);
+const { CTA, WA_MESSAGES } = data;
 
-const { air, sea } = RATES;
-const cityNames = BRANCHES.map((branch) => branch.city);
-
-const t = {
-  es: {
-    tagline: 'Carinova para negocios',
-    metaTitle: 'Carinova para empresas',
-    description:
-      'Soluciones logísticas de Estados Unidos a Nicaragua para empresas: importación y abastecimiento, envíos recurrentes y atención corporativa, por aéreo o por marítimo. Contanos qué necesitás.',
-    title: 'Tus operaciones también merecen moverse mejor.',
-    subtitle:
-      'Desde el primer abastecimiento hasta el crecimiento de tu empresa, exploramos soluciones logísticas adaptadas a las características de tu carga.',
-    offers: 'Lo que exploramos con tu empresa',
-    also: 'Y lo que tenés como cualquier cliente',
-    benefits: [
-      {
-        icon: 'tabler:packages',
-        title: 'Carga aérea y marítima',
-        text: `Aéreo a ${formatUSD(air.pricePerLb)} la libra, en ${air.transit}. Marítimo a ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie cúbico, en ${sea.transit}.`,
-      },
-      {
-        icon: 'tabler:id-badge-2',
-        title: 'Un Carinova ID para tu empresa',
-        text: `El mismo ID para todos los envíos de tu empresa, con retiro en ${cityNames.join(' o ')}.`,
-      },
-    ],
-    quote: 'Cotizar un envío',
-    next: '¿Qué pasa después?',
-    steps: [
-      { title: 'Recibimos tu solicitud', description: 'Le llega directamente a nuestro equipo.' },
-      {
-        title: 'Te contactamos',
-        description: 'Por correo o por WhatsApp, para conocer lo que necesita tu empresa.',
-      },
-      {
-        title: 'Abrimos la cuenta de tu empresa',
-        description: 'Con su Carinova ID y su dirección en Miami, lista para recibir.',
-      },
-    ],
-    helpTitle: '¿Preferís escribirnos?',
-    helpText: 'También abrimos la cuenta de tu empresa por WhatsApp.',
-    helpLink: 'Abrir la cuenta de mi empresa',
-    closing: {
-      title: '¿Querés saber cuánto cuesta tu carga?',
-      subtitle: 'Cotizá por libra o por pie cúbico en segundos.',
-      lead: '¿Preferís hablar con un asesor?',
-    },
-  },
-  en: {
-    tagline: 'Carinova for business',
-    metaTitle: 'Carinova for companies',
-    description:
-      'Logistics solutions from the United States to Nicaragua for companies: importing and supply, recurring shipments and corporate service, by air or by sea. Tell us what you need.',
-    title: 'Your operations deserve to move better too.',
-    subtitle:
-      'From your first supply run to the growth of your company, we explore logistics solutions adapted to the characteristics of your cargo.',
-    offers: 'What we explore with your company',
-    also: 'And what you get like any customer',
-    benefits: [
-      {
-        icon: 'tabler:packages',
-        title: 'Air and sea cargo',
-        text: `Air at ${formatUSD(air.pricePerLb)} per pound, in ${air.transit}. Sea at ${formatUSD(sea.pricePerLb)} per pound or ${formatUSD(sea.pricePerCubicFoot)} per cubic foot, in ${sea.transit}.`,
-      },
-      {
-        icon: 'tabler:id-badge-2',
-        title: 'One Carinova ID for your company',
-        text: `The same ID for all your company’s shipments, with pickup in ${cityNames.join(' or ')}.`,
-      },
-    ],
-    quote: 'Get a quote for a shipment',
-    next: 'What happens next?',
-    steps: [
-      { title: 'We receive your request', description: 'It goes straight to our team.' },
-      {
-        title: 'We contact you',
-        description: 'By e-mail or on WhatsApp, to learn what your company needs.',
-      },
-      {
-        title: 'We open your company’s account',
-        description: 'With its Carinova ID and its address in Miami, ready to receive.',
-      },
-    ],
-    helpTitle: 'Would you rather write to us?',
-    helpText: 'We also open your company’s account through WhatsApp.',
-    helpLink: 'Open my company’s account',
-    closing: {
-      title: 'Want to know what your cargo costs?',
-      subtitle: 'Get a quote per pound or per cubic foot in seconds.',
-      lead: 'Would you rather talk to an advisor?',
-    },
-  },
-}[locale];
+const t = ui.businessPage;
 
 const metadata = { title: t.metaTitle, description: t.description };
 ---
@@ -125,13 +32,13 @@ const metadata = { title: t.metaTitle, description: t.description };
         BUSINESS_SOLUTIONS.map((solution) => (
           <li class="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <Icon name={solution.icon} class="h-8 w-8 text-primary" />
-            <h3 class="mt-4 font-heading text-lg font-bold text-heading">{solution[locale].title}</h3>
-            <p class="mt-1 flex-1 text-muted">{solution[locale].text}</p>
+            <h3 class="mt-4 font-heading text-lg font-bold text-heading">{ui.business.solutions[solution.id].title}</h3>
+            <p class="mt-1 flex-1 text-muted">{ui.business.solutions[solution.id].text}</p>
           </li>
         ))
       }
     </ul>
-    <p class="mt-4 text-sm text-muted">{BUSINESS_DISCLAIMER[locale]}</p>
+    <p class="mt-4 text-sm text-muted">{ui.business.disclaimer}</p>
 
     <h2 class="mt-10 font-heading text-xl font-bold text-heading">{t.also}</h2>
     <ul class="mt-4 grid gap-5 md:grid-cols-2">

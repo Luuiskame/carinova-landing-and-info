@@ -12,18 +12,15 @@ import SigninForm from '~/components/carinova/SigninForm.astro';
 import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 
-const { locale } = i18n(Astro);
-const t = {
-  es: { label: 'Ingresá a tu cuenta', close: 'Cerrar' },
-  en: { label: 'Sign in to your account', close: 'Close' },
-}[locale];
+const { ui } = i18n(Astro);
+const t = ui.signinDialog;
 ---
 
 <dialog id={SIGNIN_DIALOG_ID} class="cn-dialog" aria-label={t.label}>
   <div class="relative">
     <button
       type="button"
-      class="absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-navy focus-visible:outline-2 focus-visible:outline-brand"
+      class="absolute top-3 end-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-navy focus-visible:outline-2 focus-visible:outline-brand"
       aria-label={t.close}
       data-cn-dialog-close
     >

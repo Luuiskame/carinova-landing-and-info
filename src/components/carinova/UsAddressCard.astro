@@ -15,38 +15,19 @@ import { Icon } from 'astro-icon/components';
 import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 import { i18n } from '~/i18n';
 
-const { locale, data } = i18n(Astro);
+const { data, ui } = i18n(Astro);
 const { MIAMI_ADDRESS, RECEPTION_POINTS, miamiAddressRows } = data;
 
 const rows = miamiAddressRows('', '');
 const personal = ['firstName', 'lastName'];
 
-const t = {
-  es: {
-    title: 'Tu dirección en Estados Unidos',
-    intro: 'Usala como dirección de envío cuando compres en tiendas de Estados Unidos.',
-    warehouse: 'Bodega',
-    soonTitle: (city: string) => `${city}: próximamente`,
-    soonText: (city: string, state: string) =>
-      `Pronto vas a poder recibir tus compras también en ${city}, ${state}. Cuando la bodega esté habilitada, su dirección va a aparecer aquí.`,
-    meanwhile: (city: string) => `Mientras tanto, usá tu dirección de ${city}.`,
-  },
-  en: {
-    title: 'Your address in the United States',
-    intro: 'Use it as the shipping address when you buy at stores in the United States.',
-    warehouse: 'Warehouse',
-    soonTitle: (city: string) => `${city}: coming soon`,
-    soonText: (city: string, state: string) =>
-      `Soon you will also be able to receive your purchases in ${city}, ${state}. When the warehouse is open, its address will appear here.`,
-    meanwhile: (city: string) => `In the meantime, use your ${city} address.`,
-  },
-}[locale];
+const t = ui.usAddressCard;
 
 const [first] = RECEPTION_POINTS;
 const open = RECEPTION_POINTS.find((point) => point.available) ?? first;
 ---
 
-<cn-us-address class="block rounded-2xl bg-white p-6 text-left shadow-lg ring-1 ring-slate-200 sm:p-8">
+<cn-us-address class="block rounded-2xl bg-white p-6 text-start shadow-lg ring-1 ring-slate-200 sm:p-8">
   <h2 class="font-heading text-2xl font-bold text-heading">{t.title}</h2>
   <p class="mt-1 text-muted">{t.intro}</p>
 
@@ -81,11 +62,11 @@ const open = RECEPTION_POINTS.find((point) => point.available) ?? first;
             {rows.map((row) => (
               <div class="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
                 <dt class="text-sm text-muted">{row.label}</dt>
-                <dd
-                  class="font-semibold text-heading select-all sm:text-right"
-                  data-cn-fill={personal.includes(row.id) ? row.id : undefined}
-                >
-                  {personal.includes(row.id) ? '' : row.value}
+                <dd class="font-semibold text-heading sm:text-end">
+                  {/* Written from left to right in every language: it is what a store's form is given. */}
+                  <span class="select-all" dir="ltr" data-cn-fill={personal.includes(row.id) ? row.id : undefined}>
+                    {personal.includes(row.id) ? '' : row.value}
+                  </span>
                 </dd>
               </div>
             ))}

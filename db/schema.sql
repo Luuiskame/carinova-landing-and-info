@@ -215,7 +215,8 @@ CREATE TABLE IF NOT EXISTS customers (
   terms_accepted_at   timestamptz,
   -- Where the account came from: 'web' for the sign-up form, 'staff' when the team created it.
   source              text NOT NULL DEFAULT 'web',
-  -- The language the customer signed up in ('es' or 'en'): the one to write to them in.
+  -- The language the customer signed up in, one of the site's (src/i18n/locales.ts): the one to
+  -- write to them in.
   locale              text NOT NULL DEFAULT 'es',
   -- 'suspended': the account is kept but cannot sign in, and its open sessions stop working.
   status              text NOT NULL DEFAULT 'active',
@@ -231,7 +232,7 @@ CREATE TABLE IF NOT EXISTS customers (
   CONSTRAINT customers_code_key UNIQUE (code),
   CONSTRAINT customers_email_key UNIQUE (email),
   CONSTRAINT customers_email_lowercase CHECK (email = lower(email)),
-  CONSTRAINT customers_locale_known CHECK (locale IN ('es', 'en')),
+  CONSTRAINT customers_locale_known CHECK (locale IN ('es', 'en', 'fr', 'pt', 'zh', 'ru', 'ar')),
   CONSTRAINT customers_status_known CHECK (status IN ('active', 'suspended')),
   CONSTRAINT customers_account_type_known CHECK (account_type IN ('personal', 'business')),
   CONSTRAINT customers_business_has_name CHECK (account_type = 'personal' OR company_name IS NOT NULL)
@@ -242,7 +243,14 @@ CREATE TABLE IF NOT EXISTS customers (
 -- ('es', 'active', 'personal').
 ALTER TABLE customers
   ADD COLUMN IF NOT EXISTS locale text NOT NULL DEFAULT 'es'
-  CONSTRAINT customers_locale_known CHECK (locale IN ('es', 'en'));
+  CONSTRAINT customers_locale_known CHECK (locale IN ('es', 'en', 'fr', 'pt', 'zh', 'ru', 'ar'));
+
+-- For a database whose check knows fewer languages than the site has (it knew 'es' and 'en' until
+-- 2026-11-14): the check is put again with today's list. Every customer already there has one of
+-- the languages of the old list, so nothing is rejected; running it again changes nothing.
+ALTER TABLE customers
+  DROP CONSTRAINT IF EXISTS customers_locale_known,
+  ADD CONSTRAINT customers_locale_known CHECK (locale IN ('es', 'en', 'fr', 'pt', 'zh', 'ru', 'ar'));
 
 ALTER TABLE customers
   ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active'

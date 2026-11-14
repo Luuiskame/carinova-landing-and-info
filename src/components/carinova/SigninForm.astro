@@ -22,78 +22,10 @@ export interface Props {
 }
 
 const { inDialog = false } = Astro.props;
-const { locale, href, data } = i18n(Astro);
+const { locale, href, data, ui } = i18n(Astro);
 const { CTA, WA_MESSAGES } = data;
 
-const t = {
-  es: {
-    title: 'Ingresá con tu correo',
-    intro: `Te mandamos un código de ${LOGIN_CODE_DIGITS} dígitos a tu correo. No necesitás contraseña.`,
-    noscript: 'Para ingresar necesitás activar JavaScript en tu navegador.',
-    email: 'Correo electrónico',
-    emailHint: 'El correo con el que creaste tu cuenta.',
-    send: 'Enviarme un código',
-    sending: 'Enviando…',
-    noAccount: '¿Todavía no tenés cuenta?',
-    codeTitle: 'Escribí tu código',
-    code: `Código de ${LOGIN_CODE_DIGITS} dígitos`,
-    enter: CTA.signin.text,
-    entering: 'Ingresando…',
-    notes: [
-      'Puede tardar un par de minutos en llegar. Si no lo ves, revisá la carpeta de spam o correo no deseado.',
-      'Nunca te vamos a pedir este código por WhatsApp ni por teléfono.',
-    ],
-    notArriving: 'Si no llega, puede que ese correo no tenga una cuenta.',
-    openYours: 'Creá la tuya',
-    resend: 'Enviar otro código',
-    change: 'Usar otro correo',
-    signedIn: 'Ya ingresaste en este navegador.',
-    // For the script.
-    messages: {
-      emailMissing: 'Escribí tu correo electrónico.',
-      codeMissing: `Escribí el código de ${LOGIN_CODE_DIGITS} dígitos.`,
-      codeInvalid: 'El código no es correcto o ya venció. Revisalo o pedí otro.',
-      resendIn: 'Enviar otro código ({seconds} s)',
-      resent: 'Listo: si el correo tiene una cuenta, le enviamos otro código. El anterior ya no sirve.',
-      unavailable: 'El ingreso no está disponible en este momento. Escribinos por WhatsApp y te ayudamos.',
-      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
-      failed: 'No pudimos conectarnos. Revisá tu conexión e intentalo de nuevo.',
-    },
-  },
-  en: {
-    title: 'Sign in with your e-mail',
-    intro: `We send a ${LOGIN_CODE_DIGITS}-digit code to your e-mail. You do not need a password.`,
-    noscript: 'To sign in you need to turn on JavaScript in your browser.',
-    email: 'E-mail',
-    emailHint: 'The e-mail you created your account with.',
-    send: 'Send me a code',
-    sending: 'Sending…',
-    noAccount: 'Do you not have an account yet?',
-    codeTitle: 'Enter your code',
-    code: `${LOGIN_CODE_DIGITS}-digit code`,
-    enter: CTA.signin.text,
-    entering: 'Signing in…',
-    notes: [
-      'It can take a couple of minutes to arrive. If you do not see it, check your spam or junk folder.',
-      'We will never ask you for this code on WhatsApp or by phone.',
-    ],
-    notArriving: 'If it does not arrive, that e-mail may not have an account.',
-    openYours: 'Create yours',
-    resend: 'Send another code',
-    change: 'Use another e-mail',
-    signedIn: 'You are already signed in on this browser.',
-    messages: {
-      emailMissing: 'Enter your e-mail.',
-      codeMissing: `Enter the ${LOGIN_CODE_DIGITS}-digit code.`,
-      codeInvalid: 'The code is not correct or has expired. Check it or ask for another one.',
-      resendIn: 'Send another code ({seconds} s)',
-      resent: 'Done: if the e-mail has an account, we sent it another code. The earlier one no longer works.',
-      unavailable: 'Signing in is not available right now. Write to us on WhatsApp and we will help you.',
-      busy: 'We received too many attempts in a row. Wait a minute and try again.',
-      failed: 'We could not connect. Check your connection and try again.',
-    },
-  },
-}[locale];
+const t = ui.signinForm;
 
 const config = {
   locale,
@@ -107,8 +39,8 @@ const config = {
 };
 
 const cardClass = inDialog
-  ? 'bg-white p-6 pt-12 text-left text-slate-800 sm:p-8 sm:pt-12'
-  : 'rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8';
+  ? 'bg-white p-6 pt-12 text-start text-slate-800 sm:p-8 sm:pt-12'
+  : 'rounded-2xl bg-white p-6 text-start text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8';
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
   'mt-1.5 block w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base text-navy outline-none transition placeholder:text-slate-400 focus:border-brand aria-[invalid=true]:border-red-600';
@@ -161,19 +93,9 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
     <h2 class="mt-4 font-heading text-2xl font-bold text-navy outline-none" tabindex="-1" data-cn-code-title>
       {t.codeTitle}
     </h2>
-    {
-      locale === 'en' ? (
-        <p class="mt-2 text-slate-700">
-          If <strong class="break-all" data-cn-email /> has an account, we sent it a {LOGIN_CODE_DIGITS}-digit code. It
-          expires in {LOGIN_CODE_MINUTES} minutes.
-        </p>
-      ) : (
-        <p class="mt-2 text-slate-700">
-          Si <strong class="break-all" data-cn-email /> tiene una cuenta, le enviamos un código de {LOGIN_CODE_DIGITS}{' '}
-          dígitos. Vence en {LOGIN_CODE_MINUTES} minutos.
-        </p>
-      )
-    }
+    <p class="mt-2 text-slate-700">
+      {t.codeSent[0]}<strong class="break-all" dir="ltr" data-cn-email></strong>{t.codeSent[1]}
+    </p>
 
     <div class="mt-6">
       <label for="cn-signin-code" class={labelClass}>{t.code}</label>
@@ -198,7 +120,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
       {t.enter}
     </button>
 
-    <ul class="mt-5 list-disc space-y-1.5 pl-5 text-sm text-slate-600">
+    <ul class="mt-5 list-disc space-y-1.5 ps-5 text-sm text-slate-600">
       {t.notes.map((note) => <li>{note}</li>)}
       <li>
         {t.notArriving}{' '}
@@ -227,7 +149,7 @@ const linkClass = 'font-semibold text-link underline underline-offset-4';
 
   <!-- When the request could not be made (no connection, service not available), whatever the step. -->
   <div
-    class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-sm text-red-900"
+    class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-start text-sm text-red-900"
     role="alert"
     data-cn-alert
     hidden

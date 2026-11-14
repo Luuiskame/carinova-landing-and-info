@@ -6,6 +6,9 @@
 /** Longest e-mail address there can be. */
 export const EMAIL_MAX = 254;
 
+/** How long each field of the sign-up form can be: what the form's messages state and its checks enforce. */
+export const SIGNUP_LIMITS = { name: 60, email: EMAIL_MAX, address1: 120, address2: 60, city: 60 };
+
 const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
 
 // Letters of any alphabet plus what real names contain. No digits or URL characters, so a name

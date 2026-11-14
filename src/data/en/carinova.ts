@@ -14,7 +14,7 @@ const listOf = (items: Array<string>): string =>
   items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 
 export const TAGLINE = 'Shipments that bring us together';
-export const HEADLINE: [string, string] = ['From the United States', 'to you.'];
+export const HEADLINE: [string, string] = ['From there', 'to here.'];
 export const VALUE_PROPOSITION =
   'We bring your personal purchases, family packages and business cargo from the United States to Nicaragua.';
 
@@ -275,6 +275,9 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
     '/servicios': hello('I would like to know which service suits me.'),
     '/cotizador': hello('I need help getting a quote for my shipment.'),
     '/sucursales': hello('I have a question about your branches.'),
+    '/casillero-en-miami': hello('I would like to open my US address in Miami.'),
+    '/tiendas': hello('I want to buy at a store in the United States and have a question.'),
+    '/rastreo': hello('I would like to know where my package is.'),
     '/mi-cuenta': hello('I am in my account and have a question.'),
     '/registro': hello('I am creating my account and have a question.'),
     '/registro/confirmar': hello('I am confirming my e-mail and have a question.'),
@@ -288,6 +291,7 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   },
   floatingDefault: hello('I am coming from your website and have a question.'),
   footer: hello('I am coming from your website and would like some information.'),
+  channels: hello('I found you on your website and would like to write to you.'),
 
   homeQuote: (shipment: string, total: string) =>
     hello(`I got a quote on your home page for ${shipment}: ${total}. Can you help me confirm it?`),
@@ -298,11 +302,21 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
     ),
   storeAssist: (store: string) =>
     hello(`I would like an assisted purchase at ${store}. This is the link to the product: `),
+  homeFamily: hello('I would like to send a family package to Nicaragua. What do I need?'),
   itemCheck: (item: string) => hello(`Before I buy, I would like to know if you can bring: ${item}`),
   itemCheckEmpty: hello('I would like to ask whether an item can enter Nicaragua: '),
+  homeBranch: (city: string) => hello(`I would like to know the location and the hours of the ${city} branch.`),
   homeDelivery: hello('I would like to ask about home delivery. My address is: '),
   homeFaq: hello('I read your frequently asked questions and have another one.'),
-  careers: hello('I would like to join the Carinova team. I am interested in this area: '),
+
+  trackItemCheck: (item: string) =>
+    hello(`I am on your tracking page and would like to know if you can bring: ${item}`),
+  trackItemCheckEmpty: hello('I am on your tracking page and would like to ask about an item: '),
+  trackPackage: (code: string, reference: string) =>
+    hello(`My Carinova ID is ${code}. I am tracking my package ${reference} and have a question.`),
+  trackMissing: (code: string, reference: string) =>
+    hello(`My Carinova ID is ${code}. I cannot find package ${reference} in my account.`),
+  trackClosing: hello('I cannot find my package on the tracking page. Can you help me?'),
 
   howToClosing: hello('I saw how it works and would like help with my first shipment.'),
   example: (category: string) =>
@@ -317,6 +331,15 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
     'entrega-a-domicilio': hello('I would like to arrange a home delivery. What coverage and charge does it have?'),
   },
   servicesClosing: hello('I would like help choosing the service for my shipment.'),
+
+  lockerClosing: hello('I would like to know more about the US address in Miami before I create my account.'),
+  storesShopper: (link: string) =>
+    hello(
+      `I am on your stores page and would like an assisted purchase. Product: ${link} Can you confirm availability, whether it can enter, and the total cost?`
+    ),
+  storePageAssist: (store: string) =>
+    hello(`I saw ${store} on your stores page and would like you to buy for me. This is the link to the product: `),
+  storesClosing: hello('I would like help buying at a store in the United States.'),
 
   quote: (shipment: string, total: string) =>
     hello(`I got a quote on your calculator for ${shipment}: ${total}. Can you help me confirm it?`),
@@ -352,5 +375,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   faqClosing: hello('I could not find my answer in your frequently asked questions.'),
   restricted: hello('Before I buy, I want to know if you can bring this product: '),
   aboutClosing: hello('I found Carinova on your site and want to start shipping with you.'),
+  careers: hello('I would like to join the Carinova team. I am interested in this area: '),
   notFound: hello('I landed on a page of your site that does not exist.'),
 };

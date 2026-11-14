@@ -1,39 +1,24 @@
 ---
-// "Preguntas frecuentes" on the home page, in the prototype's two columns: what the section is on
-// the left, with the way to ask something else, and the ten questions of the prototype on the right
-// (FEATURED_FAQS, in its order), one open at a time. Native <details>: no JavaScript. Every question
-// and the rest of them live on /preguntas-frecuentes.
+// "Preguntas frecuentes." on the home page, in two columns: what the section is on one side, with the
+// way to ask something else, and the featured questions on the other (FEATURED_FAQS, in their
+// order), one open at a time. Native <details>: no JavaScript. These questions and the rest of them
+// live on /preguntas-frecuentes, which is also the one page that describes them to search engines
+// (FAQPage): the same questions marked up on two pages would compete with each other.
 import { Icon } from 'astro-icon/components';
+import SectionHeading from '~/components/carinova/SectionHeading.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
+const { href, data, ui } = i18n(Astro);
 const { FEATURED_FAQS, WA_MESSAGES } = data;
-
-const t = {
-  es: {
-    eyebrow: 'Respuestas sin vueltas',
-    title: 'Preguntas frecuentes',
-    intro: 'Lo esencial para comprar, cotizar, enviar y recibir con tranquilidad.',
-    help: '¿Necesitás ayuda? Escribinos',
-    all: 'Ver todas las preguntas',
-  },
-  en: {
-    eyebrow: 'Straight answers',
-    title: 'Frequently asked questions',
-    intro: 'The essentials to buy, quote, ship and receive with peace of mind.',
-    help: 'Need help? Write to us',
-    all: 'See all the questions',
-  },
-}[locale];
+const t = ui.homeFaq;
 ---
 
-<section id="preguntas" class="scroll-mt-20 bg-[#f1f5fa]">
-  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:py-24">
+<section id="preguntas" class="scroll-mt-20 bg-white">
+  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:py-28">
     <div>
-      <p class="eyebrow">{t.eyebrow}</p>
-      <h2 class="display-title mt-4">{t.title}</h2>
-      <p class="mt-5 text-lg leading-relaxed text-muted">{t.intro}</p>
+      <SectionHeading number="07" eyebrow={t.eyebrow} title={t.title} />
+      <p class="mt-5 max-w-xs text-base leading-relaxed text-muted sm:text-lg">{t.intro}</p>
       <div class="mt-5 flex flex-col items-start gap-1">
         <WhatsAppHelp message={WA_MESSAGES.homeFaq} text={t.help} />
         <a
@@ -46,18 +31,20 @@ const t = {
       </div>
     </div>
 
-    <div class="border-t border-[#d2dce8]">
+    <div class="border-t border-[#e0e7f0]">
       {
-        FEATURED_FAQS.map((item) => (
-          <details name="home-faq" class="group border-b border-[#d2dce8]">
-            <summary class="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 font-heading text-base font-bold text-[#112e51] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand [&::-webkit-details-marker]:hidden">
+        FEATURED_FAQS.map((item, index) => (
+          <details name="home-faq" class="group border-b border-[#e0e7f0]" open={index === 0}>
+            <summary class="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-3.5 font-heading text-base leading-snug font-extrabold text-[#0b2241] transition hover:text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:text-[1.0625rem] [&::-webkit-details-marker]:hidden">
               {item.title}
-              <Icon
-                name="tabler:plus"
-                class="h-5 w-5 shrink-0 text-secondary transition group-open:rotate-45 motion-reduce:transition-none"
-              />
+              <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#fff0e2] text-[#b85600]">
+                <Icon
+                  name="tabler:plus"
+                  class="h-4 w-4 transition group-open:rotate-45 motion-reduce:transition-none"
+                />
+              </span>
             </summary>
-            <p class="pr-9 pb-5 leading-relaxed text-[#48607c]" set:html={item.description} />
+            <p class="pe-12 pb-5 leading-relaxed text-[#48607c]" set:html={item.description} />
           </details>
         ))
       }

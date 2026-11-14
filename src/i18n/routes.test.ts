@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { test } from 'node:test';
 import { WA_MESSAGES } from '../data/carinova.ts';
 import { LOCALES, isLocale, localeFrom } from './locales.ts';
-import { ROUTES, alternatePath, localeOfPath, localizePath, pathOf, spanishPath } from './routes.ts';
+import { ROUTES, alternatePath, homeOf, localeOfPath, localizePath, pathIn, pathOf, spanishPath } from './routes.ts';
 
 const routes = Object.values(ROUTES);
 
@@ -17,7 +17,7 @@ test('every page has one address per language, and a file to render it', () => {
     assert.match(route.es, /^\/([a-z0-9-]+(\/[a-z0-9-]+)*)?$/, id);
   }
   for (const locale of LOCALES) {
-    const paths = routes.map((route) => route[locale]);
+    const paths = routes.map((route) => pathIn(route, locale));
     assert.equal(new Set(paths).size, paths.length, `two pages share an address in ${locale}`);
   }
 });
@@ -55,6 +55,20 @@ test('each page knows its other language', () => {
 
   assert.equal(pathOf('account', 'es'), '/mi-cuenta');
   assert.equal(pathOf('account', 'en'), '/en/my-account');
+
+  // The other languages use the English words under their own prefix.
+  assert.equal(pathOf('account', 'fr'), '/fr/my-account');
+  assert.equal(pathOf('home', 'zh'), '/zh');
+  assert.equal(homeOf('es'), '/');
+  assert.equal(homeOf('ar'), '/ar');
+  assert.equal(alternatePath('/ru/quote', 'es'), '/cotizador');
+  assert.equal(alternatePath('/cotizador', 'pt'), '/pt/quote');
+  assert.equal(alternatePath('/fr/quote', 'ar'), '/ar/quote');
+  // An address of one language under another's prefix is not a page.
+  assert.equal(alternatePath('/fr/cotizador', 'es'), undefined);
+  assert.equal(localizePath('/cotizador?tarifa=aereo', 'ru'), '/ru/quote?tarifa=aereo');
+  assert.equal(localizePath('/#rastreo', 'zh'), '/zh#rastreo');
+  assert.equal(spanishPath('/ar/track'), '/rastreo');
 });
 
 test('what is kept per page uses the Spanish address, whatever the language', () => {
@@ -69,12 +83,18 @@ test('the language of an address, and of a form', () => {
   assert.equal(localeOfPath('/en'), 'en');
   assert.equal(localeOfPath('/en/'), 'en');
   assert.equal(localeOfPath('/en/quote'), 'en');
-  // "en" only as a whole first segment.
+  // A prefix only as a whole first segment.
   assert.equal(localeOfPath('/envios'), 'es');
   assert.equal(localeOfPath('/english'), 'es');
+  assert.equal(localeOfPath('/fr/quote'), 'fr');
+  assert.equal(localeOfPath('/zh'), 'zh');
+  assert.equal(localeOfPath('/ar/track/'), 'ar');
+  assert.equal(localeOfPath('/rastreo'), 'es');
+  assert.equal(localeOfPath('/pt-br'), 'es');
 
-  assert.ok(isLocale('es') && isLocale('en'));
-  assert.equal(isLocale('fr'), false);
-  for (const value of [undefined, null, '', 'fr', 42, 'EN']) assert.equal(localeFrom(value), 'es');
+  for (const locale of LOCALES) assert.ok(isLocale(locale), locale);
+  assert.equal(isLocale('de'), false);
+  for (const value of [undefined, null, '', 'de', 42, 'EN']) assert.equal(localeFrom(value), 'es');
   assert.equal(localeFrom('en'), 'en');
+  assert.equal(localeFrom('ar'), 'ar');
 });

@@ -17,8 +17,8 @@ import type { AstroIntegration } from 'astro';
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin } from './src/utils/frontmatter';
-import { ENGLISH_ENABLED, LOCALE_INFO } from './src/i18n/locales';
-import { ROUTES, alternatePath, type Route } from './src/i18n/routes';
+import { ACTIVE_LOCALES, DEFAULT_LOCALE, LOCALE_INFO, PUBLISHED_TRANSLATIONS } from './src/i18n/locales';
+import { ROUTES, alternatePath, notFoundPathOf, pathIn, type Route } from './src/i18n/routes';
 import { devApi } from './worker/dev-plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,35 +27,42 @@ const hasExternalScripts = false;
 const whenExternalScripts = (items: (() => AstroIntegration) | (() => AstroIntegration)[] = []) =>
   hasExternalScripts ? (Array.isArray(items) ? items.map((item) => item()) : [items()]) : [];
 
-// The English version (src/i18n/locales.ts → ENGLISH_ENABLED). Every English address renders the
-// same page file as its Spanish address (src/i18n/routes.ts); the page reads its language from the
-// address. While the switch is off, none of these routes exist.
-const ENGLISH_NOT_FOUND = '/en/404';
-const englishPages = (): AstroIntegration => ({
-  name: 'carinova-english-pages',
+// The translations (src/i18n/locales.ts → PUBLISHED_TRANSLATIONS). Every address of a translation
+// renders the same page file as its Spanish address (src/i18n/routes.ts); the page reads its
+// language from the address. A language that is not published has none of these routes.
+const translatedPages = (): AstroIntegration => ({
+  name: 'carinova-translated-pages',
   hooks: {
     'astro:config:setup': ({ injectRoute }) => {
-      if (!ENGLISH_ENABLED) return;
-      for (const route of Object.values<Route>(ROUTES)) {
-        injectRoute({ pattern: route.en, entrypoint: `src/pages/${route.page}` });
+      for (const locale of PUBLISHED_TRANSLATIONS) {
+        for (const route of Object.values<Route>(ROUTES)) {
+          injectRoute({ pattern: pathIn(route, locale), entrypoint: `src/pages/${route.page}` });
+        }
+        injectRoute({ pattern: notFoundPathOf(locale), entrypoint: 'src/pages/404.astro' });
       }
-      injectRoute({ pattern: ENGLISH_NOT_FOUND, entrypoint: 'src/pages/404.astro' });
     },
     // Cloudflare answers an address that does not exist with the nearest 404.html up the folders
-    // (wrangler.jsonc → not_found_handling), so the English one has to be en/404.html. Astro writes
-    // every page but the root 404 as <page>/index.html: move it.
+    // (wrangler.jsonc → not_found_handling), so each language's has to be <language>/404.html. Astro
+    // writes every page but the root 404 as <page>/index.html: move them.
     'astro:build:done': ({ dir }) => {
-      const built = new URL(`.${ENGLISH_NOT_FOUND}/index.html`, dir);
-      if (!fs.existsSync(built)) return;
-      fs.renameSync(built, new URL(`.${ENGLISH_NOT_FOUND}.html`, dir));
-      fs.rmdirSync(new URL(`.${ENGLISH_NOT_FOUND}/`, dir));
+      for (const locale of PUBLISHED_TRANSLATIONS) {
+        const notFound = notFoundPathOf(locale);
+        const built = new URL(`.${notFound}/index.html`, dir);
+        if (!fs.existsSync(built)) continue;
+        fs.renameSync(built, new URL(`.${notFound}.html`, dir));
+        fs.rmdirSync(new URL(`.${notFound}/`, dir));
+      }
     },
   },
 });
 
 // Pages that search engines have no use for: what a confirmation link opens (noindex) and the
-// English 404 page. "Mi cuenta" stays: what it holds of a customer is fetched when they are signed in.
-const PRIVATE_PAGES = [ROUTES.signupConfirm.es, ROUTES.signupConfirm.en, ENGLISH_NOT_FOUND];
+// translations' 404 pages. "Mi cuenta" stays: what it holds of a customer is fetched when they are
+// signed in.
+const PRIVATE_PAGES = ACTIVE_LOCALES.flatMap((locale) => [
+  pathIn(ROUTES.signupConfirm, locale),
+  notFoundPathOf(locale),
+]);
 const pathOfUrl = (url: string) => new URL(url).pathname.replace(/\/+$/, '') || '/';
 
 export default defineConfig({
@@ -80,32 +87,34 @@ export default defineConfig({
       cssVariable: '--font-inter',
       weights: ['100 900'],
       styles: ['normal'],
-      subsets: ['latin'],
+      // Latin for Spanish, English, French and Portuguese; Cyrillic for Russian. A browser downloads
+      // a subset only when the page has its letters. Chinese and Arabic use the device's own fonts.
+      subsets: ['latin', 'cyrillic'],
       fallbacks: ['sans-serif'],
     },
   ],
 
   integrations: [
-    englishPages(),
+    translatedPages(),
     sitemap({
       filter: (page) => !PRIVATE_PAGES.includes(pathOfUrl(page)),
-      // With the English version on, every page lists its two languages (hreflang), Spanish as the
-      // default. The addresses differ per language (/cotizador, /en/quote), so the pairs come from
+      // With translations published, every page lists its languages (hreflang), Spanish as the
+      // default. The addresses differ per language (/cotizador, /en/quote), so they come from
       // src/i18n/routes.ts instead of the integration's own `i18n` option, which expects /en/cotizador.
       serialize: (item) => {
-        if (!ENGLISH_ENABLED) return item;
         const pathname = pathOfUrl(item.url);
-        const es = alternatePath(pathname, 'es');
-        const en = alternatePath(pathname, 'en');
-        if (!es || !en) return item;
+        const spanish = alternatePath(pathname, DEFAULT_LOCALE);
+        if (ACTIVE_LOCALES.length < 2 || !spanish) return item;
         const origin = new URL(item.url).origin;
         const url = (path: string) => `${origin}${path === '/' ? '' : path}`;
         return {
           ...item,
           links: [
-            { lang: LOCALE_INFO.es.htmlLang, url: url(es) },
-            { lang: LOCALE_INFO.en.htmlLang, url: url(en) },
-            { lang: 'x-default', url: url(es) },
+            ...ACTIVE_LOCALES.map((locale) => ({
+              lang: LOCALE_INFO[locale].htmlLang,
+              url: url(alternatePath(pathname, locale) ?? spanish),
+            })),
+            { lang: 'x-default', url: url(spanish) },
           ],
         };
       },

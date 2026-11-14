@@ -1,187 +1,138 @@
 ---
-// "Dos caminos. Un mismo destino.": the two ways a package travels, as in Carinova's prototype. One
-// card each (air on white, sea on navy) with its estimate and its rate per pound; touching a card
-// opens its details (the service's own description and facts, from SERVICES) with a button that
-// opens the calculator on that rate. Without JavaScript the cards lead to the service on /servicios.
-// Under the cards, the conditions (RATES.notes) and the two ways into the calculator.
+// "Dos modalidades. Un destino." (home page): the two ways a package travels, one card each, with
+// what it is for, its base rate and its delivery estimate. The foot of each card opens the
+// calculator of this page on that rate; "Ver detalle" leads to the service on /servicios, which owns
+// its description. Under the cards, the conditions that go with every rate (RATES.notes).
 import { Icon } from 'astro-icon/components';
-import { i18n } from '~/i18n';
+import SectionHeading from '~/components/carinova/SectionHeading.astro';
+import { LOCALE_INFO, i18n } from '~/i18n';
 import { formatUSD } from '~/utils/rates';
 
-const { locale, href, data } = i18n(Astro);
+const { locale, href, data, ui } = i18n(Astro);
+// Between two sentences: a space, or nothing in Chinese.
+const gap = LOCALE_INFO[locale].wordGap;
 const { RATES, SERVICES } = data;
 const { air, sea } = RATES;
+const t = ui.shippingModes;
 
-const t = {
-  es: {
-    eyebrow: 'Modalidades de envío',
-    title: ['Dos caminos.', 'Un mismo destino.'],
-    intro:
-      'Elegí la modalidad que mejor se adapta a tu tiempo y presupuesto. Tocá cada tarjeta para ver el detalle completo.',
-    delivery: 'Entrega estimada',
-    perPound: 'Tarifa por libra',
-    more: 'Tocá para ver detalle',
-    details: (name: string) => `Ver detalle de envío ${name.toLowerCase()}`,
-    mode: 'Modalidad',
-    shipping: (name: string) => `Envío ${name.toLowerCase()}`,
-    important: 'Importante:',
-    close: 'Cerrar',
-  },
-  en: {
-    eyebrow: 'Shipping modes',
-    title: ['Two routes.', 'One destination.'],
-    intro: 'Choose the mode that best fits your time and your budget. Tap each card to see the full details.',
-    delivery: 'Estimated delivery',
-    perPound: 'Rate per pound',
-    more: 'Tap to see details',
-    details: (name: string) => `See details of ${name.toLowerCase()} shipping`,
-    mode: 'Mode',
-    shipping: (name: string) => `${name} shipping`,
-    important: 'Important:',
-    close: 'Close',
-  },
-}[locale];
+/** "US$6.50" → ["US$", "6.50"]: the currency is set smaller than the amount. */
+const amount = (value: number) => {
+  const text = formatUSD(value);
+  const at = text.search(/\d/);
+  return { currency: text.slice(0, at), number: text.slice(at) };
+};
 
-const modes = [air, sea].map((rate, index) => {
-  const service = SERVICES.find((item) => item.id === rate.id)!;
-  return {
-    ...rate,
-    number: String(index + 1).padStart(2, '0'),
-    dialog: `cn-mode-${rate.id}`,
-    service,
-    // The calculator of this page, on this rate: it reads the address (QuoteCalculator.astro).
-    calculator: href(`/?tarifa=${rate.id}#cotizador`),
-    dark: index === 1,
-  };
-});
+const modes = [
+  { rate: air, text: t.air, extra: t.electronics, sea: false },
+  { rate: sea, text: t.sea, extra: t.orPerCubicFoot(formatUSD(sea.pricePerCubicFoot)), sea: true },
+].map((mode) => ({
+  ...mode,
+  price: amount(mode.rate.pricePerLb),
+  service: SERVICES.find((item) => item.id === mode.rate.id)!,
+  // The calculator of this page, on this rate: it reads the address (QuoteCalculator.astro).
+  calculator: href(`/?tarifa=${mode.rate.id}#cotizador`),
+}));
 ---
 
-<section
-  id="tarifas"
-  class="relative scroll-mt-20 overflow-hidden bg-[linear-gradient(180deg,#f7f9fc_0%,#eef3f9_100%)]"
->
-  <div class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-24">
-    <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
-      <div>
-        <p class="eyebrow">{t.eyebrow}</p>
-        <h2 class="display-title mt-4">{t.title[0]}<br />{t.title[1]}</h2>
-      </div>
-      <p class="max-w-sm text-base leading-relaxed text-muted lg:pb-2">{t.intro}</p>
-    </div>
+<section id="tarifas" class="scroll-mt-20 bg-[linear-gradient(180deg,#eff3fa_0%,#f5f7fb_100%)]">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-28">
+    <SectionHeading number="02" eyebrow={t.eyebrow} title={t.title} aside={t.intro} center />
 
-    <div class="mt-10 grid gap-5 md:grid-cols-2">
+    <div class="mt-11 grid gap-5 md:grid-cols-2 md:gap-6">
       {
         modes.map((mode) => (
-          <a
-            href={href(`/servicios#${mode.id}`)}
-            data-dialog-open={mode.dialog}
-            aria-label={t.details(mode.name)}
+          <article
+            id={`modalidad-${mode.rate.id}`}
             class:list={[
-              'group relative flex flex-col overflow-hidden rounded-3xl border border-t-[5px] border-t-cta p-6 text-left shadow-[0_18px_65px_rgb(12_41_73/0.07)] transition hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:p-9',
-              mode.dark
-                ? 'dark border-[#123965] bg-[linear-gradient(140deg,#102f57,#06172e_78%)] text-white'
-                : 'border-[#e0e6f0] bg-white',
+              'relative flex flex-col overflow-hidden rounded-[1.4rem] border border-[#dfe6f0] bg-white shadow-[0_1.05rem_2.8rem_rgb(5_26_59/0.06)] transition duration-300 before:absolute before:inset-x-0 before:top-0 before:h-1 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+              mode.sea ? 'before:bg-[#1b4173]' : 'before:bg-cta',
             ]}
           >
-            <span
+            <div class="flex flex-1 flex-col p-6 sm:p-9">
+              <div class="flex items-center justify-between gap-3">
+                <span
+                  class:list={[
+                    'grid h-[3.75rem] w-[3.75rem] shrink-0 place-items-center rounded-2xl',
+                    mode.sea ? 'bg-[#e7eef9] text-[#174575]' : 'bg-[#fff0de] text-[#b85600]',
+                  ]}
+                >
+                  <Icon name={mode.rate.icon} class="h-8 w-8" />
+                </span>
+                <span class="rounded-full bg-[#f2f4f9] px-3 py-1.5 text-[0.6875rem] font-black tracking-[0.07em] text-[#56657c] uppercase">
+                  {mode.text.tag}
+                </span>
+              </div>
+
+              <p
+                class:list={[
+                  'mt-7 text-xs font-black tracking-[0.18em] uppercase',
+                  mode.sea ? 'text-[#315781]' : 'text-secondary',
+                ]}
+              >
+                {mode.text.overline}
+              </p>
+              <h3 class="mt-2 max-w-sm font-heading text-[1.9rem] leading-[1.12] font-extrabold tracking-[-0.045em] text-heading">
+                {mode.text.title}
+              </h3>
+              <p class="mt-3 mb-7 max-w-sm text-base leading-relaxed text-muted">{mode.text.text}</p>
+
+              <dl class="mt-auto flex flex-wrap items-end justify-between gap-x-6 gap-y-5 border-t border-[#e3e9f1] pt-6">
+                <div>
+                  <dt class="text-[0.6875rem] font-extrabold tracking-[0.12em] text-[#56657c] uppercase">
+                    {t.baseRate}
+                  </dt>
+                  <dd class="mt-1.5 font-heading text-[3.1rem] leading-none font-extrabold tracking-[-0.055em] text-navy tabular-nums">
+                    {/* "US$ 6.50/lb" keeps its order in a page written from right to left. */}
+                    <span dir="ltr">
+                      <span class="me-1 text-lg tracking-normal text-secondary">{mode.price.currency}</span>
+                      {mode.price.number}
+                      <span class="text-lg font-semibold tracking-normal text-[#56657c]">{t.perPound}</span>
+                    </span>
+                  </dd>
+                  {mode.extra && <dd class="mt-1.5 text-sm font-semibold text-[#56657c]">{mode.extra}</dd>}
+                </div>
+                <div class="flex items-center gap-3 border-[#e3e9f1] sm:border-s sm:ps-6">
+                  <Icon
+                    name="tabler:clock"
+                    class:list={['h-6 w-6 shrink-0', mode.sea ? 'text-[#315e92]' : 'text-[#b85600]']}
+                  />
+                  <div>
+                    <dt class="sr-only">{t.delivery}</dt>
+                    <dd class="text-base font-extrabold text-heading">{mode.rate.transit}</dd>
+                    <dd class="text-xs text-[#56657c]" aria-hidden="true">
+                      {t.delivery}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+              <a
+                class="mt-4 inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-link underline underline-offset-4"
+                href={href(`/servicios#${mode.rate.id}`)}
+              >
+                {t.details(mode.rate.name)}
+              </a>
+            </div>
+
+            <a
               class:list={[
-                'w-fit rounded-full border px-3 py-1.5 text-xs font-bold',
-                mode.dark ? 'border-cta/40 bg-cta/10 text-[#ffb667]' : 'border-[#ffdbbb] bg-[#fff5eb] text-secondary',
+                'flex min-h-16 items-center justify-between gap-4 px-6 text-sm font-extrabold transition sm:px-9',
+                mode.sea
+                  ? 'bg-[#eaf0f9] text-[#193f70] hover:bg-[#dbe7f6]'
+                  : 'bg-[#fff0e2] text-[#8c4600] hover:bg-[#ffe4ca]',
               ]}
+              href={mode.calculator}
             >
-              {mode.badge}
-            </span>
-
-            <span class="mt-6 flex items-center gap-4">
-              <span
-                class:list={[
-                  'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border text-cta',
-                  mode.dark ? 'border-white/20 bg-white/10' : 'border-[#ffe3c6] bg-[#fff0e3]',
-                ]}
-              >
-                <Icon name={mode.icon} class="h-8 w-8" />
-              </span>
-              <span class="font-heading text-3xl font-extrabold tracking-[-0.04em] text-heading uppercase sm:text-4xl">
-                {mode.name}
-              </span>
-            </span>
-
-            <span class:list={['mt-6 block border-t pt-5', mode.dark ? 'border-white/20' : 'border-[#e3e9f0]']}>
-              <span class="block text-[0.6875rem] font-bold tracking-[0.14em] text-muted uppercase">{t.delivery}</span>
-              <strong class="mt-1 block font-heading text-4xl font-extrabold tracking-[-0.05em] text-heading sm:text-5xl">
-                {mode.transit}
-              </strong>
-            </span>
-
-            <span class:list={['mt-5 block border-t pt-5', mode.dark ? 'border-white/20' : 'border-[#e3e9f0]']}>
-              <span class="block text-[0.6875rem] font-bold tracking-[0.14em] text-muted uppercase">{t.perPound}</span>
-              <b
-                class:list={[
-                  'mt-1 block font-heading text-4xl font-extrabold tracking-[-0.05em] sm:text-5xl',
-                  mode.dark ? 'text-accent' : 'text-heading',
-                ]}
-              >
-                {formatUSD(mode.pricePerLb)}
-              </b>
-            </span>
-
-            <span class="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-link">
-              {t.more}
-              <Icon name="tabler:arrow-up-right" class="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </span>
-          </a>
+              {mode.service.link?.text}
+              <Icon name="tabler:arrow-right" class="h-5 w-5 shrink-0" />
+            </a>
+          </article>
         ))
       }
     </div>
 
-    <p class="mt-8 max-w-5xl border-l-[3px] border-cta pl-4 text-sm leading-relaxed text-muted">
-      <b class="text-heading">{t.important}</b>
-      {' '}{RATES.notes.join(' ')}
+    <p class="mx-auto mt-8 flex max-w-4xl gap-3 text-sm leading-relaxed text-[#56657c]">
+      <Icon name="tabler:info-circle" class="mt-0.5 h-5 w-5 shrink-0" />
+      <span><b class="text-heading">{t.important}</b>{gap}{RATES.notes.join(gap)}</span>
     </p>
-
-    <div class="mt-8 grid gap-3 sm:grid-cols-2">
-      {
-        modes.map((mode) => (
-          <a class:list={[mode.dark ? 'btn-navy' : 'btn bg-white']} href={mode.calculator}>
-            {mode.service.link?.text}
-            <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
-          </a>
-        ))
-      }
-    </div>
   </div>
-
-  {
-    modes.map((mode) => (
-      <dialog id={mode.dialog} class="cn-dialog" aria-labelledby={`${mode.dialog}-title`}>
-        <div class="relative p-6 sm:p-9">
-          <button
-            type="button"
-            class="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-navy focus-visible:outline-2 focus-visible:outline-brand"
-            aria-label={t.close}
-            data-cn-dialog-close
-          >
-            <Icon name="tabler:x" class="h-5 w-5" />
-          </button>
-          <p class="eyebrow">{`${t.mode} ${mode.number}`}</p>
-          <h2 id={`${mode.dialog}-title`} class="mt-3 pr-10 font-heading text-3xl font-extrabold text-navy">
-            {t.shipping(mode.name)}
-          </h2>
-          <p class="mt-3 text-slate-600">{mode.service.description}</p>
-          <ul class="mt-5 divide-y divide-slate-200 border-y border-slate-200 text-sm">
-            {mode.service.facts.map((fact) => (
-              <li class="flex gap-2.5 py-3">
-                <Icon name="tabler:circle-check-filled" class="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-                <span>{fact}</span>
-              </li>
-            ))}
-          </ul>
-          <a class="btn-primary mt-6 w-full" href={mode.calculator} data-cn-dialog-close>
-            {mode.service.link?.text}
-            <Icon name="tabler:arrow-up-right" class="h-5 w-5 shrink-0" />
-          </a>
-        </div>
-      </dialog>
-    ))
-  }
 </section>

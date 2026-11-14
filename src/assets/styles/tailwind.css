@@ -132,15 +132,121 @@ html[data-session='in'] [data-auth='out'] {
   background: var(--aw-color-cta);
 }
 
-/* The title of a section of the home page: heavy and tight, as in the prototype. */
+/* The title of a section of the home page: heavy and tight, as in Carinova's design. Its
+   highlighted words are an <em>: orange, not slanted. */
 .display-title {
   color: var(--aw-color-text-heading);
   font-family: var(--font-heading);
-  font-size: clamp(2.125rem, 4.6vw, 3.75rem);
+  font-size: clamp(2.25rem, 4.6vw, 3.9rem);
   font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1.05;
+  letter-spacing: var(--cn-display-tracking, -0.05em);
+  line-height: var(--cn-display-leading, 1.06);
   text-wrap: balance;
+}
+.display-title em,
+.cn-em {
+  color: var(--aw-color-highlight);
+  font-style: normal;
+}
+
+/* The brand's line in the home hero: the largest type of the site. Its last word sits on an orange
+   stroke, drawn behind the letters and slightly tilted. */
+.hero-display {
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(4.25rem, 16.5vw, 7.9rem);
+  font-weight: 800;
+  letter-spacing: var(--cn-hero-tracking, -0.075em);
+  line-height: var(--cn-hero-leading, 0.94);
+}
+@media (width >= 64rem) {
+  .hero-display {
+    font-size: clamp(5rem, 8.8vw, 7.9rem);
+  }
+}
+.hero-accent {
+  position: relative;
+  z-index: 0;
+  white-space: nowrap;
+}
+.hero-accent::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-inline-start: 1%;
+  bottom: 0.07em;
+  width: 82%;
+  height: 0.105em;
+  border-radius: 999px;
+  background: var(--aw-color-cta);
+  box-shadow: 0 2px 15px rgb(255 138 0 / 13%);
+  transform: rotate(-2deg);
+}
+
+/* Languages whose writing does not take the tight tracking and the short line height of the Latin
+   display type: Chinese characters fill their square and Arabic letters join and carry marks above
+   and below. Their titles get room; small capitals with wide tracking (the section labels) too. */
+:lang(zh),
+:lang(ar) {
+  --cn-display-tracking: 0;
+  --cn-display-leading: 1.25;
+  --cn-hero-tracking: 0;
+  --cn-hero-leading: 1.2;
+}
+/* Inter has no Arabic letters, and the font that stands in for it while it loads (Arial) draws them
+   in a book hand that does not match the page. An Arabic page is set in the interface font of the
+   device, which is drawn for Arabic and for the Latin letters and the digits beside it; no font is
+   downloaded for it. (The navy sections set the fonts again: CustomStyles.astro.) */
+:lang(ar):is(html, .dark) {
+  --aw-font-sans: system-ui, 'Segoe UI', Tahoma;
+  --aw-font-serif: system-ui, 'Segoe UI', Tahoma;
+  --aw-font-heading: system-ui, 'Segoe UI', Tahoma;
+}
+/* Arabic letters join: any spacing between them breaks the word, so nothing in an Arabic page is
+   spaced. Chinese keeps the wide spacing of its small labels and loses only the tightening. */
+:lang(ar) {
+  letter-spacing: 0;
+}
+:lang(zh) body,
+:lang(zh) [class*='tracking-tight'],
+:lang(zh) [class*='tracking-[-'],
+:lang(zh) h1,
+:lang(zh) h2,
+:lang(zh) h3 {
+  letter-spacing: 0;
+}
+:lang(ar) .hero-display {
+  font-size: clamp(3.75rem, 13vw, 6.5rem);
+}
+/* A Chinese line may break between any two characters, which splits a title in the middle of a
+   phrase ("一 / 个目的地"). Titles break at their punctuation instead, and anywhere only when a
+   phrase is longer than the line. */
+:lang(zh) :is(h1, h2, h3) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* What is written from left to right in every language (an e-mail address, a phone number, a
+   link, an address in the United States) keeps that order in a page written from right to left,
+   and stays on the side where the form's text starts. */
+[dir='rtl'] :is(input[type='email'], input[type='tel'], input[type='url'], input[dir='ltr'], textarea[dir='ltr']) {
+  direction: ltr;
+  text-align: right;
+}
+
+/* A field that takes the direction of what is typed in it (a name, a message) stays on that side
+   too, whatever its example or its text is written in. */
+[dir='rtl'] :is(input, textarea)[dir='auto'] {
+  text-align: right;
+}
+
+/* In a page written from right to left, an arrow that points forwards points to the left. */
+[dir='rtl'] svg[data-icon='tabler:arrow-up-right'],
+[dir='rtl'] svg[data-icon='tabler:arrow-right'],
+[dir='rtl'] svg[data-icon='tabler:arrow-left'],
+[dir='rtl'] svg[data-icon='tabler:external-link'],
+[dir='rtl'] svg[data-icon='tabler:route'] {
+  scale: -1 1;
 }
 
 /* Headings are tighter than the template's: Inter at these weights reads better that way. */

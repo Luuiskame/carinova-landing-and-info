@@ -152,47 +152,32 @@ const soonNote = receivingSoon.length ? ` ${listOf(receivingSoon)}, coming soon.
 /** In the order of ../services.ts: the steps have no id. */
 const STEP_TEXT: Array<Pick<ProcessStep, 'title' | 'summary' | 'details'> & { link: string }> = [
   {
-    title: 'Sign up',
-    summary:
-      'Sign up with your e-mail and your phone number. When you confirm your e-mail, the system assigns your Carinova ID automatically.',
+    title: 'Create your account',
+    summary: `Confirm your e-mail and get your Carinova ID together with your US address: the reception address in ${listOf(receivingNow)}.`,
     details: [
       'You fill in a short form and confirm your e-mail with the link we send you.',
       'When you confirm, you see your Carinova ID and your address in the United States, and we also e-mail them to you.',
+      'After that you sign in with your e-mail and a one-time code: there is no password to remember.',
     ],
     link: CTA.signup.text,
   },
   {
-    title: 'Sign in to your account',
-    summary: 'Handle everything from one place.',
+    title: `Buy and ship to ${listOf(receivingNow)}`,
+    summary: 'Use the address of your account when you buy. Check first that your item is allowed.',
     details: [
-      'You sign in with your e-mail and a one-time code: there is no password to remember.',
-      'Your account has your Carinova ID, your address in the United States, your packages and your payments.',
-    ],
-    link: CTA.signin.text,
-  },
-  {
-    title: 'Can it enter?',
-    summary: 'Before you buy or send, check whether the item can enter.',
-    details: [
-      'Some items are prohibited, others we are not authorised to bring yet, and others only travel by sea.',
-      'If your item is not on the lists, ask us before you buy it.',
+      `Send your purchase to the address of our warehouse in ${listOf(receivingNow)} shown in your account.${soonNote}`,
+      'At the store’s checkout, write your first name and your last name exactly as they appear in your address.',
+      'Before you buy, check whether the item can enter: some items are prohibited, others we are not authorised to bring yet, and others only travel by sea.',
+      'Would you rather we buy for you? Request an assisted purchase.',
     ],
     link: 'Check an item',
   },
   {
-    title: 'We receive it',
-    summary: `Send it to the address of our warehouse in ${listOf(receivingNow)} shown in your account.${soonNote}`,
+    title: 'Receive in Nicaragua',
+    summary: `Pick up in ${cities.join(' or ')}. Delivery anywhere in the country for an additional charge.`,
     details: [
-      'At the store’s checkout, write your first name and your last name exactly as they appear in your address.',
-      'Would you rather we buy for you? Request an assisted purchase.',
       `We bring it by air in ${air.transit} or by sea in ${sea.transit}, ${RATES.transitFrom}.`,
-    ],
-    link: CTA.quote.text,
-  },
-  {
-    title: 'You receive it',
-    summary: `Pick up in ${cities.join(' or ')}. Home delivery has an additional charge.`,
-    details: [
+      'You follow every stage from your account, with the reference of your package.',
       sentence(`Our branches are open ${describeHours(branchHours)}`),
       'Home delivery is arranged according to the destination and the coverage.',
     ],

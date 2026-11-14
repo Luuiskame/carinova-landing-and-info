@@ -10,12 +10,9 @@ export interface Props {
 }
 
 const { kind } = Astro.props;
-const { locale } = i18n(Astro);
+const { ui } = i18n(Astro);
 
-const label = {
-  es: { soon: 'Próximamente', extra: 'Cargo adicional' },
-  en: { soon: 'Coming soon', extra: 'Additional charge' },
-}[locale][kind];
+const label = ui.serviceBadge[kind];
 const tone = kind === 'extra' ? 'bg-amber-100 text-amber-950' : 'bg-slate-200 text-slate-800';
 ---
 
