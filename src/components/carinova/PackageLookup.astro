@@ -1,0 +1,389 @@
+---
+// The live part of the tracking page (/rastreo): a customer who is signed in sees, under the tracker
+// (the slot), the packages that are on their way, or the one whose reference they wrote in it: its
+// stage on a five-step rail, what is known about it, its history and the way to ask about it.
+//
+// The page holds no customer data: the script asks the Worker for the packages of the session
+// (GET /api/account/activity, the same answer "Mi cuenta" shows in full) and looks the reference up
+// among them, in the browser. A reference that is not one of the customer's own packages finds
+// nothing: there is no way to look up anybody else's. A visitor sees none of this: the tracker asks
+// them to sign in.
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { PACKAGE_STAGES } from '~/data/account';
+import { LOCALE_INFO, i18n } from '~/i18n';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { BRANCHES, CTA, RATES, WA_MESSAGES } = data;
+const t = ui.trackPage.results;
+const account = ui.accountPanel.script;
+
+const namesOf = (words: Record<string, { name: string }>) =>
+  Object.fromEntries(Object.entries(words).map(([id, { name }]) => [id, name]));
+
+const config = {
+  dateLocale: LOCALE_INFO[locale].intl,
+  /** The journey, in order: the rail lights up to the package's stage. */
+  stages: PACKAGE_STAGES.map((stage) => stage.id),
+  labels: {
+    status: namesOf(ui.statuses.package),
+    statusText: Object.fromEntries(Object.entries(ui.statuses.package).map(([id, { text }]) => [id, text])),
+    service: { air: RATES.air.name, sea: RATES.sea.name },
+    branch: Object.fromEntries(BRANCHES.map((branch) => [branch.id, branch.city])),
+  },
+  /** The colour of each status' label. */
+  tones: {
+    received: 'blue',
+    processing: 'blue',
+    in_transit: 'amber',
+    ready: 'green',
+    delivered: 'slate',
+    returned: 'red',
+    cancelled: 'red',
+  },
+  text: {
+    ...t.script,
+    active: t.active,
+    found: t.found,
+    empty: t.empty,
+    none: t.none,
+    // What "Mi cuenta" calls the same facts.
+    received: account.received,
+    weight: account.weight,
+    pounds: account.pounds,
+    pickup: account.pickup,
+    delivery: account.delivery,
+    homeDelivery: account.homeDelivery,
+    // The customer's Carinova ID and the reference go into the messages.
+    whatsappPackage: WA_MESSAGES.trackPackage('{code}', '{reference}'),
+    whatsappMissing: WA_MESSAGES.trackMissing('{code}', '{reference}'),
+  },
+};
+
+const pillClass =
+  'shrink-0 rounded-full px-2.5 py-1 text-xs font-bold data-[tone=amber]:bg-amber-100 data-[tone=amber]:text-amber-950 data-[tone=blue]:bg-blue-100 data-[tone=blue]:text-blue-950 data-[tone=green]:bg-emerald-100 data-[tone=green]:text-emerald-950 data-[tone=red]:bg-red-100 data-[tone=red]:text-red-950 data-[tone=slate]:bg-slate-200 data-[tone=slate]:text-slate-800';
+const linkClass = 'inline-flex min-h-11 items-center gap-1.5 font-semibold text-link underline underline-offset-4';
+---
+
+<cn-package-lookup class="block" data-config={JSON.stringify(config)}>
+  <slot />
+
+  <section class="mt-8" data-auth="in" aria-labelledby="cn-lookup-title">
+    <h2
+      id="cn-lookup-title"
+      class="font-heading text-2xl font-extrabold tracking-[-0.03em] text-heading"
+      data-cn-heading
+    >
+      {t.active}
+    </h2>
+
+    <p class="mt-3 text-muted" role="status" data-cn-state="loading">{t.loading}</p>
+
+    <div class="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950" data-cn-state="error" hidden>
+      <p>{t.error}</p>
+      <button type="button" class="mt-1 min-h-11 font-semibold underline underline-offset-4" data-cn-retry>
+        {t.retry}
+      </button>
+    </div>
+
+    <div class="mt-3 rounded-xl border border-[#d7e1ed] bg-white p-5 text-[#173a60]" data-cn-state="message" hidden>
+      <p class="font-semibold" aria-live="polite" data-cn-message></p>
+      <div data-cn-missing hidden>
+        <p class="mt-1 text-sm text-muted">{t.notFoundHint}</p>
+        <WhatsAppHelp
+          class="text-sm"
+          message={WA_MESSAGES.trackMissing('…', '…')}
+          text={t.askMissing}
+          data-cn-ask-missing
+        />
+      </div>
+    </div>
+
+    <ul class="mt-4 space-y-4" data-cn-list></ul>
+
+    <a class:list={[linkClass, 'mt-2 text-sm']} href={href(CTA.account.path + '#paquetes')}>
+      {ui.tracker.track.all}
+      <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+    </a>
+  </section>
+
+  <!-- What the script builds the list with: it copies the template and writes into its [data-f] places. -->
+  <template data-cn-template="package">
+    <li class="rounded-2xl border border-[#dce4ef] bg-white p-5 shadow-[0_0.6rem_1.75rem_rgb(6_27_59/0.04)] sm:p-6">
+      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div class="min-w-0">
+          <h3 class="font-heading text-lg font-extrabold break-words text-navy" data-f="description"></h3>
+          <p class="text-sm text-slate-600" data-f="summary"></p>
+        </div>
+        <span class={pillClass} data-f="status"></span>
+      </div>
+
+      <ol class="mt-5 grid grid-cols-5 gap-1.5" aria-hidden="true" data-f="rail">
+        {
+          PACKAGE_STAGES.map((stage) => (
+            <li
+              class="h-2 rounded-full bg-[#e3e9f1] data-[state=current]:bg-cta data-[state=done]:bg-navy"
+              data-stage={stage.id}
+            />
+          ))
+        }
+      </ol>
+      <p class="mt-3 text-sm text-slate-700">
+        <b class="text-navy" data-f="stage"></b>
+        <span data-f="stageText"></span>
+      </p>
+
+      <dl class="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2" data-f="facts"></dl>
+
+      <details class="mt-2">
+        <summary class:list={[linkClass, 'cursor-pointer text-sm']}>{t.history}</summary>
+        <ol class="mt-2 space-y-3 border-s-2 border-slate-200 ps-5 text-sm" data-f="events"></ol>
+      </details>
+      <WhatsAppHelp class="text-sm" message={WA_MESSAGES.trackPackage('…', '…')} text={t.ask} data-f="ask" />
+    </li>
+  </template>
+</cn-package-lookup>
+
+<script>
+  import type { AccountPackage } from '../../../worker/store';
+  import { CONTACT } from '~/data/carinova';
+  import { getJson } from '~/utils/forms';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  interface Config {
+    dateLocale: string;
+    stages: Array<string>;
+    labels: Record<'status' | 'statusText' | 'service' | 'branch', Record<string, string>>;
+    tones: Record<string, string>;
+    text: Record<
+      | 'notFound'
+      | 'summary'
+      | 'active'
+      | 'found'
+      | 'empty'
+      | 'none'
+      | 'received'
+      | 'weight'
+      | 'pounds'
+      | 'pickup'
+      | 'delivery'
+      | 'homeDelivery'
+      | 'whatsappPackage'
+      | 'whatsappMissing',
+      string
+    >;
+  }
+
+  /** A journey that is over: the package is not on its way any more. */
+  const FINISHED = ['delivered', 'returned', 'cancelled'];
+
+  /** "pkg 000123" → "PKG000123": how a reference, or a carrier's tracking number, is compared. */
+  const key = (value: string): string => value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  class CnPackageLookup extends HTMLElement {
+    private config!: Config;
+    private packages: Array<AccountPackage> = [];
+    private code = '';
+    private loaded = false;
+    private onPageLoad = () => this.fromAddress();
+
+    connectedCallback() {
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+
+      const form = this.querySelector<HTMLFormElement>('[data-cn-track-form]');
+      form?.addEventListener('submit', (event) => {
+        // The answer is already here: no need to load the page again.
+        event.preventDefault();
+        this.search(this.input()?.value ?? '', true);
+      });
+      this.querySelector('[data-cn-retry]')?.addEventListener('click', () => this.load());
+
+      document.addEventListener('astro:page-load', this.onPageLoad);
+      this.fromAddress();
+      this.load();
+    }
+
+    disconnectedCallback() {
+      document.removeEventListener('astro:page-load', this.onPageLoad);
+    }
+
+    private input(): HTMLInputElement | null {
+      return this.querySelector<HTMLInputElement>('#cn-track-reference');
+    }
+
+    /** /rastreo?paquete=PKG-000123 arrives with the reference already written. */
+    private fromAddress() {
+      const reference = new URLSearchParams(window.location.search).get('paquete') ?? '';
+      const input = this.input();
+      if (input && reference) input.value = reference.slice(0, 40);
+      if (this.loaded) this.render();
+    }
+
+    private show(state: 'loading' | 'error' | 'message' | 'list') {
+      for (const part of this.querySelectorAll<HTMLElement>('[data-cn-state]')) {
+        part.hidden = part.dataset.cnState !== state;
+      }
+      const list = this.querySelector<HTMLElement>('[data-cn-list]');
+      if (list) list.hidden = state !== 'list';
+    }
+
+    private async load() {
+      // Nobody is signed in on this browser (SessionState.astro read the flag cookie): the page is
+      // showing what a visitor sees, and there is nothing to ask for.
+      if (document.documentElement.dataset.session !== 'in') return;
+
+      this.show('loading');
+      const [account, activity] = await Promise.all([getJson('/api/account'), getJson('/api/account/activity')]);
+      // The session ended: the Worker cleared the cookies with its answer, and the page turns to a visitor's.
+      if (account.status === 401 || activity.status === 401) {
+        document.documentElement.dataset.session = 'out';
+        return;
+      }
+      if (activity.status !== 200 || !activity.result?.ok) return this.show('error');
+
+      this.code = String((account.result?.account as { code?: string } | undefined)?.code ?? '');
+      this.packages = (activity.result.packages as Array<AccountPackage> | undefined) ?? [];
+      this.loaded = true;
+      this.render();
+    }
+
+    private search(reference: string, fromForm: boolean) {
+      if (fromForm) {
+        const url = new URL(window.location.href);
+        if (reference.trim()) url.searchParams.set('paquete', reference.trim());
+        else url.searchParams.delete('paquete');
+        window.history.replaceState(window.history.state, '', url);
+      }
+      if (this.loaded) this.render();
+      else this.load();
+    }
+
+    private render() {
+      const { text } = this.config;
+      const typed = (this.input()?.value ?? '').trim();
+      const wanted = key(typed);
+      const heading = this.querySelector('[data-cn-heading]');
+      if (heading) heading.textContent = wanted ? text.found : text.active;
+
+      const found = wanted
+        ? this.packages.filter(
+            (item) =>
+              key(item.reference) === wanted ||
+              // The digits alone ("123" for PKG-000123), or the number the carrier delivered it under.
+              (/^\d+$/.test(wanted) && Number(item.reference.replace(/\D/g, '')) === Number(wanted)) ||
+              (item.carrierTracking !== '' && key(item.carrierTracking) === wanted)
+          )
+        : this.packages.filter((item) => !FINISHED.includes(item.status));
+
+      if (found.length === 0) {
+        const message = wanted
+          ? fill(text.notFound, { reference: typed })
+          : this.packages.length === 0
+            ? text.empty
+            : text.none;
+        const target = this.querySelector('[data-cn-message]');
+        if (target) target.textContent = message;
+        this.querySelector('[data-cn-list]')?.replaceChildren();
+        const missing = this.querySelector<HTMLElement>('[data-cn-missing]');
+        if (missing) missing.hidden = !wanted;
+        this.querySelector('[data-cn-ask-missing]')?.setAttribute(
+          'href',
+          whatsappLink(CONTACT.whatsapp, fill(text.whatsappMissing, { code: this.code, reference: typed }))
+        );
+        return this.show('message');
+      }
+
+      const list = this.querySelector<HTMLElement>('[data-cn-list]');
+      const template = this.querySelector<HTMLTemplateElement>('template[data-cn-template="package"]');
+      if (!list || !template) return;
+      list.replaceChildren(...found.map((item) => this.card(template, item)));
+      this.show('list');
+    }
+
+    private date(value: string | null): string {
+      const date = value ? new Date(value) : null;
+      if (!date || Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat(this.config.dateLocale, { dateStyle: 'medium' }).format(date);
+    }
+
+    private card(template: HTMLTemplateElement, item: AccountPackage): Node {
+      const { labels, text, tones, stages } = this.config;
+      const node = template.content.cloneNode(true) as DocumentFragment;
+      const place = (name: string) => node.querySelector<HTMLElement>(`[data-f="${name}"]`);
+      const set = (name: string, value: string) => {
+        const target = place(name);
+        if (target) target.textContent = value;
+      };
+
+      set('description', item.description || item.reference);
+      set(
+        'summary',
+        fill(text.summary, { reference: item.reference, service: labels.service[item.service] ?? item.service })
+      );
+      const pill = place('status');
+      if (pill) {
+        pill.textContent = labels.status[item.status] ?? item.status;
+        pill.dataset.tone = tones[item.status] ?? 'slate';
+      }
+
+      // The rail: every stage up to the package's own is done; its own is the orange one. A journey
+      // that ended without a delivery (returned, cancelled) lights nothing.
+      const at = stages.indexOf(item.status);
+      for (const step of node.querySelectorAll<HTMLElement>('[data-stage]')) {
+        const position = stages.indexOf(step.dataset.stage ?? '');
+        step.dataset.state = at < 0 || position > at ? 'todo' : position === at ? 'current' : 'done';
+      }
+      set('stage', `${labels.status[item.status] ?? item.status}. `);
+      set('stageText', labels.statusText[item.status] ?? '');
+
+      const facts: Array<[string, string]> = [[text.received, this.date(item.receivedAt)]];
+      if (item.weightLb !== null) facts.push([text.weight, fill(text.pounds, { weight: String(item.weightLb) })]);
+      if (item.deliveryMethod === 'home') facts.push([text.delivery, text.homeDelivery]);
+      else if (item.branch) facts.push([text.pickup, labels.branch[item.branch] ?? item.branch]);
+      place('facts')?.replaceChildren(
+        ...facts
+          .filter(([, value]) => value)
+          .map(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'flex gap-2';
+            const term = Object.assign(document.createElement('dt'), { textContent: `${label}:` });
+            term.className = 'text-slate-600';
+            const detail = Object.assign(document.createElement('dd'), { textContent: value });
+            detail.className = 'font-semibold text-navy';
+            row.append(term, detail);
+            return row;
+          })
+      );
+
+      place('events')?.replaceChildren(
+        ...item.events.map((event) => {
+          const row = document.createElement('li');
+          const name = Object.assign(document.createElement('b'), {
+            textContent: labels.status[event.status] ?? event.status,
+          });
+          name.className = 'block text-navy';
+          const when = Object.assign(document.createElement('span'), { textContent: this.date(event.at) });
+          when.className = 'text-slate-600';
+          row.append(name, when);
+          if (event.note) {
+            const note = Object.assign(document.createElement('p'), { textContent: event.note });
+            note.className = 'text-slate-700';
+            row.append(note);
+          }
+          return row;
+        })
+      );
+      const history = node.querySelector('details');
+      if (history) history.hidden = item.events.length === 0;
+
+      place('ask')?.setAttribute(
+        'href',
+        whatsappLink(CONTACT.whatsapp, fill(text.whatsappPackage, { code: this.code, reference: item.reference }))
+      );
+      return node;
+    }
+  }
+
+  if (!customElements.get('cn-package-lookup')) customElements.define('cn-package-lookup', CnPackageLookup);
+</script>

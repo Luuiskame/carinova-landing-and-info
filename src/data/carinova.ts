@@ -33,13 +33,16 @@ export const SITE_STATUS = {
 };
 
 /** Carinova's line, under the logo and above the home page's title. */
-export const TAGLINE = 'Envíos que unen';
+export const TAGLINE: string = 'Envíos que unen';
 
-/** The title of the home page, in two lines: the second one is shown in orange. */
-export const HEADLINE: [string, string] = ['De Estados Unidos', 'hasta vos.'];
+/**
+ * The brand's line, in the two lines of the home page's title; the last word of the second one sits
+ * on an orange stroke (HomeHero.astro). From Carinova's "Signature" design.
+ */
+export const HEADLINE: [string, string] = ['De allá', 'para acá.'];
 
 /** Carinova's promise, word for word from its prototype: the sentence under the home page's title. */
-export const VALUE_PROPOSITION =
+export const VALUE_PROPOSITION: string =
   'Traemos tus compras personales, encomiendas familiares y carga empresarial desde Estados Unidos hasta Nicaragua.';
 
 export const CONTACT = {
@@ -51,10 +54,27 @@ export const CONTACT = {
   email: '',
 };
 
+/**
+ * Carinova's accounts on social networks, in the order they are shown (the footer's carousel and
+ * the company's structured data). Only the ones with an address are shown: to add
+ * one, write its `href` and the `handle` people know it by. The WhatsApp number and the e-mail are
+ * shown beside them from CONTACT.
+ */
 export const SOCIAL_LINKS = [
-  { name: 'Facebook', icon: 'tabler:brand-facebook', href: '' }, // TODO: address of the "Carinova" page
-  { name: 'Instagram', icon: 'tabler:brand-instagram', href: 'https://www.instagram.com/carinova_nic/' },
-  { name: 'TikTok', icon: 'tabler:brand-tiktok', href: 'https://www.tiktok.com/@carinova_nic' },
+  { name: 'Facebook', icon: 'tabler:brand-facebook', href: '', handle: '' }, // TODO: address of the "Carinova" page
+  {
+    name: 'Instagram',
+    icon: 'tabler:brand-instagram',
+    href: 'https://www.instagram.com/carinova_nic/',
+    handle: '@carinova_nic',
+  },
+  {
+    name: 'TikTok',
+    icon: 'tabler:brand-tiktok',
+    href: 'https://www.tiktok.com/@carinova_nic',
+    handle: '@carinova_nic',
+  },
+  { name: 'YouTube', icon: 'tabler:brand-youtube', href: '', handle: '' }, // TODO: address of the channel
 ].filter((link) => link.href);
 
 /**
@@ -76,8 +96,8 @@ export const CTA = {
   account: { text: 'Ir a mi cuenta', short: 'Mi cuenta', path: '/mi-cuenta' },
   /** `text` is the button of a form or a step; `short` is the header's link. */
   signin: { text: 'Ingresar', short: 'Ingresá', path: '/ingresar' },
-  /** A customer goes to their packages; a visitor to the section of the home page that explains tracking. */
-  track: { text: 'Rastreá tu paquete', path: '/mi-cuenta#paquetes', visitorPath: '/#rastreo' },
+  /** The tracking page: a visitor is asked to sign in there, a customer finds their packages. */
+  track: { text: 'Rastreá tu paquete', path: '/rastreo' },
 };
 
 /**
@@ -570,6 +590,9 @@ export const WA_MESSAGES = {
     '/servicios': hello('Quiero saber qué servicio me conviene.'),
     '/cotizador': hello('Necesito ayuda para cotizar mi envío.'),
     '/sucursales': hello('Tengo una consulta sobre sus sucursales.'),
+    '/casillero-en-miami': hello('Quiero abrir mi casillero en Miami.'),
+    '/tiendas': hello('Quiero comprar en una tienda de Estados Unidos y tengo una consulta.'),
+    '/rastreo': hello('Quiero saber dónde está mi paquete.'),
     '/mi-cuenta': hello('Estoy en mi cuenta y tengo una consulta.'),
     '/registro': hello('Estoy creando mi cuenta y tengo una duda.'),
     '/registro/confirmar': hello('Estoy confirmando mi correo y tengo una duda.'),
@@ -582,26 +605,43 @@ export const WA_MESSAGES = {
     '/privacidad': hello('Tengo una consulta sobre mis datos personales.'),
   } as Record<string, string>,
   floatingDefault: hello('Vengo de su sitio web y tengo una consulta.'),
+  /** The footer: its WhatsApp link, and WhatsApp among Carinova's channels. */
   footer: hello('Vengo de su sitio web y quiero información.'),
+  channels: hello('Los encontré en su sitio web y quiero escribirles.'),
 
   // Home page
   /** The calculator of the home page. */
   homeQuote: (shipment: string, total: string) =>
     hello(`Coticé en su página de inicio ${shipment}: ${total}. ¿Me ayudan a confirmarlo?`),
   homeQuoteEmpty: hello('Estoy en la calculadora de su página de inicio y no sé qué datos poner.'),
-  /** "¡Realizamos tus compras por vos!": the link the visitor pasted goes at the end. */
+  /** "Compra asistida": the link the visitor pasted goes at the end. */
   shopper: (link: string) =>
     hello(
       `Quiero solicitar una compra asistida. Producto: ${link} ¿Me confirman disponibilidad, si puede ingresar y el costo total?`
     ),
   /** A store's card. */
   storeAssist: (store: string) => hello(`Quiero una compra asistida en ${store}. Este es el enlace del producto: `),
-  /** "¿Puede ingresar a Nicaragua?": the article the visitor searched for. */
+  /** "Encomiendas", among the solutions. */
+  homeFamily: hello('Quiero enviar una encomienda familiar a Nicaragua. ¿Qué necesito?'),
+  /** "¿Puede ingresar?" in the tracker of the home page: the article the visitor searched for. */
   itemCheck: (item: string) => hello(`Antes de comprar, quiero saber si pueden traer: ${item}`),
   itemCheckEmpty: hello('Quiero consultar si un artículo puede ingresar a Nicaragua: '),
+  /** A branch's card on the home page. */
+  homeBranch: (city: string) => hello(`Quiero conocer la ubicación y el horario de la sucursal de ${city}.`),
   homeDelivery: hello('Quiero consultar la entrega a domicilio. Mi dirección es: '),
   homeFaq: hello('Leí sus preguntas frecuentes y tengo otra duda.'),
-  careers: hello('Quiero formar parte del equipo de Carinova. Me interesa el área de: '),
+
+  // Rastreo
+  /** "¿Puede ingresar?" in the tracker of the tracking page. */
+  trackItemCheck: (item: string) => hello(`Estoy en su página de rastreo y quiero saber si pueden traer: ${item}`),
+  trackItemCheckEmpty: hello('Estoy en su página de rastreo y quiero consultar por un artículo: '),
+  /** A package of the customer, from the tracking page (its reference: PKG-000123). */
+  trackPackage: (code: string, reference: string) =>
+    hello(`Mi Carinova ID es ${code}. Estoy rastreando mi paquete ${reference} y tengo una consulta.`),
+  /** A reference that is not among the customer's packages. */
+  trackMissing: (code: string, reference: string) =>
+    hello(`Mi Carinova ID es ${code}. No encuentro en mi cuenta el paquete ${reference}.`),
+  trackClosing: hello('No encuentro mi paquete en el rastreo. ¿Me ayudan?'),
 
   // Cómo funciona
   howToClosing: hello('Ya vi cómo funciona y quiero ayuda con mi primer envío.'),
@@ -617,6 +657,18 @@ export const WA_MESSAGES = {
     'entrega-a-domicilio': hello('Quiero coordinar una entrega a domicilio. ¿Qué cobertura y qué cargo tiene?'),
   } as Record<string, string>,
   servicesClosing: hello('Quiero ayuda para elegir el servicio de mi envío.'),
+
+  // Casillero and tiendas
+  lockerClosing: hello('Quiero saber más sobre el casillero en Miami antes de crear mi cuenta.'),
+  /** The product-link form of the stores page: the link the visitor pasted goes inside. */
+  storesShopper: (link: string) =>
+    hello(
+      `Estoy en su página de tiendas y quiero una compra asistida. Producto: ${link} ¿Me confirman disponibilidad, si puede ingresar y el costo total?`
+    ),
+  /** A store's card on the stores page. */
+  storePageAssist: (store: string) =>
+    hello(`Vi ${store} en su página de tiendas y quiero que compren por mí. Este es el enlace del producto: `),
+  storesClosing: hello('Quiero ayuda para comprar en una tienda de Estados Unidos.'),
 
   // Cotizador
   quote: (shipment: string, total: string) =>
@@ -661,5 +713,7 @@ export const WA_MESSAGES = {
   faqClosing: hello('No encontré mi respuesta en sus preguntas frecuentes.'),
   restricted: hello('Antes de comprar, quiero saber si pueden traer este producto: '),
   aboutClosing: hello('Conocí Carinova en su página y quiero empezar a enviar con ustedes.'),
+  /** "Formá parte de nuestro equipo", on the page about Carinova. */
+  careers: hello('Quiero formar parte del equipo de Carinova. Me interesa el área de: '),
   notFound: hello('Llegué a una página de su sitio que no existe.'),
 };

@@ -16,6 +16,7 @@ import {
   PAYMENT_STATUSES,
 } from '../src/data/account.ts';
 import { BRANCHES, MIAMI_ADDRESS, RECEPTION_POINTS } from '../src/data/carinova.ts';
+import { LOCALES } from '../src/i18n/locales.ts';
 
 const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
 
@@ -36,6 +37,18 @@ test('the statuses the database accepts are the ones the site knows how to show'
   assert.deepEqual(valuesOf('packages_service_known'), [...PACKAGE_SERVICES]);
   assert.deepEqual(valuesOf('payments_status_known'), ids(PAYMENT_STATUSES));
   assert.deepEqual(valuesOf('payments_method_known'), ids(PAYMENT_METHODS));
+});
+
+test('a customer can be written to in every language of the site, and in no other', () => {
+  // The check is written three times (a new table, a table from before the column, a table whose
+  // check knew fewer languages): each one lists the site's languages.
+  const lists = Array.from(
+    schema.matchAll(/CONSTRAINT customers_locale_known CHECK \(locale IN \(([^)]+)\)\)/g),
+    (match) => Array.from(match[1].matchAll(/'([^']+)'/g), (value) => value[1])
+  );
+  assert.equal(lists.length, 3);
+  for (const list of lists) assert.deepEqual(list, [...LOCALES]);
+  assert.deepEqual(valuesOf('customers_locale_known'), [...LOCALES]);
 });
 
 test('what a customer reads about an invoice is what the view invoice_totals works out', () => {
@@ -98,7 +111,13 @@ test('the schema can be run again: nothing is created or changed without a guard
     else if (statement.startsWith('CREATE')) assert.match(head, /^CREATE OR REPLACE VIEW /, head);
     else if (statement.startsWith('INSERT')) assert.match(statement, /ON CONFLICT \(\w+\) DO NOTHING$/, head);
     else if (statement.startsWith('ALTER TABLE')) {
-      assert.match(statement, /ADD COLUMN IF NOT EXISTS|ALTER COLUMN \w+ DROP NOT NULL$/, head);
+      // A column that may be there already, a column that stops being required, or a check put
+      // again under its own name (dropped if it is there and added in the same statement).
+      assert.match(
+        statement,
+        /ADD COLUMN IF NOT EXISTS|ALTER COLUMN \w+ DROP NOT NULL$|DROP CONSTRAINT IF EXISTS (\w+),\s+ADD CONSTRAINT \1 CHECK /,
+        head
+      );
     } else assert.match(head, /^COMMENT ON (TABLE|VIEW|COLUMN) /, head);
   }
   // Nothing in it removes or rewrites what a database already holds.

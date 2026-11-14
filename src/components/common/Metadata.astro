@@ -5,7 +5,7 @@ import { SEO } from 'astro-seo';
 import type { SEOProps } from 'astro-seo';
 
 import { SITE, METADATA } from 'astrowind:config';
-import { LOCALE_INFO, alternatesOf, i18n } from '~/i18n';
+import { ACTIVE_LOCALES, LOCALE_INFO, alternatesOf, i18n } from '~/i18n';
 import type { MetaData, MetaDataOpenGraph } from '~/types';
 import { getCanonical, getPermalink } from '~/utils/permalinks';
 
@@ -26,20 +26,13 @@ const {
 } = Astro.props;
 
 // Carinova: the page's language comes from its address (src/i18n). Each language's page is its own
-// canonical address, and the two point at each other with hreflang (Spanish is x-default), so the
-// English pages never take the place of the Spanish ones in search results.
-const { locale } = i18n(Astro);
+// canonical address, and all of them point at each other with hreflang (Spanish is x-default), so a
+// translation never takes the place of the Spanish page in search results.
+const { locale, ui } = i18n(Astro);
 const alternates = alternatesOf(Astro.url.pathname);
 
-// The site-wide defaults of src/config.yaml are Spanish; this is what they say in English.
-const defaults =
-  locale === 'en'
-    ? {
-        title: 'Carinova | Shipments that bring us together · United States to Nicaragua',
-        description:
-          'We bring your personal purchases, family packages and business cargo from the United States to Nicaragua, by air or by sea. Create your account online and pick up in Managua or Bluefields.',
-      }
-    : { title: METADATA?.title?.default || '', description: METADATA?.description };
+// What a page without a title or a description of its own says, in its language.
+const defaults = ui.meta;
 
 const mergedOg: MetaDataOpenGraph = merge(
   {
@@ -75,9 +68,9 @@ function buildOpenGraph(og: MetaDataOpenGraph): SEOProps['openGraph'] | undefine
       // The other language of this page, when it has one.
       ...(alternates.length
         ? {
-            localeAlternate: Object.values(LOCALE_INFO)
-              .map((info) => info.ogLocale)
-              .filter((ogLocale) => ogLocale !== og.locale),
+            localeAlternate: ACTIVE_LOCALES.map((item) => LOCALE_INFO[item].ogLocale).filter(
+              (ogLocale) => ogLocale !== og.locale
+            ),
           }
         : {}),
       siteName: og.siteName,

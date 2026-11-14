@@ -42,6 +42,43 @@ const recorder = (...answers: Array<Array<Record<string, unknown>>>) => {
   return { calls, store: sqlStore(query) };
 };
 
+test('a database that does not know the customer’s language yet still creates the account', async () => {
+  const created = { code: 'CNV-00008', first_name: 'Paul', last_name: 'Palacios', is_new: true, signed_in: true };
+  const calls: Array<Array<unknown>> = [];
+  const refused = Object.assign(
+    new Error('new row for relation "customers" violates check constraint "customers_locale_known"'),
+    { code: '23514', constraint: 'customers_locale_known' }
+  );
+  const query: Query = async (_text, params) => {
+    calls.push(params);
+    // The old check: Spanish and English only.
+    if (!['es', 'en'].includes(String(params[11]))) throw refused;
+    return [created];
+  };
+  const store = sqlStore(query);
+
+  const french = await store.create(data, { ...customer, locale: 'fr' });
+  assert.equal(french.code, 'CNV-00008');
+  assert.deepEqual(
+    calls.map((params) => params[11]),
+    ['fr', 'en'],
+    'tried in French, then stored in the language the database knows'
+  );
+  // Everything else of the row is the same both times.
+  assert.deepEqual(calls[0].toSpliced(11, 1), calls[1].toSpliced(11, 1));
+
+  // A language the database knows is written once.
+  calls.length = 0;
+  await store.create(data, { ...customer, locale: 'es' });
+  assert.equal(calls.length, 1);
+
+  // Any other failure is not swallowed.
+  const broken = sqlStore(async () => {
+    throw new Error('connection lost');
+  });
+  await assert.rejects(broken.create(data, { ...customer, locale: 'fr' }), /connection lost/);
+});
+
 /** The highest $n a statement uses. */
 const placeholders = (statement: string) =>
   Math.max(0, ...Array.from(statement.matchAll(/\$(\d+)/g), (match) => Number(match[1])));

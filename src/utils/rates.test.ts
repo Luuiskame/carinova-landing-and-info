@@ -90,7 +90,10 @@ test('electronics add up per unit and drop fractions and negatives', () => {
   const quote = quoteUnits({ celular: 1, laptop: 2, playstation: 0.7, tablet: 3 }, DEVICES);
   assert.equal(quote.total, 190);
   assert.equal(quote.units, 3);
-  assert.deepEqual(quote.lines.map(describeUnitLine), ['1 Celular × US$30 = US$30', '2 Laptops × US$80 = US$160']);
+  assert.deepEqual(
+    quote.lines.map((line) => describeUnitLine(line)),
+    ['1 Celular × US$30 = US$30', '2 Laptops × US$80 = US$160']
+  );
   assert.equal(quoteUnits({ celular: -2 }, DEVICES).total, 0);
 });
 
@@ -123,4 +126,29 @@ test('the formulas can be written in English: the numbers are the same', () => {
 
   const units = quoteUnits({ celular: 1, laptop: 2, playstation: 1 }, DEVICES).lines;
   assert.equal(listUnits(units, 'en'), '1 celular, 2 laptops and 1 PlayStation');
+});
+
+test('where a noun does not simply take a plural, it is named first and the quantity follows', () => {
+  const units = quoteUnits({ celular: 1, laptop: 2, playstation: 1 }, DEVICES).lines;
+  // Russian has three forms after a number and Arabic more: neither is asked to pick one.
+  assert.deepEqual(
+    units.map((line) => describeUnitLine(line, 'ru')),
+    ['1 × Celular × US$30 = US$30', '2 × Laptop × US$80 = US$160', '1 × PlayStation × US$85 = US$85']
+  );
+  assert.equal(describeUnitLine(units[1], 'zh'), '2 × Laptop × US$80 = US$160');
+  assert.equal(describeUnitLine(units[1], 'fr'), '2 Laptops × US$80 = US$160');
+  assert.equal(listUnits(units, 'ru'), 'celular × 1, laptop × 2 и PlayStation × 1');
+  // Each language joins a list its own way.
+  assert.equal(listUnits(units, 'zh'), 'celular × 1、laptop × 2和PlayStation × 1');
+  assert.equal(listUnits(units, 'ar'), 'celular × 1، laptop × 2 وPlayStation × 1');
+  assert.equal(listUnits(units, 'fr'), '1 celular, 2 laptops et 1 PlayStation');
+  assert.equal(listUnits(units.slice(0, 1), 'ar'), 'celular × 1');
+});
+
+test('a formula is written with letters of one direction only', () => {
+  // A formula reads from left to right in every language; an Arabic word in it would turn the
+  // numbers around it, so the Arabic pages use the international symbols.
+  const volume = quoteByVolume({ length: 48, width: 40, height: 72 }, 20);
+  assert.equal(describeVolume(volume, 'ar'), '48 × 40 × 72 = 138,240 in³ ÷ 1,728 = 80 ft³ × US$20 = US$1,600');
+  assert.doesNotMatch(describeVolume(volume, 'ar'), /[\u0590-\u08FF]/);
 });

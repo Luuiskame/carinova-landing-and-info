@@ -23,13 +23,15 @@ interface MenuLink extends Link {
   auth?: 'in' | 'out';
 }
 
-/** Carinova: the link to the same page in the other language (src/navigation.ts). */
+/** Carinova: a language the page can be read in, leading to this same page in it (src/navigation.ts). */
 interface LanguageLink {
   code: string;
   name: string;
   lang: string;
+  dir: string;
   href: string;
   home: string;
+  current: boolean;
 }
 
 export interface Props {
@@ -40,12 +42,13 @@ export interface Props {
    * dialog of the page (SigninDialog.astro); where there is none it is a link to the sign-in page.
    */
   signin?: { text: string; href: string };
-  /** Carinova: "Rastreá tu paquete", the outlined button from 1280 px: a visitor's and a customer's destination. */
-  track?: { text: string; href: string; accountHref: string };
+  /** Carinova: "Rastreá tu paquete", the outlined button from 1280 px. */
+  track?: { text: string; href: string };
   /** Carinova: the orange button for visitors ("Crear cuenta") and for customers ("Mi cuenta"). */
   primary?: { text: string; href: string };
   account?: { text: string; href: string };
-  language?: LanguageLink;
+  /** Carinova: the languages of the site; the menu shows with two or more. */
+  languages?: Array<LanguageLink>;
   isSticky?: boolean;
   isDark?: boolean;
   isFullWidth?: boolean;
@@ -61,7 +64,7 @@ const {
   track,
   primary,
   account,
-  language,
+  languages = [],
   isSticky = false,
   isDark = false,
   isFullWidth = false,
@@ -73,11 +76,21 @@ const {
 const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
 
 // Carinova: the labels of the header's own controls, in the page's language.
-const { locale, href } = i18n(Astro);
-const t = {
-  es: { navigation: 'Navegación principal', menu: 'Menú' },
-  en: { navigation: 'Main navigation', menu: 'Menu' },
-}[locale];
+const { href, ui } = i18n(Astro);
+const t = ui.header;
+const currentLanguage = languages.find((language) => language.current);
+
+// Carinova: the space on each side of a link of the desktop bar. The bar is drawn for the Spanish
+// labels and has no room to spare, and other languages need more of it ("Comment ça marche", "Как
+// это работает"). So most of that space is not padding but an element of its own on each side of
+// the link, which gives way: it keeps its width while the bar fits (with the link's own padding,
+// what the padding used to be: 8 px, 10 px from 1280 px) and narrows only when the labels of a
+// language would push the bar off the screen. The labels never shrink. The list and the
+// navigation are allowed to be narrower than their content (`min-w-0`) so that the giving way
+// happens there and not as a page that scrolls sideways.
+const linkSpace = 'hidden lg:block lg:w-1.5 lg:min-w-0.5 lg:shrink xl:w-2';
+/** Whether a link is in the desktop bar (the first ones are only in the phone menu). */
+const inBar = (className?: string) => !className?.split(' ').includes('lg:hidden');
 
 // Compare paths without trailing slashes so the active link is detected
 // regardless of the `trailingSlash` setting (`getPermalink()` emits `/contact/`
@@ -89,8 +102,8 @@ const isActive = (href?: string) => typeof href === 'string' && `/${trimSlash(hr
 // so the name must change whenever the header content does: otherwise a page
 // with its own menu (the demo homes, the landing pages) would keep showing the
 // header of the page the visitor came from. Hash the props that shape the markup.
-// (Carinova: the language link's address changes with every page, so only its language is part of the
-// key; the script below keeps the address current while the header persists.)
+// (Carinova: the language menu's addresses change with every page, so only the page's language is
+// part of the key; the script below keeps the addresses current while the header persists.)
 const persistKey = `header-${Array.from(
   JSON.stringify({
     links,
@@ -98,7 +111,7 @@ const persistKey = `header-${Array.from(
     track,
     primary,
     account,
-    language: language?.lang,
+    language: currentLanguage?.lang,
     isSticky,
     isDark,
     isFullWidth,
@@ -136,7 +149,7 @@ const persistKey = `header-${Array.from(
         },
       ]}
     >
-      <div class:list={[{ 'mr-auto rtl:mr-0 rtl:ml-auto': position === 'right' }, 'flex justify-between']}>
+      <div class:list={[{ 'me-auto rtl:mr-0 rtl:ml-auto': position === 'right' }, 'flex justify-between']}>
         <a class="flex items-center" href={href('/')}>
           <Logo />
         </a>
@@ -160,82 +173,117 @@ const persistKey = `header-${Array.from(
         </div>
       </div>
       <nav
-        class="items-center w-full lg:w-auto hidden lg:flex lg:mx-1 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
+        class="items-center w-full lg:w-auto lg:min-w-0 hidden lg:flex lg:mx-1 text-default overflow-y-auto overflow-x-hidden lg:overflow-visible lg:justify-self-center"
         aria-label={t.navigation}
       >
         <ul
-          class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto text-xl lg:text-sm xl:text-[0.9375rem] 2xl:text-sm tracking-[0.01rem] font-semibold lg:justify-center"
+          class="flex flex-col lg:flex-row lg:self-center w-full lg:w-auto lg:min-w-0 text-xl lg:text-sm xl:text-[0.9375rem] 2xl:text-sm tracking-[0.01rem] font-semibold lg:justify-center"
         >
           {
             links.map(({ text, href, links, class: className, auth }) => (
-              <li class:list={[{ dropdown: links?.length }, className]} data-auth={auth}>
-                {links?.length ? (
-                  <>
-                    <button
-                      type="button"
-                      class="hover:text-link dark:hover:text-white px-4 lg:px-2 xl:px-2.5 py-3 flex items-center whitespace-nowrap"
+              <>
+                {inBar(className) && <li class={linkSpace} role="presentation" aria-hidden="true" />}
+                <li class:list={[{ dropdown: links?.length }, className, 'lg:shrink-0']} data-auth={auth}>
+                  {links?.length ? (
+                    <>
+                      <button
+                        type="button"
+                        class="hover:text-link dark:hover:text-white px-4 lg:px-2 xl:px-2.5 py-3 flex items-center whitespace-nowrap"
+                      >
+                        {text}{' '}
+                        <Icon
+                          name="tabler:chevron-down"
+                          class="w-3.5 h-3.5 ms-0.5 rtl:ml-0 rtl:mr-0.5 hidden lg:inline"
+                        />
+                      </button>
+                      <ul class="dropdown-menu lg:backdrop-blur-md dark:lg:bg-slate-900 dark:lg:border dark:lg:border-slate-700/50 rounded lg:absolute ps-4 lg:ps-0 lg:hidden font-medium lg:bg-white/90 lg:min-w-[200px] drop-shadow-xl">
+                        {links.map(({ text: text2, href: href2 }) => (
+                          <li>
+                            <a
+                              class:list={[
+                                'first:rounded-t last:rounded-b lg:hover:bg-gray-100 hover:text-link dark:hover:text-white dark:hover:bg-gray-700 py-2 px-5 block whitespace-nowrap',
+                                { 'aw-link-active': isActive(href2) },
+                              ]}
+                              href={href2}
+                            >
+                              {text2}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <a
+                      class:list={[
+                        'hover:text-link dark:hover:text-white px-4 lg:px-0.5 py-3 flex items-center whitespace-nowrap',
+                        { 'aw-link-active': isActive(href) },
+                      ]}
+                      href={href}
                     >
-                      {text}{' '}
-                      <Icon
-                        name="tabler:chevron-down"
-                        class="w-3.5 h-3.5 ml-0.5 rtl:ml-0 rtl:mr-0.5 hidden lg:inline"
-                      />
-                    </button>
-                    <ul class="dropdown-menu lg:backdrop-blur-md dark:lg:bg-slate-900 dark:lg:border dark:lg:border-slate-700/50 rounded lg:absolute pl-4 lg:pl-0 lg:hidden font-medium lg:bg-white/90 lg:min-w-[200px] drop-shadow-xl">
-                      {links.map(({ text: text2, href: href2 }) => (
-                        <li>
-                          <a
-                            class:list={[
-                              'first:rounded-t last:rounded-b lg:hover:bg-gray-100 hover:text-link dark:hover:text-white dark:hover:bg-gray-700 py-2 px-5 block whitespace-nowrap',
-                              { 'aw-link-active': isActive(href2) },
-                            ]}
-                            href={href2}
-                          >
-                            {text2}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <a
-                    class:list={[
-                      'hover:text-link dark:hover:text-white px-4 lg:px-2 xl:px-2.5 py-3 flex items-center whitespace-nowrap',
-                      { 'aw-link-active': isActive(href) },
-                    ]}
-                    href={href}
-                  >
-                    {text}
-                  </a>
-                )}
-              </li>
+                      {text}
+                    </a>
+                  )}
+                </li>
+                {inBar(className) && <li class={linkSpace} role="presentation" aria-hidden="true" />}
+              </>
             ))
           }
         </ul>
       </nav>
       <div
         class:list={[
-          { 'ml-auto rtl:ml-0 rtl:mr-auto': position === 'left' },
-          'hidden lg:self-center lg:flex items-center lg:mb-0 fixed w-full lg:w-auto lg:static justify-end left-0 rtl:left-auto rtl:right-0 bottom-0 p-3 lg:p-0 lg:justify-self-end',
+          { 'ms-auto rtl:ml-0 rtl:mr-auto': position === 'left' },
+          'hidden lg:self-center lg:flex items-center lg:mb-0 fixed w-full lg:w-auto lg:static justify-end start-0 rtl:left-auto rtl:right-0 bottom-0 p-3 lg:p-0 lg:justify-self-end',
         ]}
       >
         <div class="items-center flex justify-between w-full lg:w-auto">
           <div class="flex items-center">
             {
-              /* Carinova: the other language of this page. "EN" is what shows; its name is what is read. */
-              language && (
-                <a
-                  class="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-base lg:text-sm xl:text-[0.9375rem] 2xl:text-sm font-semibold text-default hover:text-link dark:hover:text-white"
-                  href={language.href}
-                  hreflang={language.lang}
-                  lang={language.lang}
-                  aria-label={language.name}
-                  data-language-switch={language.lang}
-                  data-home={language.home}
-                >
-                  <Icon name="tabler:world" class="h-5 w-5 lg:hidden xl:block" />
-                  <span aria-hidden="true">{language.code}</span>
-                </a>
+              /* Carinova: the language menu. Its button shows the language of the page ("ES"); the list names
+                 every language in its own words, each leading to this same page in it. A native <details>:
+                 it opens without JavaScript; the script closes it on a click outside, on Esc and on leaving
+                 the page. It opens downwards in the desktop bar and upwards in the phone menu's bottom bar. */
+              currentLanguage && languages.length > 1 && (
+                <details class="group/language relative" data-language-menu>
+                  <summary
+                    class="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-lg px-2 text-base font-semibold text-default hover:text-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta lg:text-sm xl:text-[0.9375rem] 2xl:text-sm dark:hover:text-white [&::-webkit-details-marker]:hidden"
+                    aria-label={`${ui.nav.language}: ${currentLanguage.name}`}
+                  >
+                    <Icon name="tabler:world" class="h-5 w-5 lg:hidden xl:block" />
+                    <span aria-hidden="true">{currentLanguage.code}</span>
+                    <Icon
+                      name="tabler:chevron-down"
+                      class="h-3.5 w-3.5 transition group-open/language:rotate-180 motion-reduce:transition-none"
+                    />
+                  </summary>
+                  <ul
+                    class="absolute start-0 bottom-full z-50 mb-2 w-52 rounded-xl border border-white/15 bg-[#0b2247] p-1.5 shadow-[0_1.5rem_3rem_rgb(0_0_0/0.45)] lg:start-auto lg:end-0 lg:top-full lg:bottom-auto lg:mt-2 lg:mb-0"
+                    aria-label={ui.nav.languageChoose}
+                  >
+                    {languages.map((language) => (
+                      <li>
+                        <a
+                          class="flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-[0.9375rem] font-semibold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cta aria-[current=true]:bg-white/10 aria-[current=true]:text-secondary"
+                          href={language.href}
+                          hreflang={language.lang}
+                          lang={language.lang}
+                          aria-current={language.current ? 'true' : undefined}
+                          data-language-link={language.lang}
+                          data-home={language.home}
+                        >
+                          <span dir={language.dir}>{language.name}</span>
+                          {language.current ? (
+                            <Icon name="tabler:check" class="h-4 w-4 shrink-0" />
+                          ) : (
+                            <span class="text-xs tracking-wide text-[#9fb0c6]" aria-hidden="true">
+                              {language.code}
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )
             }
             {
@@ -266,26 +314,13 @@ const persistKey = `header-${Array.from(
               )
             }
           </div>
-          <span class="ml-3 flex items-center gap-2 lg:ml-1 xl:ml-2">
+          <span class="ms-3 flex items-center gap-2 lg:ms-1 xl:ms-2">
             {
               /* Carinova: the buttons. Each one is in the page for visitors and for customers (data-auth). */
               track && (
-                <>
-                  <a
-                    class="btn hidden min-h-11 px-3 py-2.5 text-sm whitespace-nowrap xl:inline-flex"
-                    href={track.href}
-                    data-auth="out"
-                  >
-                    {track.text}
-                  </a>
-                  <a
-                    class="btn hidden min-h-11 px-3 py-2.5 text-sm whitespace-nowrap xl:inline-flex"
-                    href={track.accountHref}
-                    data-auth="in"
-                  >
-                    {track.text}
-                  </a>
-                </>
+                <a class="btn hidden min-h-11 px-3 py-2.5 text-sm whitespace-nowrap xl:inline-flex" href={track.href}>
+                  {track.text}
+                </a>
               )
             }
             {
@@ -330,8 +365,19 @@ const persistKey = `header-${Array.from(
     private onMqlChange?: () => void;
     private onPageLoad = () => {
       this.updateActiveLinks();
-      this.updateLanguageLink();
+      this.updateLanguageLinks();
       this.closeOpenDropdown();
+      this.closeLanguageMenu();
+    };
+    private onDocumentClick = (event: MouseEvent) => {
+      const menu = this.querySelector<HTMLDetailsElement>('[data-language-menu]');
+      if (menu?.open && !menu.contains(event.target as Node)) menu.open = false;
+    };
+    private onDocumentKey = (event: KeyboardEvent) => {
+      const menu = this.querySelector<HTMLDetailsElement>('[data-language-menu]');
+      if (event.key !== 'Escape' || !menu?.open) return;
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
     };
 
     connectedCallback() {
@@ -344,8 +390,11 @@ const persistKey = `header-${Array.from(
       // the server-rendered `aw-link-active` class would go stale. Re-compute it
       // on every navigation (astro:page-load fires on load and after each swap).
       this.updateActiveLinks();
-      this.updateLanguageLink();
+      this.updateLanguageLinks();
       document.addEventListener('astro:page-load', this.onPageLoad);
+      // Carinova: the language menu closes with a click anywhere else and with Esc.
+      document.addEventListener('click', this.onDocumentClick);
+      document.addEventListener('keydown', this.onDocumentKey);
 
       const closeMenu = () => {
         toggle?.classList.remove('expanded');
@@ -354,6 +403,7 @@ const persistKey = `header-${Array.from(
         header?.classList.remove('h-screen', 'expanded', 'bg-page');
         nav?.classList.add('hidden');
         lastChild?.classList.add('hidden');
+        this.closeLanguageMenu();
       };
 
       // Mobile menu toggle.
@@ -411,6 +461,13 @@ const persistKey = `header-${Array.from(
       if (this.onScroll) document.removeEventListener('scroll', this.onScroll);
       if (this.mql && this.onMqlChange) this.mql.removeEventListener('change', this.onMqlChange);
       document.removeEventListener('astro:page-load', this.onPageLoad);
+      document.removeEventListener('click', this.onDocumentClick);
+      document.removeEventListener('keydown', this.onDocumentKey);
+    }
+
+    private closeLanguageMenu() {
+      const menu = this.querySelector<HTMLDetailsElement>('[data-language-menu]');
+      if (menu) menu.open = false;
     }
 
     // With `transition:persist` the header (and its focus) survives client-side
@@ -421,19 +478,19 @@ const persistKey = `header-${Array.from(
       if (active && this.contains(active) && active.closest('.dropdown')) active.blur();
     }
 
-    // Carinova: the language link leads to this page in the other language, and the header persists
-    // from page to page. Each page names its translation in the <head> (hreflang); a page without one
-    // (404) sends to the other language's home page. What the address carries (a filled-in calculator,
-    // a confirmation token, an anchor) goes along.
-    private updateLanguageLink() {
-      const link = this.querySelector<HTMLAnchorElement>('[data-language-switch]');
-      if (!link) return;
-      const alternate = document.head.querySelector<HTMLLinkElement>(
-        `link[rel="alternate"][hreflang="${link.dataset.languageSwitch}"]`
-      );
-      link.href = alternate
-        ? new URL(alternate.href).pathname + window.location.search + window.location.hash
-        : (link.dataset.home ?? '/');
+    // Carinova: each entry of the language menu leads to this page in that language, and the header
+    // persists from page to page. Each page names its translations in the <head> (hreflang); a page
+    // without them (404) sends to each language's home page. What the address carries (a filled-in
+    // calculator, a confirmation token, an anchor) goes along. The footer's list is kept the same way.
+    private updateLanguageLinks() {
+      for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-language-link]')) {
+        const alternate = document.head.querySelector<HTMLLinkElement>(
+          `link[rel="alternate"][hreflang="${link.dataset.languageLink}"]`
+        );
+        link.href = alternate
+          ? new URL(alternate.href).pathname + window.location.search + window.location.hash
+          : (link.dataset.home ?? link.getAttribute('href') ?? '/');
+      }
     }
 
     private updateActiveLinks() {

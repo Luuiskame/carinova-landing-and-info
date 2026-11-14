@@ -9,38 +9,10 @@ import StructuredData from '~/components/common/StructuredData.astro';
 import { faqSchema } from '~/data/faq';
 import { i18n } from '~/i18n';
 
-const { locale, data } = i18n(Astro);
+const { data, ui } = i18n(Astro);
 const { FAQ_GROUPS, WA_MESSAGES } = data;
 
-const t = {
-  es: {
-    tagline: 'Ayuda',
-    title: 'Preguntas frecuentes',
-    description:
-      'Cuenta y Carinova ID, servicios, tarifas, plazos, artículos restringidos y retiro: respuestas a las dudas más comunes sobre los envíos de Carinova de EE. UU. a Nicaragua.',
-    subtitle: 'Todo sobre tu cuenta, los servicios, las tarifas, los tiempos de entrega y el retiro de tus paquetes.',
-    topics: 'Temas',
-    closing: {
-      title: '¿No encontraste tu respuesta?',
-      subtitle: 'Escribinos y te ayudamos, o empezá creando tu cuenta.',
-      lead: 'Contanos tu duda:',
-    },
-  },
-  en: {
-    tagline: 'Help',
-    title: 'Frequently asked questions',
-    description:
-      'Account and Carinova ID, services, rates, delivery times, restricted items and pickup: answers to the most common questions about Carinova’s shipments from the US to Nicaragua.',
-    subtitle:
-      'Everything about your account, the services, the rates, the delivery times and the pickup of your packages.',
-    topics: 'Topics',
-    closing: {
-      title: 'Did you not find your answer?',
-      subtitle: 'Write to us and we will help you, or start by creating your account.',
-      lead: 'Tell us your question:',
-    },
-  },
-}[locale];
+const t = ui.faqPage;
 
 const metadata = { title: t.title, description: t.description };
 ---

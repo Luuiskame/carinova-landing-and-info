@@ -36,7 +36,7 @@ const trail = breadcrumb && {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { name: { es: 'Inicio', en: 'Home' }[page.locale], url: String(getCanonical(page.href('/'))) },
+    { name: page.ui.nav.home, url: String(getCanonical(page.href('/'))) },
     { name: breadcrumb, url: String(getCanonical(pathname)) },
   ].map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: item.url })),
 };

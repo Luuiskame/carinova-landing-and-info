@@ -131,25 +131,25 @@ Append-only: rows are never changed or deleted. Actions written by `db/queries.s
 
 #### `customers` — one row per customer
 
-| Column                           | Type                        | Meaning                                                                                            |
-| -------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `id`                             | integer PK                  | Customer number: 1, 2, 3…                                                                          |
-| `code`                           | text, generated, unique     | The Carinova ID: `CNV-00001`                                                                       |
-| `email`                          | text, unique, lower case    | Also how the customer signs in                                                                     |
-| `first_name`, `last_name`        | text                        | For a company, its contact person                                                                  |
-| `phone`                          | text                        | E.164: `+50588552956`                                                                              |
-| `country`                        | text                        | `NI` or `US`                                                                                       |
-| `address_line1`, `city`, `state` | text                        | `state` is the department (Nicaragua) or the state (United States), by name                        |
-| `address_line2`, `postal_code`   | text?                       |                                                                                                    |
-| `email_verified_at`              | timestamptz?                | When the customer opened the confirmation link. Empty for an account the team created (→ hand-off) |
-| `terms_accepted_at`              | timestamptz?                | When the customer accepted the terms and the privacy policy. Empty for an account the team created |
-| `source`                         | text                        | `web` (the sign-up form) or `staff` (the team created it). Default `web`                           |
-| `locale`                         | text                        | `es` or `en`: the language to write to them in. Default `es`                                       |
-| `status`                         | text                        | `active` or `suspended`. Default `active`                                                          |
-| `account_type`                   | text                        | `personal` or `business`. Default `personal`                                                       |
-| `company_name`                   | text?                       | Required for a `business` account (`customers_business_has_name`)                                  |
-| `created_by_staff_id`            | integer? FK → `staff_users` | Who created it, when it was not the sign-up form                                                   |
-| `created_at`, `updated_at`       | timestamptz                 |                                                                                                    |
+| Column                           | Type                        | Meaning                                                                                                           |
+| -------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `id`                             | integer PK                  | Customer number: 1, 2, 3…                                                                                         |
+| `code`                           | text, generated, unique     | The Carinova ID: `CNV-00001`                                                                                      |
+| `email`                          | text, unique, lower case    | Also how the customer signs in                                                                                    |
+| `first_name`, `last_name`        | text                        | For a company, its contact person                                                                                 |
+| `phone`                          | text                        | E.164: `+50588552956`                                                                                             |
+| `country`                        | text                        | `NI` or `US`                                                                                                      |
+| `address_line1`, `city`, `state` | text                        | `state` is the department (Nicaragua) or the state (United States), by name                                       |
+| `address_line2`, `postal_code`   | text?                       |                                                                                                                   |
+| `email_verified_at`              | timestamptz?                | When the customer opened the confirmation link. Empty for an account the team created (→ hand-off)                |
+| `terms_accepted_at`              | timestamptz?                | When the customer accepted the terms and the privacy policy. Empty for an account the team created                |
+| `source`                         | text                        | `web` (the sign-up form) or `staff` (the team created it). Default `web`                                          |
+| `locale`                         | text                        | One of the site's languages (`es`, `en`, `fr`, `pt`, `zh`, `ru`, `ar`): the one to write to them in. Default `es` |
+| `status`                         | text                        | `active` or `suspended`. Default `active`                                                                         |
+| `account_type`                   | text                        | `personal` or `business`. Default `personal`                                                                      |
+| `company_name`                   | text?                       | Required for a `business` account (`customers_business_has_name`)                                                 |
+| `created_by_staff_id`            | integer? FK → `staff_users` | Who created it, when it was not the sign-up form                                                                  |
+| `created_at`, `updated_at`       | timestamptz                 |                                                                                                                   |
 
 A **suspended** customer cannot sign in and their open sessions stop working: the Worker's statements all ask for `status = 'active'`, and `set_customer_status` deletes the sessions. Their packages and invoices stay, and the team keeps working on them.
 
@@ -458,7 +458,7 @@ Today there is one role, `superuser`: it manages everyone (customers and team), 
 ## Changing the database
 
 1. Change `db/schema.sql` so that it still runs again safely: a new table as `CREATE TABLE IF NOT EXISTS`; a new column both inside its `CREATE TABLE` (for a new database) and as `ALTER TABLE … ADD COLUMN IF NOT EXISTS` with its default (for the ones that exist); a new reference row with `ON CONFLICT DO NOTHING`. Changing or dropping a constraint or a column on a database with data needs its own statement, written and reviewed for that one case: the file has none of those today, and the unit test will stop you, on purpose.
-2. A new status goes in the `CHECK`, in `src/data/account.ts` with its words in both languages, and in the statements and pages that list statuses. `npm test` fails until both sides agree. (A `CHECK` that already exists is not changed by running the schema again: adding a value to one is one of the cases of point 1.)
+2. A new status goes in the `CHECK`, in `src/data/account.ts` (with its words in Spanish and English), in the dictionary of every other language (`statuses` in `src/i18n/ui/<language>.ts`; the tests fail on a status without its words), and in the statements and pages that list statuses. `npm test` fails until both sides agree. (A `CHECK` that already exists is not changed by running the schema again: adding a value to one is one of the cases of point 1.)
 3. Change or add the statements (`db/queries.sql`, `worker/store.ts`) and say in the comment of each when it returns no row.
 4. Add the case to `db/check.mjs` and run the checks below.
 5. Apply it to the real database (`npm run db:apply`), and write the change in `docs/PROJECT-LOG.md`.

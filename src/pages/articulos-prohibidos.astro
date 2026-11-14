@@ -9,39 +9,10 @@ import Restrictions from '~/components/carinova/Restrictions.astro';
 
 import { i18n } from '~/i18n';
 
-const { locale, data } = i18n(Astro);
+const { data, ui } = i18n(Astro);
 const { WA_MESSAGES } = data;
 
-const t = {
-  es: {
-    tagline: 'Antes de comprar',
-    title: '¿Puede ingresar a Nicaragua?',
-    metaTitle: 'Artículos prohibidos y restringidos',
-    description:
-      'Lo que Carinova no puede traer de Estados Unidos a Nicaragua: artículos prohibidos, artículos que todavía no estamos autorizados a traer y productos que no viajan por aéreo pero sí por marítimo. Revisalo antes de comprar.',
-    subtitle:
-      'Hay artículos que no recibimos ni transportamos, otros que todavía no estamos autorizados a traer y otros que solo viajan por marítimo. Revisá las listas antes de comprar o enviar.',
-    closing: {
-      title: '¿No estás seguro de un producto?',
-      subtitle: 'Preguntanos antes de comprarlo y te decimos si podemos traerlo.',
-      lead: 'Mandanos el producto:',
-    },
-  },
-  en: {
-    tagline: 'Before you buy',
-    title: 'Can it enter Nicaragua?',
-    metaTitle: 'Prohibited and restricted items',
-    description:
-      'What Carinova cannot bring from the United States to Nicaragua: prohibited items, items we are not authorised to bring yet and products that do not travel by air but do by sea. Check it before you buy.',
-    subtitle:
-      'Some items we neither receive nor carry, others we are not authorised to bring yet, and others only travel by sea. Check the lists before you buy or send.',
-    closing: {
-      title: 'Not sure about a product?',
-      subtitle: 'Ask us before you buy it and we will tell you if we can bring it.',
-      lead: 'Send us the product:',
-    },
-  },
-}[locale];
+const t = ui.restrictedPage;
 
 const metadata = { title: t.metaTitle, description: t.description };
 ---

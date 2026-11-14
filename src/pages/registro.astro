@@ -9,57 +9,10 @@ import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
 import { i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, CTA, WA_MESSAGES } = data;
+const { href, data, ui } = i18n(Astro);
+const { CTA, WA_MESSAGES } = data;
 
-const cityNames = BRANCHES.map((branch) => branch.city);
-
-const t = {
-  es: {
-    tagline: 'Mi cuenta',
-    title: 'Creá tu cuenta',
-    description: `Un solo registro: creá tu cuenta en línea y recibí tu Carinova ID y tu dirección en Estados Unidos para comprar en cualquier tienda y recibir en ${cityNames.join(' o ')}.`,
-    subtitle:
-      'Un solo registro. Al confirmar tu correo, el sistema te asigna automáticamente tu Carinova ID y te muestra tu dirección en Estados Unidos.',
-    existing: '¿Ya tenés cuenta?',
-    next: '¿Qué pasa después?',
-    steps: [
-      { title: 'Confirmá tu correo', description: 'Te mandamos un enlace. Abrilo para activar tu cuenta.' },
-      {
-        title: 'Recibí tu Carinova ID y tu dirección en Estados Unidos',
-        description: 'Los ves en pantalla al confirmar y también te llegan por correo.',
-      },
-      {
-        title: 'Comprá y nosotros lo traemos',
-        description: `Usá tu dirección en la tienda, seguí tu paquete en tu cuenta y retiralo en ${cityNames.join(' o ')}.`,
-      },
-    ],
-    helpTitle: '¿Preferís que te ayudemos?',
-    helpText: 'Escribinos y creamos tu cuenta por WhatsApp.',
-  },
-  en: {
-    tagline: 'My account',
-    title: 'Create your account',
-    description: `One sign-up: create your account online and get your Carinova ID and your address in the United States to buy at any store and receive in ${cityNames.join(' or ')}.`,
-    subtitle:
-      'One sign-up. When you confirm your e-mail, the system assigns your Carinova ID automatically and shows you your address in the United States.',
-    existing: 'Already have an account?',
-    next: 'What happens next?',
-    steps: [
-      { title: 'Confirm your e-mail', description: 'We send you a link. Open it to activate your account.' },
-      {
-        title: 'Get your Carinova ID and your address in the United States',
-        description: 'You see them on screen when you confirm, and they also reach you by e-mail.',
-      },
-      {
-        title: 'Buy, and we bring it',
-        description: `Use your address at the store, follow your package in your account and pick it up in ${cityNames.join(' or ')}.`,
-      },
-    ],
-    helpTitle: 'Would you rather we help you?',
-    helpText: 'Write to us and we will create your account through WhatsApp.',
-  },
-}[locale];
+const t = ui.signupPage;
 
 const metadata = { title: t.title, description: t.description };
 ---

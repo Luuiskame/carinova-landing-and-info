@@ -8,76 +8,12 @@ import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { BUSINESS_EXAMPLES, BUSINESS_LIMITS, BUSINESS_VOLUMES } from '~/data/business';
 import { i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
+const { locale, href, data, ui } = i18n(Astro);
 const { SIGNUP_COUNTRIES, WA_MESSAGES } = data;
 
 const [initial] = SIGNUP_COUNTRIES;
 
-const t = {
-  es: {
-    title: 'Contanos de tu empresa',
-    intro: 'Llená estos datos y te contactamos.',
-    noscript:
-      'Para enviar el formulario necesitás activar JavaScript en tu navegador. También podés escribirnos por WhatsApp.',
-    company: 'Nombre de la empresa',
-    contactName: 'Tu nombre',
-    email: 'Correo electrónico',
-    phone: 'Teléfono',
-    phoneHint: 'De preferencia, el número que usás en WhatsApp.',
-    country: 'País',
-    city: 'Ciudad',
-    volume: 'Volumen estimado',
-    optional: '(opcional)',
-    choose: 'Elegí uno',
-    message: '¿Qué necesita tu empresa?',
-    messageHint: 'Qué traés, de dónde y cada cuánto.',
-    honeypot: 'Dejá este campo vacío',
-    submit: 'Enviar solicitud',
-    sending: 'Enviando…',
-    sentTitle: 'Recibimos tu solicitud',
-    sentText: 'Gracias. Nuestro equipo la va a revisar y te va a contactar al correo o al teléfono que nos diste.',
-    home: 'Volver al inicio',
-    messages: {
-      missing: 'Completá este campo.',
-      unavailable: 'El formulario no está disponible en este momento. Escribinos por WhatsApp y te atendemos.',
-      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
-      failed: 'No pudimos enviar tu solicitud. Revisá tu conexión e intentalo de nuevo, o escribinos por WhatsApp.',
-      oneError: 'Hay un campo por corregir.',
-      manyErrors: 'Hay {count} campos por corregir.',
-    },
-  },
-  en: {
-    title: 'Tell us about your company',
-    intro: 'Fill in these details and we will contact you.',
-    noscript: 'To send the form you need to turn on JavaScript in your browser. You can also write to us on WhatsApp.',
-    company: 'Name of the company',
-    contactName: 'Your name',
-    email: 'E-mail',
-    phone: 'Phone',
-    phoneHint: 'Preferably the number you use on WhatsApp.',
-    country: 'Country',
-    city: 'City',
-    volume: 'Estimated volume',
-    optional: '(optional)',
-    choose: 'Choose one',
-    message: 'What does your company need?',
-    messageHint: 'What you bring, from where and how often.',
-    honeypot: 'Leave this field empty',
-    submit: 'Send request',
-    sending: 'Sending…',
-    sentTitle: 'We received your request',
-    sentText: 'Thank you. Our team will review it and contact you at the e-mail or the phone you gave us.',
-    home: 'Back to the home page',
-    messages: {
-      missing: 'Fill in this field.',
-      unavailable: 'The form is not available right now. Write to us on WhatsApp and we will look after you.',
-      busy: 'We received too many attempts in a row. Wait a minute and try again.',
-      failed: 'We could not send your request. Check your connection and try again, or write to us on WhatsApp.',
-      oneError: 'There is one field to correct.',
-      manyErrors: 'There are {count} fields to correct.',
-    },
-  },
-}[locale];
+const t = ui.businessForm;
 
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
@@ -92,7 +28,7 @@ const optionalClass = 'font-normal text-slate-500';
   <form
     method="dialog"
     novalidate
-    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    class="rounded-2xl bg-white p-5 text-start text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
   >
     <h2 class="font-heading text-2xl font-bold text-navy">{t.title}</h2>
     <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
@@ -111,6 +47,7 @@ const optionalClass = 'font-normal text-slate-500';
           name="company"
           type="text"
           autocomplete="organization"
+          dir="auto"
           required
           maxlength={BUSINESS_LIMITS.company}
           placeholder={BUSINESS_EXAMPLES.company}
@@ -127,6 +64,7 @@ const optionalClass = 'font-normal text-slate-500';
           name="contactName"
           type="text"
           autocomplete="name"
+          dir="auto"
           required
           maxlength={BUSINESS_LIMITS.contactName}
           placeholder={BUSINESS_EXAMPLES.contactName}
@@ -201,6 +139,7 @@ const optionalClass = 'font-normal text-slate-500';
           name="city"
           type="text"
           autocomplete="address-level2"
+          dir="auto"
           required
           maxlength={BUSINESS_LIMITS.city}
           placeholder={initial.examples.city}
@@ -217,7 +156,7 @@ const optionalClass = 'font-normal text-slate-500';
         </label>
         <select id="cn-biz-volume" name="volume" class={inputClass} aria-describedby="cn-biz-volume-error">
           <option value="">{t.choose}</option>
-          {BUSINESS_VOLUMES.map((volume) => <option value={volume.id}>{volume[locale]}</option>)}
+          {BUSINESS_VOLUMES.map((volume) => <option value={volume.id}>{ui.business.volumes[volume.id]}</option>)}
         </select>
         <p id="cn-biz-volume-error" class={errorClass} hidden></p>
       </div>
@@ -225,6 +164,7 @@ const optionalClass = 'font-normal text-slate-500';
       <div class="sm:col-span-2">
         <label for="cn-biz-message" class={labelClass}>{t.message}</label>
         <textarea
+          dir="auto"
           id="cn-biz-message"
           name="message"
           rows="5"
@@ -257,29 +197,18 @@ const optionalClass = 'font-normal text-slate-500';
     <button type="submit" class="btn-primary mt-6 w-full" data-cn-submit data-busy-label={t.sending}>
       {t.submit}
     </button>
-    {
-      locale === 'en' ? (
-        <p class="mt-3 text-center text-xs text-slate-500">
-          When you send it, we use these details to contact you, as our{' '}
-          <a class="font-medium text-link underline" href={href('/privacidad')} target="_blank" rel="noopener">
-            Privacy policy
-          </a>{' '}
-          explains.
-        </p>
-      ) : (
-        <p class="mt-3 text-center text-xs text-slate-500">
-          Al enviar, usamos estos datos para contactarte, como explica nuestra{' '}
-          <a class="font-medium text-link underline" href={href('/privacidad')} target="_blank" rel="noopener">
-            Política de privacidad
-          </a>
-          .
-        </p>
-      )
-    }
+    <p class="mt-3 text-center text-xs text-slate-500">
+      {t.privacyNote[0]}<a
+        class="font-medium text-link underline"
+        href={href('/privacidad')}
+        target="_blank"
+        rel="noopener">{t.privacyNote[1]}</a
+      >{t.privacyNote[2]}
+    </p>
   </form>
 
   <div
-    class="rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    class="rounded-2xl bg-white p-6 text-start text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
     data-cn-sent
     hidden
   >

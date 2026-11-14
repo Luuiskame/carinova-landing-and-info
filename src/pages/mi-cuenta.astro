@@ -17,78 +17,16 @@ import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 
 import { CARINOVA_ID_EXAMPLE, LAST_MILE } from '~/data/carinova';
 import { PACKAGE_STAGES, SIGNIN_DIALOG_ID } from '~/data/account';
-import { i18n } from '~/i18n';
+import { LOCALE_INFO, i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
+const { locale, href, data, ui } = i18n(Astro);
+// Between a label and what follows it: a space, or nothing in Chinese.
+const gap = LOCALE_INFO[locale].wordGap;
 const { ACCOUNT_PARTS, BRANCHES, CTA, RECEPTION_POINTS, WA_MESSAGES } = data;
 
 const cityNames = BRANCHES.map((branch) => branch.city);
 
-const t = {
-  es: {
-    tagline: 'Mi cuenta',
-    metaTitle: 'Mi cuenta: Carinova ID, paquetes y pagos',
-    description: `Ingresá a tu cuenta Carinova: tu Carinova ID, tu dirección en Estados Unidos, tus paquetes con su estado y tus pagos. Retirá en ${cityNames.join(' o ')}.`,
-    title: 'Tu cuenta Carinova',
-    subtitle:
-      'Realizá todas tus gestiones desde un mismo lugar: tu Carinova ID, tu dirección, tus paquetes y tus pagos.',
-    signin: 'Ingresá a tu cuenta',
-    noAccount: '¿Todavía no tenés cuenta?',
-    includes: 'Lo que encontrás en tu cuenta',
-    looksLike: 'Se ve así',
-    idFacts: [
-      'El sistema te lo asigna al confirmar tu correo.',
-      'Es el mismo para aéreo, marítimo, encomiendas y compras asistidas.',
-    ],
-    company: '¿Sos empresa?',
-    companyLink: 'Conocé Carinova para negocios',
-    fullAddress: 'Ves la dirección completa al ingresar.',
-    stages: 'Cada paquete, con su etapa:',
-    paymentFacts: [
-      'Cada factura con su monto y su estado.',
-      'Un pago aparece como confirmado cuando nuestro equipo lo verifica.',
-    ],
-    pickup: 'Retirás en',
-    homeDelivery: 'Entrega a domicilio',
-    branches: 'Ver sucursales',
-    closing: {
-      title: 'Creá tu cuenta en un par de minutos',
-      subtitle: 'Llenás un formulario corto, confirmás tu correo y listo: ya tenés tu Carinova ID.',
-      lead: '¿Tenés dudas antes de registrarte?',
-    },
-  },
-  en: {
-    tagline: 'My account',
-    metaTitle: 'My account: Carinova ID, packages and payments',
-    description: `Sign in to your Carinova account: your Carinova ID, your address in the United States, your packages with their status and your payments. Pick up in ${cityNames.join(' or ')}.`,
-    title: 'Your Carinova account',
-    subtitle: 'Handle everything from one place: your Carinova ID, your address, your packages and your payments.',
-    signin: 'Sign in to your account',
-    noAccount: 'Do you not have an account yet?',
-    includes: 'What you find in your account',
-    looksLike: 'It looks like this',
-    idFacts: [
-      'The system assigns it when you confirm your e-mail.',
-      'It is the same for air, sea, packages and assisted purchases.',
-    ],
-    company: 'Are you a company?',
-    companyLink: 'See Carinova for business',
-    fullAddress: 'You see the full address when you sign in.',
-    stages: 'Every package, with its stage:',
-    paymentFacts: [
-      'Every invoice with its amount and its status.',
-      'A payment shows as confirmed once our team verifies it.',
-    ],
-    pickup: 'You pick up in',
-    homeDelivery: 'Home delivery',
-    branches: 'See branches',
-    closing: {
-      title: 'Create your account in a couple of minutes',
-      subtitle: 'You fill in a short form, confirm your e-mail and that is it: you have your Carinova ID.',
-      lead: 'Any questions before you sign up?',
-    },
-  },
-}[locale];
+const t = ui.accountPage;
 
 const metadata = { title: t.metaTitle, description: t.description };
 
@@ -187,13 +125,13 @@ const factClass = 'flex gap-2';
             {
               PACKAGE_STAGES.map((stage, index) => (
                 <li class="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-800">
-                  {`${index + 1}. ${stage[locale].name}`}
+                  {`${index + 1}. ${ui.statuses.package[stage.id].name}`}
                 </li>
               ))
             }
           </ol>
           <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            <span>{t.pickup} {cityNames.join(locale === 'en' ? ' or ' : ' o ')}.</span>
+            <span>{`${t.pickup}${gap}${cityNames.join(ui.nav.or)}`}</span>
             {
               LAST_MILE.available && (
                 <span class="font-semibold text-heading">

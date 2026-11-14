@@ -7,6 +7,7 @@ import { content } from '../../src/data/content.ts';
 import type { Locale } from '../../src/i18n/locales.ts';
 import { whatsappLink } from '../../src/utils/whatsapp.ts';
 import { button, escapeHtml, h1, layout, p, table, textRows, type Message } from '../email-kit.ts';
+import { LANGUAGE_NAMES } from '../text/index.ts';
 import type { BusinessInquiry } from './validate.ts';
 
 export const businessInquiryEmail = (inquiry: BusinessInquiry, locale: Locale = 'es'): Message => {
@@ -22,7 +23,7 @@ export const businessInquiryEmail = (inquiry: BusinessInquiry, locale: Locale = 
     { label: 'Volumen estimado', value: volume?.es ?? '—' },
     { label: 'Qué necesita', value: inquiry.message },
     // The language to answer in.
-    { label: 'Idioma del formulario', value: locale === 'en' ? 'Inglés' : 'Español' },
+    { label: 'Idioma del formulario', value: LANGUAGE_NAMES[locale] },
   ];
   const chatUrl = whatsappLink(inquiry.phone);
 

@@ -1,143 +1,68 @@
 ---
-// Inicio. The sections, their format and their order are those of Carinova's prototype page: hero,
-// the two ways of shipping, the calculator, "Compras por vos", how it works, what can enter,
-// companies, tracking, coverage, questions, careers and the closing band
-// (docs/INFORMATION-ARCHITECTURE.md → "The home page"). Each section is a component; what it says
-// comes from src/data, so the pages that own each subject cannot disagree with it. Like every page,
-// it renders in Spanish at its own address and in English under /en (src/i18n).
+// Inicio. The sections, their look and their order follow Carinova's "Signature" design: hero, the
+// three facts under it, the four solutions (with the stores), the two ways of shipping, the
+// calculator, the three steps, tracking (with the article search), the band for companies, the
+// branches, the questions and the closing call (docs/INFORMATION-ARCHITECTURE.md → "The home page").
+// Each section is a component; what it says comes from src/data and src/i18n/ui, so the pages that
+// own each subject cannot disagree with it. Like every page, it renders in Spanish at its own
+// address and in each translation under its prefix (src/i18n).
 import Layout from '~/layouts/PageLayout.astro';
 
 import HomeHero from '~/components/carinova/HomeHero.astro';
+import ProofStrip from '~/components/carinova/ProofStrip.astro';
+import SectionHeading from '~/components/carinova/SectionHeading.astro';
+import Solutions from '~/components/carinova/Solutions.astro';
 import ShippingModes from '~/components/carinova/ShippingModes.astro';
 import QuoteCalculator from '~/components/carinova/QuoteCalculator.astro';
-import PersonalShopper from '~/components/carinova/PersonalShopper.astro';
 import HowItWorks from '~/components/carinova/HowItWorks.astro';
-import ItemChecker from '~/components/carinova/ItemChecker.astro';
+import TrackingSection from '~/components/carinova/TrackingSection.astro';
 import BusinessBand from '~/components/carinova/BusinessBand.astro';
-import TrackingBand from '~/components/carinova/TrackingBand.astro';
-import Coverage from '~/components/carinova/Coverage.astro';
+import Locations from '~/components/carinova/Locations.astro';
 import HomeFaq from '~/components/carinova/HomeFaq.astro';
 import HomeClosing from '~/components/carinova/HomeClosing.astro';
 import Testimonials from '~/components/widgets/Testimonials.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
-import { Icon } from 'astro-icon/components';
 
-import { SITE } from 'astrowind:config';
-import { CONTACT, REVIEWS, SOCIAL_LINKS } from '~/data/carinova';
-import { LOCALE_INFO, i18n } from '~/i18n';
-import { ACTIVE_LOCALES } from '~/i18n/locales';
-import { formatUSD } from '~/utils/rates';
-import logoImage from '~/assets/favicons/apple-touch-icon.png';
+import { REVIEWS } from '~/data/carinova';
+import { i18n } from '~/i18n';
+import { homeSchema } from '~/utils/schema';
 
-const { locale, data } = i18n(Astro);
-const { BRANCHES, RATES, TAGLINE, VALUE_PROPOSITION } = data;
+const page = i18n(Astro);
+const { ui } = page;
+const t = ui.homePage;
 
-const cityNames = BRANCHES.map((branch) => branch.city);
 const hasReviews = REVIEWS.length > 0;
-const { air, sea } = RATES;
-
-const t = {
-  es: {
-    title: `Carinova | ${TAGLINE} · Estados Unidos a Nicaragua`,
-    description: `${VALUE_PROPOSITION} Aéreo en ${air.transit} a ${formatUSD(air.pricePerLb)} la libra; marítimo en ${sea.transit} desde ${formatUSD(sea.pricePerLb)} la libra. Retirá en ${cityNames.join(' o ')}.`,
-    reviews: { tagline: 'Reseñas', title: 'Lo que dicen nuestros clientes', source: 'Reseña de Google' },
-    calculator: {
-      eyebrow: 'Calculadora interactiva',
-      title: ['Sacá cuentas.', 'Sin complicarte.'],
-      intro:
-        'Estimá el flete con una base de cálculo a la vez: peso, volumen o tarifa por unidad. Antes de pagar, confirmá el criterio aplicable a tu mercancía.',
-      tip: 'Sin registro. Con criterios claros.',
-    },
-  },
-  en: {
-    title: `Carinova | ${TAGLINE} · United States to Nicaragua`,
-    description: `${VALUE_PROPOSITION} By air in ${air.transit} at ${formatUSD(air.pricePerLb)} per pound; by sea in ${sea.transit} from ${formatUSD(sea.pricePerLb)} per pound. Pick up in ${cityNames.join(' or ')}.`,
-    reviews: { tagline: 'Reviews', title: 'What our customers say', source: 'Google review' },
-    calculator: {
-      eyebrow: 'Interactive calculator',
-      title: ['Do the math.', 'Keep it simple.'],
-      intro:
-        'Estimate the freight on one basis at a time: weight, volume or a rate per unit. Before you pay, confirm which one applies to your goods.',
-      tip: 'No sign-up. Clear criteria.',
-    },
-  },
-}[locale];
-
 const metadata = { title: t.title, ignoreTitleTemplate: true, description: t.description };
-
-// Structured data for the site and the company, built from src/config.yaml and src/data/carinova.ts.
-// The same company and site in both languages: only the languages the site is published in change.
-const organizationId = `${SITE?.site}/#organization`;
-const structuredData = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    '@id': `${SITE?.site}/#website`,
-    name: SITE?.name,
-    url: SITE?.site,
-    inLanguage:
-      ACTIVE_LOCALES.length > 1 ? ACTIVE_LOCALES.map((item) => LOCALE_INFO[item].htmlLang) : LOCALE_INFO.es.htmlLang,
-    publisher: { '@id': organizationId },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': organizationId,
-    name: SITE?.name,
-    url: SITE?.site,
-    logo: new URL(logoImage.src, SITE?.site).toString(),
-    slogan: TAGLINE,
-    description: t.description,
-    areaServed: { '@type': 'Country', name: 'Nicaragua' },
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer service',
-      telephone: `+${CONTACT.whatsapp}`,
-      ...(CONTACT.email ? { email: CONTACT.email } : {}),
-      availableLanguage: 'Spanish',
-    },
-    ...(SOCIAL_LINKS.length ? { sameAs: SOCIAL_LINKS.map((link) => link.href) } : {}),
-  },
-];
 ---
 
 <Layout metadata={metadata}>
-  <StructuredData slot="head" schema={structuredData} />
+  <StructuredData slot="head" schema={homeSchema(page)} />
 
   <HomeHero />
 
+  <ProofStrip />
+
+  <Solutions />
+
   <ShippingModes />
 
-  <section id="cotizador" class="scroll-mt-20 bg-[linear-gradient(180deg,#edf3fa,#f4f7fc)]">
-    <div
-      class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:gap-20 lg:py-24"
-    >
-      <div class="lg:pt-8">
-        <p class="eyebrow">{t.calculator.eyebrow}</p>
-        <h2 class="display-title mt-4">{t.calculator.title[0]}<br />{t.calculator.title[1]}</h2>
-        <p class="mt-5 text-lg leading-relaxed text-muted">{t.calculator.intro}</p>
-        <p class="mt-6 flex items-center gap-3 text-sm font-bold text-[#29486c]">
-          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff0df] text-secondary">
-            <Icon name="tabler:target-arrow" class="h-5 w-5" />
-          </span>
-          {t.calculator.tip}
-        </p>
+  <section id="cotizador" class="scroll-mt-20 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-28">
+      <SectionHeading number="03" eyebrow={t.calculator.eyebrow} title={t.calculator.title} />
+      <p class="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{t.calculator.intro}</p>
+      <div class="mt-10">
+        <QuoteCalculator place="home" headingTag="h3" />
       </div>
-      <QuoteCalculator place="home" headingTag="h3" />
     </div>
   </section>
 
-  <PersonalShopper />
-
   <HowItWorks />
 
-  <ItemChecker />
+  <TrackingSection />
 
   <BusinessBand />
 
-  <TrackingBand />
-
-  <Coverage />
+  <Locations />
 
   {
     hasReviews && (

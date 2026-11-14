@@ -416,9 +416,18 @@ const activityOf = (row: Json): AccountActivity => ({
   })),
 });
 
+/** The language a customer is stored with where the database does not know theirs yet. */
+const FALLBACK_LOCALE: Locale = 'en';
+
+/** Whether the database refused a row because of the language of the customer (customers_locale_known). */
+const isUnknownLocale = (error: unknown): boolean => {
+  const { constraint, message } = (error ?? {}) as { constraint?: unknown; message?: unknown };
+  return `${String(constraint ?? '')} ${String(message ?? '')}`.includes('customers_locale_known');
+};
+
 export const sqlStore = (query: Query): Store => ({
   async create(data, { termsAcceptedAt, locale, session }) {
-    let [row] = await query(CREATE_CUSTOMER, [
+    const values = (language: Locale) => [
       data.email,
       data.firstName,
       data.lastName,
@@ -430,10 +439,25 @@ export const sqlStore = (query: Query): Store => ({
       data.state,
       data.postalCode,
       termsAcceptedAt.toISOString(),
-      locale,
+      language,
       session?.tokenHash ?? null,
       session?.days ?? 0,
-    ]);
+    ];
+    let rows: Array<Json>;
+    try {
+      rows = await query(CREATE_CUSTOMER, values(locale));
+    } catch (error) {
+      // A database whose check lists fewer languages than the site has (db/schema.sql not applied
+      // since a language was added) refuses the row, and nothing was written. The customer is
+      // created all the same, in a language it knows: an account matters more than its language.
+      if (locale === FALLBACK_LOCALE || !isUnknownLocale(error)) throw error;
+      rows = await query(CREATE_CUSTOMER, values(FALLBACK_LOCALE));
+      // In the Worker's log, with nothing of the customer in it: the schema is waiting to be applied.
+      console.warn(
+        `customers.locale does not accept "${locale}" yet: the customer was stored with "${FALLBACK_LOCALE}". Apply db/schema.sql (npm run db:apply).`
+      );
+    }
+    let [row] = rows;
     // No row: another request inserted the same e-mail between our check and our insert.
     if (!row) [row] = await query(FIND_BY_EMAIL, [data.email]);
     if (!row) throw new Error('The customer could not be created.');

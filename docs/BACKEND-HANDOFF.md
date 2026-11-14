@@ -8,7 +8,7 @@ Read first, in this order: `AGENTS.md` (the rules of the repository), [DATABASE.
 
 **Built and working**
 
-- The website: static pages (Astro), in Spanish with English under `/en`.
+- The website: static pages (Astro), in Spanish with six translations, each under its own prefix (`/en`, `/fr`, `/pt`, `/zh`, `/ru`, `/ar`). A customer has the language they signed up in (`customers.locale`), which is the one to write to them in.
 - The Worker (`worker/`), eight endpoints under `/api/`: sign-up with e-mail confirmation, passwordless sign-in for customers (a one-time code by e-mail, then a session cookie), the customer's account, a form for companies.
 - **"Mi cuenta"** (`/mi-cuenta`, `src/components/carinova/AccountPanel.astro`): a signed-in customer sees their packages (at the warehouse, shipped, delivered; each with its history) and their invoices and payments. It reads `GET /api/account/activity`. **It is empty for every customer today**, because nothing writes packages or invoices yet.
 - The database (`db/schema.sql`): fifteen tables and a view, applied to the real Neon database on 2026-11-13.
@@ -156,7 +156,7 @@ Done when: an issued invoice appears in the customer's "Mi cuenta" with its line
 
 ### 5. The customer's side of a payment (if the owner wants it)
 
-`POST /api/account/payments` with `report_payment`, a form in "Mi cuenta" (both languages, voseo in Spanish), and a place for the picture of the receipt: an R2 bucket bound to the Worker, private, with the object's key in `payments.proof_key` and the picture served only through an endpoint that checks who is asking (the invoice's customer, or the team). Limit the size and the type of the upload. Nothing of this exists.
+`POST /api/account/payments` with `report_payment`, a form in "Mi cuenta" (in every language of the site, voseo in Spanish), and a place for the picture of the receipt: an R2 bucket bound to the Worker, private, with the object's key in `payments.proof_key` and the picture served only through an endpoint that checks who is asking (the invoice's customer, or the team). Limit the size and the type of the upload. Nothing of this exists.
 
 ### 6. The team
 

@@ -1,29 +1,56 @@
 /**
  * What a page or a component needs to render in its language:
  *
- *   const { locale, href, data } = i18n(Astro);
+ *   const { locale, href, data, ui } = i18n(Astro);
  *
- * - `locale`: the language of the address being rendered ("es" at the root, "en" under /en). Every
- *   page file renders both; nothing has to be passed down to components.
+ * - `locale`: the language of the address being rendered ("es" at the root, "en" under /en, "fr"
+ *   under /fr…). Every page file renders every language; nothing has to be passed down to components.
  * - `href('/cotizador?tarifa=aereo')`: a Spanish site path as the address of this language, ready
  *   for an href ("/en/quote?tarifa=aereo").
  * - `data`: the site's data in this language (src/data/content.ts) plus the questions of faq.ts.
+ * - `ui`: what the pages and the components say in this language (src/i18n/ui): one entry per
+ *   page or component, named after it.
  *
- * Copy that belongs to one page or component is written in that file, both languages side by side:
- *
- *   const t = { es: { title: 'Sucursales' }, en: { title: 'Branches' } }[locale];
+ *   const t = ui.branchesPage;   // { title: 'Sucursales', … } or { title: 'Branches', … }
  *
  * Rules and the list of addresses: docs/INFORMATION-ARCHITECTURE.md → "Languages".
  */
+import { faqGroups as faqAr } from '~/data/ar/faq';
 import { content, type Content } from '~/data/content';
-import { faqGroups as faqGroupsEn } from '~/data/en/faq';
-import { faqGroups as faqGroupsEs, featuredOf, type FaqGroup, type FaqItem } from '~/data/faq';
+import { faqGroups as faqEn } from '~/data/en/faq';
+import { faqGroups as faqEs, featuredOf, type FaqGroup, type FaqItem } from '~/data/faq';
+import { faqGroups as faqFr } from '~/data/fr/faq';
+import { faqGroups as faqPt } from '~/data/pt/faq';
+import { faqGroups as faqRu } from '~/data/ru/faq';
+import { faqGroups as faqZh } from '~/data/zh/faq';
 import { getPermalink } from '~/utils/permalinks';
-import { DEFAULT_LOCALE, ENGLISH_ENABLED, LOCALE_INFO, type Locale } from './locales';
-import { alternatePath, localeOfPath, localizePath } from './routes';
+import { ACTIVE_LOCALES, DEFAULT_LOCALE, LOCALE_INFO, type Locale } from './locales';
+import { alternatePath, homeOf, localeOfPath, localizePath } from './routes';
+import { ui as uiAr } from './ui/ar';
+import { ui as uiEn } from './ui/en';
+import { ui as uiEs, type UI } from './ui/es';
+import { ui as uiFr } from './ui/fr';
+import { ui as uiPt } from './ui/pt';
+import { ui as uiRu } from './ui/ru';
+import { ui as uiZh } from './ui/zh';
 
-export { ENGLISH_ENABLED, LOCALE_INFO, type Locale } from './locales';
+export { ACTIVE_LOCALES, LOCALE_INFO, type Locale } from './locales';
 export { pathOf, spanishPath, type RouteId } from './routes';
+export type { UI } from './ui/es';
+
+/** What the pages say, per language. A language without its dictionary does not compile. */
+const UI_OF: Record<Locale, UI> = { es: uiEs, en: uiEn, fr: uiFr, pt: uiPt, zh: uiZh, ru: uiRu, ar: uiAr };
+
+/** The questions of each language, as functions of how a link is written (faq.ts). */
+const FAQ_OF: Record<Locale, typeof faqEs> = {
+  es: faqEs,
+  en: faqEn,
+  fr: faqFr,
+  pt: faqPt,
+  zh: faqZh,
+  ru: faqRu,
+  ar: faqAr,
+};
 
 export interface PageData extends Content {
   FAQ_GROUPS: Array<FaqGroup>;
@@ -35,17 +62,17 @@ export interface PageI18n {
   locale: Locale;
   href: (path: string) => string;
   data: PageData;
+  ui: UI;
 }
 
 const build = (locale: Locale): PageI18n => {
   const href = (path: string) => getPermalink(localizePath(path, locale));
-  const groups = (locale === 'en' ? faqGroupsEn : faqGroupsEs)(
-    (path, text) => `<a class="text-link underline" href="${href(path)}">${text}</a>`
-  );
+  const groups = FAQ_OF[locale]((path, text) => `<a class="text-link underline" href="${href(path)}">${text}</a>`);
   return {
     locale,
     href,
     data: { ...content(locale), FAQ_GROUPS: groups, FEATURED_FAQS: featuredOf(groups) },
+    ui: UI_OF[locale],
   };
 };
 
@@ -58,28 +85,45 @@ export const i18n = (astro: { url: URL }): PageI18n => {
   return page;
 };
 
-/**
- * The hreflang links of a page: its address in each language and the default (Spanish). Empty while
- * the English version is off, and for pages that exist in one language only (404, the blog).
- */
-export const alternatesOf = (pathname: string): Array<{ hreflang: string; path: string }> => {
-  if (!ENGLISH_ENABLED) return [];
-  const es = alternatePath(pathname, 'es');
-  const en = alternatePath(pathname, 'en');
-  if (!es || !en) return [];
-  return [
-    { hreflang: LOCALE_INFO.es.htmlLang, path: es },
-    { hreflang: LOCALE_INFO.en.htmlLang, path: en },
-    { hreflang: 'x-default', path: es },
-  ];
-};
+/** Whether the site is published in more than one language. */
+export const isMultilingual = ACTIVE_LOCALES.length > 1;
 
 /**
- * Where the language switch of a page leads: the same page in the other language, or that
- * language's home page when the page has no translation. Undefined while English is off.
+ * The hreflang links of a page: its address in each published language and the default (Spanish).
+ * Empty while only Spanish is published, and for pages that exist in one language only (404, the
+ * blog).
  */
-export const languageSwitchOf = (pathname: string): { locale: Locale; path: string } | undefined => {
-  if (!ENGLISH_ENABLED) return undefined;
-  const other: Locale = localeOfPath(pathname) === DEFAULT_LOCALE ? 'en' : DEFAULT_LOCALE;
-  return { locale: other, path: alternatePath(pathname, other) ?? (other === 'en' ? '/en' : '/') };
+export const alternatesOf = (pathname: string): Array<{ hreflang: string; path: string }> => {
+  const spanish = alternatePath(pathname, DEFAULT_LOCALE);
+  if (!isMultilingual || spanish === undefined) return [];
+  const paths = ACTIVE_LOCALES.map((locale) => ({
+    hreflang: LOCALE_INFO[locale].htmlLang,
+    path: alternatePath(pathname, locale) ?? spanish,
+  }));
+  return [...paths, { hreflang: 'x-default', path: spanish }];
+};
+
+export interface LanguageOption {
+  locale: Locale;
+  /** This page in that language, or that language's home page when the page has no translation. */
+  path: string;
+  /** That language's home page. */
+  home: string;
+  /** Whether it is the language of the page. */
+  current: boolean;
+}
+
+/**
+ * What the language menu of a page offers: every published language, each leading to this same
+ * page in it. Empty while only Spanish is published.
+ */
+export const languagesOf = (pathname: string): Array<LanguageOption> => {
+  if (!isMultilingual) return [];
+  const current = localeOfPath(pathname);
+  return ACTIVE_LOCALES.map((locale) => ({
+    locale,
+    path: alternatePath(pathname, locale) ?? homeOf(locale),
+    home: homeOf(locale),
+    current: locale === current,
+  }));
 };

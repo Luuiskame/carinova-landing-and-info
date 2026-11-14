@@ -10,6 +10,10 @@
  * site in the language being rendered: pages get the result as `FAQ_GROUPS` through `i18n(Astro)`
  * (src/i18n). Relative imports with the .ts extension: the unit tests run this file on plain Node.
  *
+ * Some questions are worded the way people search for them ("¿Cuánto cuesta enviar un paquete de
+ * Estados Unidos a Nicaragua?", "¿Qué es un casillero en Miami?"): their answers are the site's own
+ * facts, and they lead to the page that owns the subject.
+ *
  * Draft answers marked TODO describe usual courier practice and must be confirmed by Carinova.
  */
 import { LOGIN_CODE_DIGITS, PACKAGE_STAGES } from './account.ts';
@@ -25,7 +29,14 @@ import {
   type RestrictedItem,
 } from './carinova.ts';
 import { FORMULA_EXAMPLE } from './services.ts';
-import { CUBIC_CM_PER_CUBIC_FOOT, describeVolume, formatNumber, formatUSD, quoteByVolume } from '../utils/rates.ts';
+import {
+  CUBIC_CM_PER_CUBIC_FOOT,
+  describeVolume,
+  formatNumber,
+  formatUSD,
+  quoteByVolume,
+  quoteByWeight,
+} from '../utils/rates.ts';
 
 export interface FaqItem {
   title: string;
@@ -78,6 +89,10 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
           'Es el identificador de tu cuenta. Hay uno por persona o por empresa, y es el mismo para todos nuestros servicios: aéreo, marítimo, encomiendas y compras asistidas.',
       },
       {
+        title: `¿Qué es un casillero en ${receiving.join(' y ')} y cómo funciona?`,
+        description: `Es una dirección en Estados Unidos a tu nombre: la escribís como dirección de envío cuando comprás en línea, y lo que llega a nuestra bodega lo traemos a Nicaragua. En Carinova el casillero viene con tu cuenta: al crearla recibís tu Carinova ID y tu dirección. ${link('/casillero-en-miami', 'Conocé el casillero')}.`,
+      },
+      {
         title: '¿Cómo ingreso a mi cuenta?',
         description: `Tocá ${link('/ingresar', 'Ingresá')} y escribí el correo con el que te registraste: te mandamos un código de ${LOGIN_CODE_DIGITS} dígitos y entrás con él, sin contraseña. En ${link('/mi-cuenta', 'tu cuenta')} están tu Carinova ID, tu dirección en Estados Unidos, tus paquetes y tus pagos.`,
       },
@@ -123,12 +138,20 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
         title: '¿En qué tiendas puedo comprar?',
         description: `En cualquier tienda en línea que envíe dentro de Estados Unidos: ${stores} y muchas más.`,
       },
+      {
+        title: '¿Cómo compro en Amazon, SHEIN o Temu desde Nicaragua?',
+        description: `Creá tu cuenta, usá la dirección de tu cuenta como dirección de envío al pagar en la tienda y nosotros traemos tu paquete a Nicaragua, por aéreo o por marítimo. Si preferís que compremos por vos, pedí una compra asistida. ${link('/tiendas', 'Ver tiendas')}.`,
+      },
     ],
   },
   {
     id: 'tarifas',
     title: 'Tarifas y pagos',
     items: [
+      {
+        title: '¿Cuánto cuesta enviar un paquete de Estados Unidos a Nicaragua?',
+        description: `Por aéreo, ${formatUSD(air.pricePerLb)} la libra; por marítimo, ${formatUSD(sea.pricePerLb)} la libra o ${formatUSD(sea.pricePerCubicFoot)} el pie cúbico. Por ejemplo, un paquete de 5 libras por aéreo son ${formatUSD(quoteByWeight(5, air.pricePerLb).total)}. ${link('/cotizador', 'Calculá tu envío')}.`,
+      },
       {
         title: '¿Cómo se calcula la tarifa?',
         description: `Aéreo: ${formatUSD(air.pricePerLb)} por libra, con tarifas por unidad para electrónicos específicos. Marítimo: ${formatUSD(sea.pricePerLb)} por libra o ${formatUSD(sea.pricePerCubicFoot)} por pie cúbico. La base de cobro se determina según la mercancía y las condiciones del servicio. Calculala en nuestro ${link('/cotizador', 'cotizador')}.`,
@@ -167,6 +190,10 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
     id: 'tiempos',
     title: 'Plazos y seguimiento',
     items: [
+      {
+        title: `¿Cuánto tarda un envío de ${receiving.join(' y ')} a Nicaragua?`,
+        description: `Por aéreo, ${air.transit}; por marítimo, ${sea.transit}. Los plazos cuentan ${RATES.transitFrom} y pueden variar por tránsito, aduana y destino.`,
+      },
       {
         title: '¿Desde cuándo cuentan los plazos?',
         description: `Desde la recepción física del paquete, no desde la fecha de compra. Aéreo: ${air.transit}. Marítimo: ${sea.transit}. Son estimaciones sujetas a tránsito, aduana y destino.`,
@@ -210,6 +237,11 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
         title: '¿Dónde retiro mi paquete?',
         description: `${sentence(`En nuestras sucursales de ${cities}, de ${describeHours(hours)}`)} ${link('/sucursales', 'Ver direcciones y horarios')}.`,
       },
+      // One per branch outside the capital: people ask about their own city.
+      ...BRANCHES.slice(1).map((branch) => ({
+        title: `¿Hacen envíos a ${branch.city}?`,
+        description: `Sí: tenemos sucursal de retiro en ${branch.city}, además de ${BRANCHES[0].city}. ${link(`/sucursales#${branch.id}`, `Ver la sucursal de ${branch.city}`)}.`,
+      })),
       {
         title: '¿Hacen entregas a domicilio?',
         description:

@@ -12,39 +12,10 @@ import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 
 import { i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
+const { href, data, ui } = i18n(Astro);
 const { SERVICE_AXES, WA_MESSAGES, servicesOf } = data;
 
-const t = {
-  es: {
-    tagline: 'Servicios',
-    metaTitle: 'Servicios: aéreo, marítimo, encomiendas y compras asistidas',
-    description:
-      'Envíos aéreos y marítimos de Estados Unidos a Nicaragua, encomiendas, compras asistidas, retiro en sucursal y entrega a domicilio. Elegí cómo viaja tu paquete y cómo lo recibís.',
-    title: 'Todo para traer tus cosas de Estados Unidos',
-    subtitle: 'Cada envío combina tres decisiones: cómo viaja, quién hace la compra y cómo lo recibís.',
-    kinds: 'Tipos de servicio',
-    closing: {
-      title: '¿No sabés qué te conviene?',
-      subtitle: 'Cotizá tu envío y compará aéreo con marítimo, o creá tu cuenta y empezá a comprar.',
-      lead: '¿Querés que te aconsejemos?',
-    },
-  },
-  en: {
-    tagline: 'Services',
-    metaTitle: 'Services: air, sea, packages and assisted purchases',
-    description:
-      'Air and sea shipping from the United States to Nicaragua, packages, assisted purchases, branch pickup and home delivery. Choose how your package travels and how you receive it.',
-    title: 'Everything to bring your things from the United States',
-    subtitle: 'Every shipment combines three decisions: how it travels, who makes the purchase and how you receive it.',
-    kinds: 'Kinds of service',
-    closing: {
-      title: 'Not sure what suits you?',
-      subtitle: 'Get a quote and compare air with sea, or create your account and start buying.',
-      lead: 'Would you like our advice?',
-    },
-  },
-}[locale];
+const t = ui.servicesPage;
 
 const metadata = { title: t.metaTitle, description: t.description };
 ---

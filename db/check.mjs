@@ -149,6 +149,14 @@ const limits = { per15Minutes: 3, perDay: 10 };
     );
     ok(`upgrade from ${ref}: the customer that was there keeps every value and has the defaults of the new columns`);
 
+    // The languages a customer can be written to in: the upgrade leaves the check with today's list.
+    for (const locale of ['en', 'fr', 'pt', 'zh', 'ru', 'ar', 'es']) {
+      await db.query('update customers set locale = $1', [locale]);
+    }
+    await assert.rejects(db.query("update customers set locale = 'de'"), /customers_locale_known/);
+    assert.equal((await one(db, 'select locale from customers')).locale, 'es');
+    ok('upgrade: a customer can have any language of the site, and no other');
+
     const store = storeOf(db);
     assert.equal((await store.findAccount('old-session')).code, 'CNV-00001');
     assert.deepEqual(await store.findActivity('old-session', 50), { packages: [], invoices: [] });

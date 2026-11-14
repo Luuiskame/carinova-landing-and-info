@@ -1,0 +1,347 @@
+---
+// The tracker: one card with a switch between its two uses.
+//
+// - "Rastrear paquete": packages are tracked inside the customer's account, so a visitor is asked to
+//   sign in (the dialog opens) and a customer writes the reference of a package, which opens the
+//   tracking page on it (/rastreo?paquete=PKG-000123). There is no search by Carinova ID: the number
+//   of an account is not a key to anybody's packages.
+// - "¿Puede ingresar?": the visitor writes what they want to bring and reads which of Carinova's
+//   three lists it is on, or that it is on none, with the way to ask about it. The search only knows
+//   those lists (RESTRICTED_ITEMS): it never says an article is allowed. The lists themselves live
+//   on /articulos-prohibidos.
+//
+// Without JavaScript there is no switch: both parts are in view, one under the other, and the lists'
+// page is the answer to the second. It is on the home page (inside "Seguimiento") and on /rastreo;
+// each place sends its own WhatsApp message.
+import { Icon } from 'astro-icon/components';
+import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
+import { SIGNIN_DIALOG_ID } from '~/data/account';
+import { i18n } from '~/i18n';
+
+export interface Props {
+  /** Where it is: each place sends its own WhatsApp message. */
+  place?: 'home' | 'page';
+  /** The titles of its two parts: h3 inside a section that has its own h2, h2 right under a page title. */
+  headingTag?: 'h2' | 'h3';
+}
+
+const { place = 'home', headingTag: Heading = 'h3' } = Astro.props;
+const { href, data, ui } = i18n(Astro);
+const { CTA, RESTRICTED_EXAMPLES, RESTRICTED_ITEMS, WA_MESSAGES } = data;
+const t = ui.tracker;
+
+const messages =
+  place === 'home'
+    ? { item: WA_MESSAGES.itemCheck, empty: WA_MESSAGES.itemCheckEmpty }
+    : { item: WA_MESSAGES.trackItemCheck, empty: WA_MESSAGES.trackItemCheckEmpty };
+
+const config = {
+  // From the strictest list to the mildest: an item that is on two of them gets the strictest answer.
+  groups: (['prohibited', 'notYet', 'seaOnly'] as const).map((id) => ({
+    id,
+    title: RESTRICTED_ITEMS[id].title,
+    summary: RESTRICTED_ITEMS[id].summary,
+    items: RESTRICTED_ITEMS[id].items,
+  })),
+  text: {
+    ...t.check.script,
+    // The WhatsApp message of this place, with the article still to fill in.
+    whatsapp: messages.item('{item}'),
+    whatsappEmpty: messages.empty,
+  },
+};
+
+const tabs = [
+  { id: 'track', panel: 'rastrear', icon: 'tabler:package', label: t.tabs.track },
+  { id: 'check', panel: 'puede-ingresar', icon: 'tabler:shield-search', label: t.tabs.check },
+];
+
+const fieldClass =
+  'block min-h-12 w-full min-w-0 rounded-lg border border-[#cbd7e4] bg-[#fbfcff] px-3.5 text-base text-navy outline-none transition placeholder:text-slate-500 focus:border-cta focus:ring-2 focus:ring-orange-100';
+const linkClass = 'inline-flex min-h-11 items-center gap-1.5 font-semibold text-link underline underline-offset-4';
+---
+
+<cn-tracker class="block" data-config={JSON.stringify(config)}>
+  <div
+    class="relative overflow-hidden rounded-[1.4rem] border border-[#dce4ef] bg-white text-slate-800 shadow-[0_1.9rem_5rem_rgb(0_20_54/0.1)] before:absolute before:inset-x-0 before:top-0 before:h-[5px] before:bg-[linear-gradient(90deg,#ff8a00,#ffbd67_40%,#06366a_40%)] rtl:before:bg-[linear-gradient(270deg,#ff8a00,#ffbd67_40%,#06366a_40%)]"
+  >
+    <div class="p-5 pt-7 sm:p-8 sm:pt-9">
+      <!-- The switch needs the script: without it both parts show, one under the other. -->
+      <div
+        class="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-[#edf1f7] p-1"
+        role="tablist"
+        aria-label={t.switchLabel}
+        data-cn-tabs
+        hidden
+      >
+        {
+          tabs.map((tab, index) => (
+            <button
+              type="button"
+              role="tab"
+              id={`cn-tab-${tab.id}`}
+              aria-controls={tab.panel}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-cn-tab={tab.id}
+              class="flex min-h-12 items-center justify-center gap-2 rounded-lg px-2 text-[0.8125rem] leading-tight font-extrabold text-[#56657c] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand aria-selected:bg-navy aria-selected:text-white aria-selected:shadow-md sm:text-sm"
+            >
+              <Icon name={tab.icon} class="h-5 w-5 shrink-0" />
+              {tab.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div id="rastrear" class="scroll-mt-28" role="tabpanel" aria-labelledby="cn-tab-track" data-cn-panel="track">
+        <Heading class="font-heading text-2xl font-extrabold tracking-[-0.03em] text-navy">{t.track.title}</Heading>
+
+        <div data-auth="out">
+          <p class="mt-2 leading-relaxed text-slate-600">{t.track.visitor}</p>
+          <a class="btn-primary mt-5 w-full" href={href(CTA.signin.path)} data-dialog-open={SIGNIN_DIALOG_ID}>
+            <Icon name="tabler:user-circle" class="h-5 w-5 shrink-0" />
+            {t.track.signin}
+          </a>
+          <p class="mt-2 flex flex-wrap items-center gap-x-1.5 text-sm text-slate-600">
+            <span>{t.track.noAccount}</span>
+            <a class={linkClass} href={href(CTA.signup.path)}>{CTA.signup.text}</a>
+          </p>
+        </div>
+
+        <div data-auth="in">
+          <p class="mt-2 leading-relaxed text-slate-600">{t.track.customer}</p>
+          <form
+            class="mt-4 flex flex-col gap-2 sm:flex-row"
+            action={href(CTA.track.path)}
+            method="get"
+            data-cn-track-form
+          >
+            <label class="sr-only" for="cn-track-reference">{t.track.label}</label>
+            <input
+              id="cn-track-reference"
+              name="paquete"
+              type="search"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="40"
+              dir="ltr"
+              placeholder={t.track.placeholder}
+              class:list={[fieldClass, 'sm:flex-1']}
+            />
+            <button type="submit" class="btn-primary min-h-12 shrink-0 px-5 py-2.5">
+              <Icon name="tabler:search" class="h-5 w-5 shrink-0" />
+              {t.track.submit}
+            </button>
+          </form>
+          <a class:list={[linkClass, 'mt-1 text-sm']} href={href(CTA.account.path + '#paquetes')}>
+            {t.track.all}
+            <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+          </a>
+        </div>
+
+        <p class="mt-4 flex gap-2 text-xs leading-relaxed text-slate-600">
+          <Icon name="tabler:lock" class="mt-0.5 h-4 w-4 shrink-0" />
+          {t.track.privacy}
+        </p>
+      </div>
+
+      <div
+        id="puede-ingresar"
+        class="mt-8 scroll-mt-28 border-t border-[#e0e7f0] pt-7 [[data-ready]_&]:mt-0 [[data-ready]_&]:border-t-0 [[data-ready]_&]:pt-0"
+        role="tabpanel"
+        aria-labelledby="cn-tab-check"
+        data-cn-panel="check"
+      >
+        <Heading class="font-heading text-2xl font-extrabold tracking-[-0.03em] text-navy">{t.check.title}</Heading>
+        <p class="mt-2 leading-relaxed text-slate-600" id="cn-item-note">{t.check.intro}</p>
+
+        <!-- The search needs the script: without it the lists' page is the answer. -->
+        <div class="mt-4" data-cn-search hidden>
+          <label for="cn-item-search" class="block text-sm font-bold text-navy">{t.check.label}</label>
+          <input
+            id="cn-item-search"
+            type="search"
+            maxlength="120"
+            autocomplete="off"
+            enterkeyhint="search"
+            dir="auto"
+            placeholder={t.check.placeholder}
+            aria-describedby="cn-item-note"
+            class:list={[fieldClass, 'mt-1.5']}
+          />
+        </div>
+
+        <div
+          class="mt-4 rounded-xl border border-[#d7e1ed] bg-[#f1f5fb] p-4 text-sm leading-relaxed text-[#173a60] data-[kind=notYet]:border-amber-300 data-[kind=notYet]:bg-amber-50 data-[kind=notYet]:text-amber-950 data-[kind=prohibited]:border-red-300 data-[kind=prohibited]:bg-red-50 data-[kind=prohibited]:text-red-950 data-[kind=seaOnly]:border-blue-300 data-[kind=seaOnly]:bg-blue-50 data-[kind=seaOnly]:text-blue-950"
+          aria-live="polite"
+          data-cn-result
+          data-kind="idle"
+          hidden
+        >
+          <strong class="block text-base" data-cn-result-title>{t.check.script.idleTitle}</strong>
+          <span data-cn-result-text>{t.check.script.idleText}</span>
+        </div>
+
+        <div class="mt-3 flex flex-wrap items-center gap-2" data-cn-examples hidden>
+          <span class="text-xs font-semibold text-slate-600">{t.check.examples}</span>
+          {
+            RESTRICTED_EXAMPLES.map((example) => (
+              <button
+                type="button"
+                class="min-h-11 rounded-lg border border-[#dce5ef] bg-[#f1f5fa] px-3 text-xs font-bold text-[#22476d] transition hover:border-cta hover:bg-[#ffeedc] focus-visible:outline-2 focus-visible:outline-brand"
+                data-query={example}
+              >
+                {example}
+              </button>
+            ))
+          }
+        </div>
+
+        <div class="mt-3 flex flex-col text-sm">
+          <a class={linkClass} href={href('/articulos-prohibidos')}>
+            <Icon name="tabler:list-search" class="h-5 w-5 shrink-0" />
+            {t.check.lists}
+          </a>
+          <WhatsAppHelp message={messages.empty} text={t.check.ask} data-cn-ask />
+        </div>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600">{t.check.note}</p>
+      </div>
+    </div>
+  </div>
+</cn-tracker>
+
+<script>
+  import { CONTACT } from '~/data/carinova';
+  import { findRestricted, type SearchGroup } from '~/utils/restricted';
+  import { fill } from '~/utils/template';
+  import { whatsappLink } from '~/utils/whatsapp';
+
+  interface Config {
+    groups: Array<SearchGroup>;
+    text: Record<'idleTitle' | 'idleText' | 'unknownTitle' | 'unknownText' | 'whatsapp' | 'whatsappEmpty', string>;
+  }
+
+  /** The part of the tracker an address asks for: "#puede-ingresar" is the article search. */
+  const PANELS: Record<string, string> = { '#rastrear': 'track', '#puede-ingresar': 'check' };
+
+  class CnTracker extends HTMLElement {
+    private config!: Config;
+    private tabs: Array<HTMLButtonElement> = [];
+    private onHash = () => this.fromAddress(true);
+    private onPageLoad = () => this.fromAddress(false);
+    /** A link of this page to one of the tracker's parts: that part has to be in view before the page scrolls to it. */
+    private onLinkClick = (event: MouseEvent) => {
+      const link = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href*="#"]');
+      if (!link || link.pathname !== window.location.pathname) return;
+      const panel = PANELS[link.hash];
+      if (panel) this.select(panel);
+    };
+
+    connectedCallback() {
+      this.config = JSON.parse(this.dataset.config ?? '{}');
+      this.tabs = Array.from(this.querySelectorAll<HTMLButtonElement>('[data-cn-tab]'));
+
+      for (const tab of this.tabs) {
+        tab.addEventListener('click', () => this.select(tab.dataset.cnTab ?? 'track'));
+        tab.addEventListener('keydown', (event) => this.onKey(event, tab));
+      }
+
+      const input = this.querySelector<HTMLInputElement>('#cn-item-search');
+      if (input) {
+        input.addEventListener('input', () => this.check(input.value));
+        for (const button of this.querySelectorAll<HTMLButtonElement>('[data-query]')) {
+          button.addEventListener('click', () => {
+            input.value = button.dataset.query ?? '';
+            this.check(input.value);
+            input.focus();
+          });
+        }
+      }
+
+      // With the script: the switch, the search and its answer show, and one part at a time.
+      for (const part of this.querySelectorAll<HTMLElement>(
+        '[data-cn-tabs], [data-cn-search], [data-cn-result], [data-cn-examples]'
+      )) {
+        part.hidden = false;
+      }
+      this.dataset.ready = '';
+      this.select('track');
+
+      window.addEventListener('hashchange', this.onHash);
+      document.addEventListener('astro:page-load', this.onPageLoad);
+      // On the way down (capture): before the page router handles the click.
+      document.addEventListener('click', this.onLinkClick, { capture: true });
+      this.fromAddress(false);
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('hashchange', this.onHash);
+      document.removeEventListener('astro:page-load', this.onPageLoad);
+      document.removeEventListener('click', this.onLinkClick, { capture: true });
+    }
+
+    /** A link to "#puede-ingresar" opens that part; a part that is hidden cannot be scrolled to, so the card is. */
+    private fromAddress(scroll: boolean) {
+      const panel = PANELS[window.location.hash];
+      if (!panel) return;
+      this.select(panel);
+      if (scroll) {
+        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+      }
+    }
+
+    private select(id: string) {
+      for (const tab of this.tabs) {
+        const selected = tab.dataset.cnTab === id;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      }
+      for (const panel of this.querySelectorAll<HTMLElement>('[data-cn-panel]')) {
+        panel.hidden = panel.dataset.cnPanel !== id;
+      }
+    }
+
+    /** The arrows move between the two options, as in any group of tabs; in a right-to-left page they swap. */
+    private onKey(event: KeyboardEvent, tab: HTMLButtonElement) {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const rtl = getComputedStyle(this).direction === 'rtl';
+      const at = this.tabs.indexOf(tab);
+      const step = (event.key === 'ArrowRight') !== rtl ? 1 : -1;
+      const next =
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? this.tabs.length - 1
+            : (at + step + this.tabs.length) % this.tabs.length;
+      this.select(this.tabs[next].dataset.cnTab ?? 'track');
+      this.tabs[next].focus();
+    }
+
+    private check(query: string) {
+      const { text, groups } = this.config;
+      const typed = query.trim();
+      const found = typed ? findRestricted(typed, groups) : null;
+
+      const kind = !typed ? 'idle' : found ? found.group.id : 'unknown';
+      const title = !typed ? text.idleTitle : found ? found.group.title : text.unknownTitle;
+      const body = !typed ? text.idleText : found ? `${found.name}. ${found.group.summary}` : text.unknownText;
+
+      const result = this.querySelector<HTMLElement>('[data-cn-result]');
+      if (result) result.dataset.kind = kind;
+      const set = (selector: string, value: string) => {
+        const element = this.querySelector(selector);
+        if (element) element.textContent = value;
+      };
+      set('[data-cn-result-title]', title);
+      set('[data-cn-result-text]', body);
+
+      const message = typed ? fill(text.whatsapp, { item: typed }) : text.whatsappEmpty;
+      this.querySelector('[data-cn-ask]')?.setAttribute('href', whatsappLink(CONTACT.whatsapp, message));
+    }
+  }
+
+  if (!customElements.get('cn-tracker')) customElements.define('cn-tracker', CnTracker);
+</script>

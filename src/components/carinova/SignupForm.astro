@@ -7,97 +7,15 @@
 // the e-mails come back in that language.
 import { Icon } from 'astro-icon/components';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
-import { CONFIRM_LINK_HOURS, SIGNUP_NAME_EXAMPLES } from '~/data/signup';
+import { SIGNUP_NAME_EXAMPLES } from '~/data/signup';
 import { i18n } from '~/i18n';
 
-const { locale, href, data } = i18n(Astro);
+const { locale, href, data, ui } = i18n(Astro);
 const { CTA, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
 
 const [initial] = SIGNUP_COUNTRIES;
 
-const t = {
-  es: {
-    signedIn: 'Ya ingresaste a tu cuenta en este navegador.',
-    title: 'Tus datos',
-    intro: 'Te toma un par de minutos.',
-    noscript:
-      'Para registrarte en línea necesitás activar JavaScript en tu navegador. También podés crear tu cuenta por WhatsApp.',
-    country: 'País',
-    firstName: 'Nombre',
-    lastName: 'Apellido',
-    email: 'Correo electrónico',
-    emailHint: 'Te enviaremos un enlace para confirmar tu cuenta.',
-    phone: 'Teléfono',
-    phoneHint: 'De preferencia, el número que usás en WhatsApp.',
-    address1: 'Dirección',
-    address2: 'Apto / Suite',
-    optional: '(opcional)',
-    city: 'Ciudad',
-    choose: 'Elegí uno',
-    postalCode: 'Código postal',
-    honeypot: 'Dejá este campo vacío',
-    sending: 'Enviando…',
-    afterSubmit: 'Al enviar, te mandamos un correo para confirmar tu cuenta.',
-    sentTitle: 'Revisá tu correo',
-    sentNotes: [
-      'Puede tardar un par de minutos en llegar.',
-      'Si no lo ves, revisá la carpeta de spam o correo no deseado.',
-      `El enlace vence en ${CONFIRM_LINK_HOURS} horas.`,
-    ],
-    edit: '¿Escribiste mal tu correo? Corregilo',
-    // For the script.
-    messages: {
-      missing: 'Completá este campo.',
-      terms: 'Para continuar, aceptá los términos y la política de privacidad.',
-      unavailable:
-        'El registro en línea no está disponible en este momento. Escribinos por WhatsApp y creamos tu cuenta.',
-      busy: 'Recibimos demasiados intentos seguidos. Esperá un minuto y volvé a intentarlo.',
-      failed: 'No pudimos enviar tu registro. Revisá tu conexión e intentalo de nuevo, o escribinos por WhatsApp.',
-      oneError: 'Hay un campo por corregir.',
-      manyErrors: 'Hay {count} campos por corregir.',
-    },
-  },
-  en: {
-    signedIn: 'You are already signed in to your account on this browser.',
-    title: 'Your details',
-    intro: 'It takes a couple of minutes.',
-    noscript:
-      'To sign up online you need to turn on JavaScript in your browser. You can also create your account through WhatsApp.',
-    country: 'Country',
-    firstName: 'First name',
-    lastName: 'Last name',
-    email: 'E-mail',
-    emailHint: 'We will send you a link to confirm your account.',
-    phone: 'Phone',
-    phoneHint: 'Preferably the number you use on WhatsApp.',
-    address1: 'Address',
-    address2: 'Apt / Suite',
-    optional: '(optional)',
-    city: 'City',
-    choose: 'Choose one',
-    postalCode: 'Postal code',
-    honeypot: 'Leave this field empty',
-    sending: 'Sending…',
-    afterSubmit: 'When you submit, we send you an e-mail to confirm your account.',
-    sentTitle: 'Check your e-mail',
-    sentNotes: [
-      'It can take a couple of minutes to arrive.',
-      'If you do not see it, check your spam or junk folder.',
-      `The link expires in ${CONFIRM_LINK_HOURS} hours.`,
-    ],
-    edit: 'Wrong e-mail? Correct it',
-    messages: {
-      missing: 'Fill in this field.',
-      terms: 'To continue, accept the terms and the privacy policy.',
-      unavailable:
-        'Online sign-up is not available right now. Write to us on WhatsApp and we will create your account.',
-      busy: 'We received too many attempts in a row. Wait a minute and try again.',
-      failed: 'We could not send your sign-up. Check your connection and try again, or write to us on WhatsApp.',
-      oneError: 'There is one field to correct.',
-      manyErrors: 'There are {count} fields to correct.',
-    },
-  },
-}[locale];
+const t = ui.signupForm;
 
 const labelClass = 'block text-sm font-semibold text-slate-700';
 const inputClass =
@@ -124,7 +42,7 @@ const legalLinkClass = 'font-medium text-link underline';
   <form
     method="dialog"
     novalidate
-    class="rounded-2xl bg-white p-5 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    class="rounded-2xl bg-white p-5 text-start text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
   >
     <h2 class="font-heading text-2xl font-bold text-navy">{t.title}</h2>
     <p class="mt-1 text-sm text-slate-600">{t.intro}</p>
@@ -168,6 +86,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="firstName"
           type="text"
           autocomplete="given-name"
+          dir="auto"
           required
           maxlength="60"
           placeholder={SIGNUP_NAME_EXAMPLES.firstName}
@@ -184,6 +103,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="lastName"
           type="text"
           autocomplete="family-name"
+          dir="auto"
           required
           maxlength="60"
           placeholder={SIGNUP_NAME_EXAMPLES.lastName}
@@ -238,6 +158,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="address1"
           type="text"
           autocomplete="address-line1"
+          dir="ltr"
           required
           maxlength="120"
           placeholder={initial.examples.address1}
@@ -257,6 +178,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="address2"
           type="text"
           autocomplete="address-line2"
+          dir="ltr"
           maxlength="60"
           placeholder={initial.examples.address2}
           class={inputClass}
@@ -272,6 +194,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="city"
           type="text"
           autocomplete="address-level2"
+          dir="ltr"
           required
           maxlength="60"
           placeholder={initial.examples.city}
@@ -319,6 +242,7 @@ const legalLinkClass = 'font-medium text-link underline';
           name="postalCode"
           type="text"
           autocomplete="postal-code"
+          dir="ltr"
           required={initial.postalCode.required}
           maxlength="10"
           placeholder={initial.examples.postalCode}
@@ -337,34 +261,14 @@ const legalLinkClass = 'font-medium text-link underline';
             class="mt-0.5 h-5 w-5 shrink-0 accent-brand"
             aria-describedby="cn-terms-error"
           />
-          {/* Explicit spaces: line breaks between text and tags are dropped from the output. */}
-          {
-            locale === 'en' ? (
-              <span>
-                I accept the{' '}
-                <a class={legalLinkClass} href={href('/terminos')} target="_blank" rel="noopener">
-                  Terms and conditions
-                </a>{' '}
-                and the{' '}
-                <a class={legalLinkClass} href={href('/privacidad')} target="_blank" rel="noopener">
-                  Privacy policy
-                </a>
-                .
-              </span>
-            ) : (
-              <span>
-                Acepto los{' '}
-                <a class={legalLinkClass} href={href('/terminos')} target="_blank" rel="noopener">
-                  Términos y condiciones
-                </a>{' '}
-                y la{' '}
-                <a class={legalLinkClass} href={href('/privacidad')} target="_blank" rel="noopener">
-                  Política de privacidad
-                </a>
-                .
-              </span>
-            )
-          }
+          {/* The sentence carries its own spaces (ui.signupForm.accept): text, link, text, link, text. */}
+          <span>
+            {t.accept[0]}<a class={legalLinkClass} href={href('/terminos')} target="_blank" rel="noopener"
+              >{t.accept[1]}</a
+            >{t.accept[2]}<a class={legalLinkClass} href={href('/privacidad')} target="_blank" rel="noopener"
+              >{t.accept[3]}</a
+            >{t.accept[4]}
+          </span>
         </label>
         <p id="cn-terms-error" class={errorClass} hidden></p>
       </div>
@@ -394,7 +298,7 @@ const legalLinkClass = 'font-medium text-link underline';
   </form>
 
   <div
-    class="rounded-2xl bg-white p-6 text-left text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
+    class="rounded-2xl bg-white p-6 text-start text-slate-800 shadow-xl ring-1 ring-slate-200 sm:p-8"
     data-cn-sent
     hidden
   >
@@ -402,20 +306,10 @@ const legalLinkClass = 'font-medium text-link underline';
     <h2 class="mt-4 font-heading text-2xl font-bold text-navy outline-none" tabindex="-1" data-cn-sent-title>
       {t.sentTitle}
     </h2>
-    {
-      locale === 'en' ? (
-        <p class="mt-3">
-          We sent a link to <strong class="break-all" data-cn-sent-email />. Open it to confirm your account and get
-          your Carinova ID and your address in Miami.
-        </p>
-      ) : (
-        <p class="mt-3">
-          Te mandamos un enlace a <strong class="break-all" data-cn-sent-email />. Abrilo para confirmar tu cuenta y
-          recibir tu Carinova ID y tu dirección en Miami.
-        </p>
-      )
-    }
-    <ul class="mt-4 list-disc space-y-1.5 pl-5 text-sm text-slate-600">
+    <p class="mt-3">
+      {t.sentTo[0]}<strong class="break-all" dir="ltr" data-cn-sent-email></strong>{t.sentTo[1]}
+    </p>
+    <ul class="mt-4 list-disc space-y-1.5 ps-5 text-sm text-slate-600">
       {t.sentNotes.map((note) => <li>{note}</li>)}
     </ul>
     <button type="button" class="mt-6 text-sm font-semibold text-link underline" data-cn-edit>{t.edit}</button>

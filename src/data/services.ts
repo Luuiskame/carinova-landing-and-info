@@ -3,8 +3,8 @@
  *
  * - SERVICES: six services on three independent axes (how a package travels, who makes the
  *   purchase, how the customer receives it). Every shipment is one choice on each axis.
- * - PROCESS_STEPS: the five steps of "¿Cómo funciona?" (summary on the home page, details on
- *   /como-comprar), as in Carinova's prototype.
+ * - PROCESS_STEPS: the three steps of "Cómo funciona" (summary on the home page, details on
+ *   /como-comprar), as in Carinova's "Signature" design.
  * - ACCOUNT_PARTS: what a customer finds in their account ("Mi cuenta").
  * - SHOPPING_EXAMPLES: the worked examples of "¿Cómo funciona?", one per kind of purchase, and
  *   FORMULA_EXAMPLE, the cubic-foot example of Carinova's brief (on the calculator page).
@@ -230,52 +230,35 @@ const soonNote = receivingSoon.length ? ` ${listOf(receivingSoon)}, próximament
 export const PROCESS_STEPS: Array<ProcessStep> = [
   {
     icon: 'tabler:user-plus',
-    title: 'Registrate',
-    summary:
-      'Registrate con tu correo y tu número telefónico. Al confirmar tu correo, el sistema te asigna automáticamente tu Carinova ID.',
+    title: 'Creá tu cuenta',
+    summary: `Confirmá tu correo y obtené tu Carinova ID junto con tu casillero: la dirección de recepción en ${listOf(receivingNow)}.`,
     details: [
       'Llenás un formulario corto y confirmás tu correo con el enlace que te mandamos.',
       'Al confirmar ves tu Carinova ID y tu dirección en Estados Unidos, y también te los mandamos por correo.',
+      'Después ingresás con tu correo y un código de un solo uso: no hay contraseña que recordar.',
     ],
     link: { text: CTA.signup.text, path: CTA.signup.path },
   },
   {
-    icon: 'tabler:layout-dashboard',
-    title: 'Ingresá a tu cuenta',
-    summary: 'Realizá todas tus gestiones desde un mismo lugar.',
+    icon: 'tabler:shopping-bag',
+    title: `Comprá y enviá a ${listOf(receivingNow)}`,
+    summary: 'Usá la dirección de tu cuenta al comprar. Revisá antes que tu artículo esté permitido.',
     details: [
-      'Ingresás con tu correo y un código de un solo uso: no hay contraseña que recordar.',
-      'En tu cuenta están tu Carinova ID, tu dirección en Estados Unidos, tus paquetes y tus pagos.',
-    ],
-    link: { text: CTA.signin.text, path: CTA.signin.path },
-  },
-  {
-    icon: 'tabler:search',
-    title: '¿Puede ingresar?',
-    summary: 'Antes de comprar o enviar, revisá si el artículo puede ingresar.',
-    details: [
-      'Hay artículos prohibidos, otros que todavía no estamos autorizados a traer y otros que solo viajan por marítimo.',
-      'Si tu artículo no aparece en las listas, consultanos antes de comprarlo.',
+      `Enviá tu compra a la dirección de nuestra bodega en ${listOf(receivingNow)} indicada en tu cuenta.${soonNote}`,
+      'Al pagar en la tienda, escribí tu nombre y tu apellido exactamente como aparecen en tu dirección.',
+      'Antes de comprar, revisá si el artículo puede ingresar: hay artículos prohibidos, otros que todavía no estamos autorizados a traer y otros que solo viajan por marítimo.',
+      '¿Preferís que compremos por vos? Pedí una compra asistida.',
     ],
     link: { text: 'Revisar artículo', path: '/articulos-prohibidos' },
-    homeAnchor: '#verificador',
+    homeAnchor: '#puede-ingresar',
   },
   {
-    icon: 'tabler:building-warehouse',
-    title: 'Recibimos',
-    summary: `Envialo a la dirección de nuestra bodega en ${listOf(receivingNow)} indicada en tu cuenta.${soonNote}`,
+    icon: 'tabler:map-pin-check',
+    title: 'Recibí en Nicaragua',
+    summary: `Retirá en ${cities.join(' o ')}. Envíos a todo el país por un costo adicional.`,
     details: [
-      'Al pagar en la tienda, escribí tu nombre y tu apellido exactamente como aparecen en tu dirección.',
-      '¿Preferís que compremos por vos? Pedí una compra asistida.',
       `Lo traemos por aéreo en ${air.transit} o por marítimo en ${sea.transit}, ${RATES.transitFrom}.`,
-    ],
-    link: { text: CTA.quote.text, path: CTA.quote.path },
-  },
-  {
-    icon: 'tabler:home-check',
-    title: 'Lo recibís',
-    summary: `Retirá en ${cities.join(' o ')}. La entrega a domicilio tiene cargo adicional.`,
-    details: [
+      'Seguís cada etapa desde tu cuenta, con la referencia de tu paquete.',
       sentence(`Nuestras sucursales abren de ${describeHours(branchHours)}`),
       'La entrega a domicilio se coordina según el destino y la cobertura.',
     ],
@@ -443,7 +426,7 @@ export const exampleQuoter =
       if (!quote.units) throw new Error(`Example "${example.id}" names a device that has no rate.`);
       return {
         tariff: words.unit,
-        lines: quote.lines.map(describeUnitLine),
+        lines: quote.lines.map((line) => describeUnitLine(line, locale)),
         note: words.unitNote,
         total: quote.total,
         transit: rates.electronics.transit,

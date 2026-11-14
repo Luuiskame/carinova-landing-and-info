@@ -42,7 +42,7 @@ const {
 const justify = align === 'center' ? 'sm:justify-center' : 'sm:justify-center lg:justify-start';
 ---
 
-<div class={twMerge('text-center', align === 'start' && 'lg:text-left', className)}>
+<div class={twMerge('text-center', align === 'start' && 'lg:text-start', className)}>
   {
     (signup || quote) && (
       <div class:list={['mx-auto flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row', justify]}>

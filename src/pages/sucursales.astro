@@ -1,8 +1,7 @@
 ---
-// Sucursales: the pickup branches in full (address, hours, WhatsApp, Maps) and the other ways to
-// reach Carinova. The branches' LocalBusiness data, with opening hours, goes out once the addresses
-// are real.
-import { Icon } from 'astro-icon/components';
+// Sucursales: the pickup branches in full (address, hours, WhatsApp, Maps). The other ways to reach
+// Carinova are in the footer of every page (its carousel of channels). The branches' LocalBusiness
+// data, with opening hours, goes out once the addresses are real.
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
 import Branches from '~/components/carinova/Branches.astro';
@@ -10,47 +9,14 @@ import ClosingCta from '~/components/carinova/ClosingCta.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 
 import { SITE } from 'astrowind:config';
-import { CONTACT, SITE_STATUS, SOCIAL_LINKS, sentence } from '~/data/carinova';
+import { SITE_STATUS } from '~/data/carinova';
 import { i18n } from '~/i18n';
 import { getCanonical } from '~/utils/permalinks';
 
-const { locale, href, data } = i18n(Astro);
-const { BRANCHES, WA_MESSAGES, describeHours } = data;
+const { href, data, ui } = i18n(Astro);
+const { BRANCHES, WA_MESSAGES } = data;
 
-const [hours] = BRANCHES[0].hours;
-const sameHours = BRANCHES.every((branch) => JSON.stringify(branch.hours) === JSON.stringify(BRANCHES[0].hours));
-const cityNames = BRANCHES.map((branch) => branch.city);
-
-const t = {
-  es: {
-    tagline: 'Sucursales',
-    title: 'Sucursales de retiro',
-    description: `Direcciones, horarios y WhatsApp de Carinova en ${cityNames.join(' y ')}.${sameHours ? ` ${sentence(`Abrimos de ${describeHours(hours)}`)}` : ''}`,
-    subtitle: sameHours
-      ? sentence(`Por ahora retirás en ${cityNames.join(' y ')}, de ${describeHours(hours)}`)
-      : `Por ahora retirás en ${cityNames.join(' y ')}.`,
-    channels: 'Seguinos y escribinos',
-    closing: {
-      title: 'Tu próxima compra, lista para retirar',
-      subtitle: 'Creá tu cuenta y cotizá tu envío antes de comprar.',
-      lead: '¿No sabés en qué sucursal te conviene retirar?',
-    },
-  },
-  en: {
-    tagline: 'Branches',
-    title: 'Pickup branches',
-    description: `Addresses, opening hours and WhatsApp of Carinova in ${cityNames.join(' and ')}.${sameHours ? ` ${sentence(`We are open ${describeHours(hours)}`)}` : ''}`,
-    subtitle: sameHours
-      ? sentence(`For now you pick up in ${cityNames.join(' and ')}, ${describeHours(hours)}`)
-      : `For now you pick up in ${cityNames.join(' and ')}.`,
-    channels: 'Follow us and write to us',
-    closing: {
-      title: 'Your next purchase, ready for pickup',
-      subtitle: 'Create your account and get a quote for your shipment before you buy.',
-      lead: 'Not sure which branch suits you for pickup?',
-    },
-  },
-}[locale];
+const t = ui.branchesPage;
 
 const metadata = { title: t.title, description: t.description };
 
@@ -81,11 +47,6 @@ const localBusinesses = SITE_STATUS.isPreview
       parentOrganization: { '@id': `${SITE?.site}/#organization` },
       ...(branch.mapsUrl ? { hasMap: branch.mapsUrl } : {}),
     }));
-
-const otherChannels = [
-  ...(CONTACT.email ? [{ name: CONTACT.email, icon: 'tabler:mail', href: `mailto:${CONTACT.email}` }] : []),
-  ...SOCIAL_LINKS,
-];
 ---
 
 <Layout metadata={metadata} breadcrumb={t.tagline}>
@@ -94,29 +55,6 @@ const otherChannels = [
   <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
   <Branches tagline="" title="" />
-
-  {
-    otherChannels.length > 0 && (
-      <section class="mx-auto max-w-3xl px-4 py-12 text-center md:py-16">
-        <h2 class="font-heading text-2xl font-bold text-heading">{t.channels}</h2>
-        <ul class="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2">
-          {otherChannels.map((channel) => (
-            <li>
-              <a
-                class="inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4"
-                href={channel.href}
-                target={channel.href.startsWith('mailto:') ? undefined : '_blank'}
-                rel={channel.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-              >
-                <Icon name={channel.icon} class="h-5 w-5" />
-                {channel.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-    )
-  }
 
   <ClosingCta
     title={t.closing.title}

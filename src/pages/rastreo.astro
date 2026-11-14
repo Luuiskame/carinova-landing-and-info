@@ -1,0 +1,48 @@
+---
+// Rastreo ("Rastreá tu paquete" in the header): the page customers track their packages on. A
+// visitor finds what tracking is, the stages a package goes through and the way in (the sign-in
+// dialog); a customer who is signed in writes a reference in the tracker and sees that package, or
+// the ones that are on their way (PackageLookup.astro). The tracker's switch searches Carinova's
+// lists of what it cannot bring, as on the home page. Everything about a customer's packages and
+// payments stays in "Mi cuenta", which this page leads to.
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import PackageLookup from '~/components/carinova/PackageLookup.astro';
+import PackageStages from '~/components/carinova/PackageStages.astro';
+import Tracker from '~/components/carinova/Tracker.astro';
+
+import { i18n } from '~/i18n';
+
+const { data, ui } = i18n(Astro);
+const { WA_MESSAGES } = data;
+const t = ui.trackPage;
+
+const metadata = { title: t.metaTitle, description: t.description };
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
+
+  <section class="mx-auto grid max-w-6xl gap-10 px-4 pt-4 pb-14 sm:px-6 md:pb-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+    <PackageLookup>
+      <Tracker place="page" headingTag="h2" />
+    </PackageLookup>
+
+    <aside class="min-w-0 lg:pt-2" aria-labelledby="cn-stages-title">
+      <h2 id="cn-stages-title" class="font-heading text-2xl font-extrabold tracking-[-0.03em] text-heading">
+        {t.stagesTitle}
+      </h2>
+      <p class="mt-2 text-muted">{t.stagesIntro}</p>
+      <PackageStages class="mt-7" label={t.stagesTitle} column />
+    </aside>
+  </section>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    quote={false}
+    whatsapp={WA_MESSAGES.trackClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>

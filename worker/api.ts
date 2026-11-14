@@ -45,6 +45,7 @@ import { teamNotificationEmail, verificationEmail, welcomeEmail } from './signup
 import { isUsableSecret, openToken, sealToken } from './signup/token.ts';
 import { validateSignup, type SignupData } from './signup/validate.ts';
 import type { Customer, Store } from './store.ts';
+import { textOf } from './text/index.ts';
 import { cleanEmail, isEmail, normalizeEmail } from './validation.ts';
 
 export interface Deps {
@@ -106,19 +107,6 @@ const missing = (deps: Deps, needs: Array<'secret' | 'mailer' | 'store' | 'owner
     .filter(Boolean)
     .join(', ');
 
-const TEXT = {
-  es: {
-    emailMissing: 'Escribí tu correo electrónico.',
-    emailInvalid: 'Revisá tu correo: no parece válido.',
-    emailRejected: 'No pudimos enviar un mensaje a este correo. Revisá que esté bien escrito.',
-  },
-  en: {
-    emailMissing: 'Enter your e-mail.',
-    emailInvalid: 'Check your e-mail: it does not look valid.',
-    emailRejected: 'We could not send a message to this e-mail. Check that it is written correctly.',
-  },
-};
-
 // ───────────────────────────── Sign-up ─────────────────────────────
 
 const signup: Handler = async ({ body, origin, locale, deps, log }) => {
@@ -147,7 +135,7 @@ const signup: Handler = async ({ body, origin, locale, deps, log }) => {
 
   if (sent.ok) return json(200, { ok: true });
   if (sent.reason === 'invalid_recipient') {
-    return json(422, { ok: false, error: 'validation', fields: { email: TEXT[locale].emailRejected } });
+    return json(422, { ok: false, error: 'validation', fields: { email: textOf(locale).api.emailRejected } });
   }
   log(`[signup] confirmation e-mail not sent: ${sent.detail}`);
   return unavailable();
@@ -226,7 +214,7 @@ const login: Handler = async ({ body, locale, deps, log }) => {
 
   const typed = cleanEmail(body.email);
   if (!typed || !isEmail(typed)) {
-    const email = typed ? TEXT[locale].emailInvalid : TEXT[locale].emailMissing;
+    const email = typed ? textOf(locale).api.emailInvalid : textOf(locale).api.emailMissing;
     return json(422, { ok: false, error: 'validation', fields: { email } });
   }
 
