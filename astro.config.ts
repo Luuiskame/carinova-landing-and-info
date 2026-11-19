@@ -96,6 +96,11 @@ export default defineConfig({
     // page came with the font inside its stylesheet; here it is a file of its own, so it is cached,
     // only the letters a page is written with are fetched and the text shows at once in a fallback
     // of the same metrics.
+    //
+    // That fallback is "Manrope Fallback", written by hand in landing.css, and not the one Astro
+    // would generate (`optimizedFallbacks`): the generated one draws every weight in regular Arial,
+    // and the page's titles are extra bold, so a title was a tenth narrower and much lighter until
+    // Manrope arrived, and took a different number of lines at some widths.
     {
       provider: fontProviders.fontsource(),
       name: 'Manrope',
@@ -103,7 +108,8 @@ export default defineConfig({
       weights: ['200 800'],
       styles: ['normal'],
       subsets: ['latin', 'cyrillic'],
-      fallbacks: ['sans-serif'],
+      fallbacks: ['Manrope Fallback', 'sans-serif'],
+      optimizedFallbacks: false,
     },
   ],
 

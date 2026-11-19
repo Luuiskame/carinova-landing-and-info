@@ -11,7 +11,8 @@
 //   when it arrives without moving anything. It is not fetched ahead (no preload): a browser holds
 //   the first paint back for a font it is already fetching, and by the time the font had come the
 //   whole page was waiting to be laid out in one go. On a slow phone that put the first paint at
-//   0.82 s instead of 0.44 s, to gain 0.06 s on the font (docs/PROJECT-LOG.md → D-108).
+//   0.82 s instead of 0.37 to 0.59 s, to gain 0.06 s on the font (docs/PROJECT-LOG.md → D-108).
+//   The fallback is "Manrope Fallback", in landing.css.
 // - No client router: a link to another page of the site is a plain navigation, so the two
 //   stylesheets never meet.
 import { Font } from 'astro:assets';

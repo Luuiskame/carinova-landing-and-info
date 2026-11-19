@@ -12,6 +12,47 @@
  *   tracking views, the notices editor);
  * - no blur behind the header, the rates and the price bar, and none behind a dialog on a phone.
  */
+
+/* ───────── What shows until Manrope arrives ─────────
+   The text is drawn at once, in a font the device already has, and Manrope takes its place when its
+   file comes (astro.config.ts names this family as Manrope's fallback). So that nothing moves at
+   that moment, the stand-in is made to take the room Manrope takes: a regular face for the weights
+   of a paragraph and a bold one for the weights of a title, each brought to Manrope's width
+   (`size-adjust`) and given Manrope's line (its ascent of 1.066em and descent of 0.3em, written
+   relative to the adjusted size).
+
+   The widths are measured on the words of this page, in Spanish, English, French, Portuguese and
+   Russian. What matters most is what a visitor sees first, because a line more or less there moves
+   everything under it: the sentence of the opening and the text of a notice are 1.6–3.8% wider in
+   Manrope than in regular Arial (the whole page: 2.5–3.8%), the titles 0.7–3% wider than in bold
+   Arial and the title of a notice between 1.7% narrower and 1% wider. Hence 102% and 100.5%: with
+   them nothing in the first screen is somewhere else once Manrope is there, in those five
+   languages from 320 to 1350 px. Roboto, which an Android phone has in Arial's place, is within
+   one per cent of Arial. Measure again if the font, the weights or the opening change. */
+@font-face {
+  font-family: 'Manrope Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Arimo'), local('Roboto'), local('Helvetica Neue');
+  font-weight: 200 599;
+  font-style: normal;
+  size-adjust: 102%;
+  ascent-override: 104.51%;
+  descent-override: 29.41%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Manrope Fallback';
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Arimo Bold'),
+    local('Roboto Bold'), local('Roboto-Bold'), local('Helvetica Neue Bold'), local('HelveticaNeue-Bold');
+  font-weight: 600 800;
+  font-style: normal;
+  size-adjust: 100.5%;
+  ascent-override: 106.07%;
+  descent-override: 29.85%;
+  line-gap-override: 0%;
+}
+
 /* ───────── Tokens ───────── */
 :root {
   --navy-950: #001127;
@@ -2722,10 +2763,17 @@ html.has-dock {
   .footer-branches {
     grid-column: 1/-1;
   }
+  /* Two columns of links, each as wide as its longest link; where the two do not fit side by side
+     (a long link on a narrow phone: "Frequently Asked Questions" at 390 px), the columns give way
+     and the link takes two lines instead of pushing the page wider than the screen. */
   .footer-main {
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(2, minmax(0, auto));
     justify-content: space-between;
     column-gap: 16px;
+  }
+  .footer-col a,
+  .footer-col button {
+    white-space: normal;
   }
   .footer-places {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3174,6 +3222,17 @@ html.has-dock {
     letter-spacing: 0.06em;
   }
 }
+/* Where the three rates first stand side by side, each has the least room it will ever have: the
+   longest name ("ÉLECTRONIQUE") and its days need a little of the padding. */
+@media (min-width: 960px) and (max-width: 1079px) {
+  .hero-rate {
+    padding-inline: 16px;
+    column-gap: 10px;
+  }
+  .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+}
 /* The narrowest phones (and a page that is zoomed in): the logo and the tools of the bar give way
    until they fit. As drawn they needed 369 px, so at 320 px the menu button ended 29 px past the
    edge of the screen and the whole page could be dragged sideways. */
@@ -3194,6 +3253,9 @@ html.has-dock {
   }
 }
 @media (max-width: 339px) {
+  .header-inner {
+    gap: 8px;
+  }
   .lang-btn {
     gap: 6px;
     padding: 0 9px;
