@@ -1,0 +1,17 @@
+---
+// What a script of the home page needs from the page: the sentences of the page's language, the
+// rates, the lists. The scripts carry no text of their own (they are the same file in every
+// language): each component hands its script what it says here, as JSON the browser does not run,
+// and the script reads it when it starts (`pageData()` in scripts/dom.ts).
+export interface Props {
+  /** What the script asks for: "calculator", "articles", "dialogs". */
+  name: string;
+  value: unknown;
+}
+
+const { name, value } = Astro.props;
+// "<" is written as its escape, so nothing inside a sentence can close the element.
+const json = JSON.stringify(value).replace(/</g, '\\u003c');
+---
+
+<script is:inline type="application/json" id={`landing-${name}`} set:html={json} />

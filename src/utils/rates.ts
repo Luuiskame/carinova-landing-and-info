@@ -4,8 +4,9 @@
 // unit tests (rates.test.ts) run this file on plain Node.
 //
 // A shipment is quoted on one basis at a time, as in Carinova's prototype: by weight, by volume or
-// per unit. The arithmetic is exact: no minimum weight and no rounding of pounds or cubic feet,
-// because Carinova has stated neither; only the amount is rounded, to cents.
+// per unit. By weight, a shipment is billed for at least the minimum Carinova states (1 lb since
+// 2026-11-18: RATES.minimumLb); pounds and cubic feet are not rounded, because Carinova has not
+// said they are, and only the amount is rounded, to cents.
 import type { Locale } from '../i18n/locales.ts';
 
 /** The measurements of a box come in centimetres or in inches. */
@@ -70,15 +71,21 @@ export interface WeightQuote {
   pounds: number;
   packages: number;
   totalPounds: number;
+  /** What is charged for: the total, or the minimum when the shipment weighs less. */
+  billedPounds: number;
   pricePerLb: number;
   total: number;
 }
 
-/** By weight (air or sea): pounds of each package × packages × price per pound. */
-export const quoteByWeight = (pounds: number, pricePerLb: number, packages?: number): WeightQuote => {
+/**
+ * By weight (air or sea): pounds of each package × packages × price per pound. A shipment that
+ * weighs less than `minimumLb` in all is billed for that minimum (0: no minimum).
+ */
+export const quoteByWeight = (pounds: number, pricePerLb: number, packages?: number, minimumLb = 0): WeightQuote => {
   const count = countOf(packages);
   const totalPounds = tidy(pounds * count);
-  return { pounds, packages: count, totalPounds, pricePerLb, total: round2(totalPounds * pricePerLb) };
+  const billedPounds = Math.max(totalPounds, minimumLb);
+  return { pounds, packages: count, totalPounds, billedPounds, pricePerLb, total: round2(billedPounds * pricePerLb) };
 };
 
 export interface Dimensions {
@@ -163,10 +170,14 @@ export const quoteUnits = (quantities: Record<string, number | undefined>, items
 
 // How each quote is written out, in the calculator and in the worked examples.
 
-/** "3 lb × US$6.50 = US$19.50"; with several packages, "2 × 5 lb = 10 lb × US$6.50 = US$65". */
+/**
+ * "3 lb × US$6.50 = US$19.50"; with several packages, "2 × 5 lb = 10 lb × US$6.50 = US$65"; under
+ * the minimum, "0.4 lb → 1 lb × US$6.50 = US$6.50" (what is weighed, then what is billed).
+ */
 export const describeWeight = (quote: WeightQuote): string => {
   const each = quote.packages > 1 ? `${quote.packages} × ${formatNumber(quote.pounds, 5)} lb = ` : '';
-  return `${each}${formatNumber(quote.totalPounds, 5)} lb × ${formatUSD(quote.pricePerLb)} = ${formatUSD(quote.total)}`;
+  const billed = quote.billedPounds > quote.totalPounds ? ` → ${formatNumber(quote.billedPounds, 5)} lb` : '';
+  return `${each}${formatNumber(quote.totalPounds, 5)} lb${billed} × ${formatUSD(quote.pricePerLb)} = ${formatUSD(quote.total)}`;
 };
 
 /** Cubic feet as they are shown: four decimals, more for a very small box. */

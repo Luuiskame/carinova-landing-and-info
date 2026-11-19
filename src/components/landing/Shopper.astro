@@ -1,0 +1,91 @@
+---
+// "Personal Shopper": the stores customers buy from most, the way into the directory of a hundred
+// ("Y más") and the form to share product links.
+//
+// - Each store is a link to the store's own site that works by itself. With the page's script it
+//   opens the choice Carinova designed instead (buy it yourself, or have Carinova buy it), and
+//   "Y más" and "Compartir mis enlaces" open their dialogs (scripts/dialogs.ts); without it they
+//   lead to /tiendas, where the same things are.
+// - The logos were 38 KB of text inside the original page's script, put in place once the script
+//   had run. Here each one is a file drawn by the page itself, fetched when the section is near,
+//   with the size Carinova gave it (LOGO_SCALE), so nothing moves when it arrives.
+// - The directory, its hundred logos and the dialogs are not in the page: they are fetched when
+//   one is opened.
+import { FEATURED_STORES, LOGO_SCALE } from '~/data/landing';
+import { i18n } from '~/i18n';
+
+import Icon from './Icon.astro';
+import { LOGO_URLS } from './logos';
+
+const { href, ui } = i18n(Astro);
+const t = ui.landing;
+---
+
+<section class="hero-section shopper on-navy" id="personal-shopper" aria-labelledby="shopper-title">
+  <div class="wrap shopper-grid">
+    <div class="hero-head">
+      <h2 class="hero-title" id="shopper-title">{t.shopperName}</h2>
+      <p class="hero-lead">{t.assistedText}</p>
+    </div>
+    <div class="shopper-stage">
+      <div class="shopper-start" id="shopper-start">
+        <div class="stores">
+          <ul class="stores-list" aria-label={t.uiShopperStores}>
+            {
+              FEATURED_STORES.map(({ id, name, url, icon }) => (
+                <li>
+                  <a
+                    class="store"
+                    data-store={id}
+                    href={url}
+                    target="_blank"
+                    rel="noopener"
+                    aria-haspopup="dialog"
+                    aria-describedby="new-tab-note"
+                  >
+                    {LOGO_URLS[id] ? (
+                      <img
+                        class="store-logo"
+                        src={LOGO_URLS[id]}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        style={`--inv:${LOGO_SCALE[id] ?? 0.55}`}
+                      />
+                    ) : (
+                      <span class="store-icon" aria-hidden="true">
+                        <svg>
+                          <use href={`#i-${icon}`} />
+                        </svg>
+                      </span>
+                    )}
+                    <span class:list={['store-name', LOGO_URLS[id] && 'sr-only']}>{name}</span>
+                    <span class="store-go" aria-hidden="true">
+                      <Icon name="arrow" />
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+            <li>
+              <a
+                class="store store-more"
+                id="store-more"
+                href={href('/tiendas')}
+                data-dialog="directory"
+                aria-haspopup="dialog"
+              >
+                <span class="store-more-icon" aria-hidden="true"><Icon name="plus" /></span>
+                <span class="store-more-name">{t.storeMore}</span>
+              </a>
+            </li>
+          </ul>
+          <span id="new-tab-note" hidden>{t.uiNewTab}</span>
+        </div>
+        <a class="btn btn-primary btn-block shopper-cta" id="shopper-cta" href={href('/tiendas')} data-dialog="shopper">
+          <span>{t.shopperCta}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

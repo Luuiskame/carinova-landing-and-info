@@ -65,9 +65,14 @@ test('the facts are the same in both languages: only the words change', () => {
     electronics: electronics.items.map((item) => [item.id, item.price, item.icon]),
   });
   assert.deepEqual(facts(en.RATES), facts(es.RATES));
-  assert.equal(en.RATES.air.transit, '3 to 4 days');
-  assert.equal(es.RATES.air.transit, '3 a 4 días');
+  assert.equal(en.RATES.air.transit, '2 to 4 days');
+  assert.equal(es.RATES.air.transit, '2 a 4 días');
   assert.equal(es.RATES.sea.transit, '15 a 20 días');
+  // The minimum billed by weight and what "Express" costs travel with the rates of every language.
+  assert.equal(en.RATES.minimumLb, es.RATES.minimumLb);
+  assert.deepEqual(en.RATES.express, es.RATES.express);
+  assert.deepEqual(en.RECEPTION_HOURS.dayOfWeek, es.RECEPTION_HOURS.dayOfWeek);
+  assert.equal(en.RECEPTION_HOURS.days, 'Monday to Friday');
 
   es.STORES.forEach((store, index) => {
     const { name, domain, url, category } = en.STORES[index];
@@ -188,7 +193,7 @@ test('what cannot be brought: three groups, and a search finds every item by its
   for (const { RESTRICTED_ITEMS, RESTRICTED_EXAMPLES } of [es, en]) {
     assert.deepEqual(Object.keys(RESTRICTED_ITEMS).sort(), [...RESTRICTED_ORDER].sort());
     const all = RESTRICTED_ORDER.flatMap((id) => RESTRICTED_ITEMS[id].items);
-    assert.equal(all.length, 14);
+    assert.equal(all.length, 15);
 
     for (const item of all) {
       assert.ok(item.match.length > 0, item.name);
@@ -204,7 +209,7 @@ test('what cannot be brought: three groups, and a search finds every item by its
     }
   }
 
-  // The lists Carinova gave on 2026-11-13.
+  // The lists Carinova gave on 2026-11-13, with the alcoholic drinks of its home page of 2026-11-18.
   assert.deepEqual(
     es.RESTRICTED_ITEMS.notYet.items.map((item) => item.name),
     ['Carros', 'Motos', 'Maquinaria pesada']
@@ -215,6 +220,7 @@ test('what cannot be brought: three groups, and a search finds every item by its
       'Armas, municiones y sus accesorios',
       'Tabaco, cigarrillos y derivados',
       'Cigarrillos electrónicos',
+      'Bebidas alcohólicas',
       'Accesorios para aeronaves',
       'Transmisores de radio',
       'Drones',
@@ -227,6 +233,12 @@ test('what cannot be brought: three groups, and a search finds every item by its
   // "armario" is furniture, not a weapon: whole words only.
   assert.equal(found('armario de madera', es.RESTRICTED_ITEMS.prohibited.items[0].match), false);
   assert.equal(found('Pistola de juguete', es.RESTRICTED_ITEMS.prohibited.items[0].match), true);
+  // A drink is not carried; alcohol to clean with is a flammable, which travels by sea.
+  const [drinks] = es.RESTRICTED_ITEMS.prohibited.items.filter((item) => item.name === 'Bebidas alcohólicas');
+  const [flammables] = es.RESTRICTED_ITEMS.seaOnly.items;
+  assert.equal(found('Botella de ron', drinks.match), true);
+  assert.equal(found('alcohol en gel', drinks.match), false);
+  assert.equal(found('alcohol en gel', flammables.match), true);
 });
 
 test('the statuses of packages and payments cover what the account shows', () => {

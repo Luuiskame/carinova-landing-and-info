@@ -1,11 +1,13 @@
 ---
-// The quote calculator, in the format of Carinova's prototype. It is on the home page ("Sacá
-// cuentas. Sin complicarte.") and on /cotizador, which owns the rates.
+// The quote calculator, in the format of Carinova's prototype. It is on /cotizador, which owns the
+// rates. (The home page has the calculator of Carinova's own page, on the same rates and the same
+// arithmetic: components/landing/Calculator.astro.)
 //
 // - One basis at a time: by weight (air or sea), by volume (sea) or per unit (some electronics, by
 //   air). The visitor chooses how the package travels and then the "Tipo de tarifa"; only the fields
-//   of that basis show. Nothing is added up across bases, and the arithmetic is exact (no minimum
-//   weight, no rounding of pounds): Carinova confirms the basis and the amount on reception.
+//   of that basis show. Nothing is added up across bases. By weight a shipment is billed for at
+//   least RATES.minimumLb; pounds are not rounded. Carinova confirms the basis and the amount on
+//   reception.
 // - Its fields can be filled in from the address, e.g.
 //   /cotizador?tarifa=maritimo&base=volumen&largo=48&ancho=40&alto=72&unidad=pulg
 //   (quotePath in src/data/services.ts builds these links). Field names are the parameter names, in
@@ -25,13 +27,11 @@ import { describeWeight, formatNumber, formatUSD, quoteByWeight } from '~/utils/
 import { fill } from '~/utils/template';
 
 export interface Props {
-  /** Where it is: each place sends its own WhatsApp message. */
-  place?: 'page' | 'home';
   /** Its title: h2 right under a page title, h3 inside a section that has its own h2. */
   headingTag?: 'h2' | 'h3';
 }
 
-const { place = 'page', headingTag: Heading = 'h2' } = Astro.props;
+const { headingTag: Heading = 'h2' } = Astro.props;
 const { locale, data, ui } = i18n(Astro);
 const { RATES, WA_MESSAGES } = data;
 
@@ -41,11 +41,8 @@ const t = ui.quoteCalculator;
 
 // Before the script runs: 5 lb by air, one package (the prototype's starting point).
 const pounds = 5;
-const initial = quoteByWeight(pounds, air.pricePerLb);
-const messages =
-  place === 'home'
-    ? { quote: WA_MESSAGES.homeQuote, empty: WA_MESSAGES.homeQuoteEmpty }
-    : { quote: WA_MESSAGES.quote, empty: WA_MESSAGES.quoteEmpty };
+const initial = quoteByWeight(pounds, air.pricePerLb, 1, RATES.minimumLb);
+const messages = { quote: WA_MESSAGES.quote, empty: WA_MESSAGES.quoteEmpty };
 const modeWord = (name: string) => name.toLowerCase();
 const initialMessage = messages.quote(
   fill(t.script.weightShipment, { mode: modeWord(air.name), weight: formatNumber(pounds) }),
@@ -53,7 +50,7 @@ const initialMessage = messages.quote(
 );
 const initialComparison = fill(t.script.comparison, {
   mode: modeWord(sea.name),
-  total: formatUSD(quoteByWeight(pounds, sea.pricePerLb).total),
+  total: formatUSD(quoteByWeight(pounds, sea.pricePerLb, 1, RATES.minimumLb).total),
   transit: sea.transit,
 });
 
@@ -78,9 +75,13 @@ const bases: Record<string, Array<[string, string]>> = {
   ],
 };
 
+/** How a quote by weight is explained, with the minimum Carinova bills. */
+const explainWeight = fill(t.script.explainWeight, { minimum: formatNumber(RATES.minimumLb) });
+
 const config = {
   locale,
   transitFrom: RATES.transitFrom,
+  minimumLb: RATES.minimumLb,
   rates: {
     [air.id]: { word: modeWord(air.name), pricePerLb: air.pricePerLb, transit: air.transit },
     [sea.id]: {
@@ -95,6 +96,7 @@ const config = {
   bases,
   text: {
     ...t.script,
+    explainWeight,
     // The WhatsApp messages of this place, with the quote still to fill in.
     whatsappQuote: messages.quote('{shipment}', '{total}'),
     whatsappEmpty: messages.empty,
@@ -294,7 +296,7 @@ const bigFieldClass =
           <Icon name="tabler:check" class="mt-0.5 h-5 w-5 shrink-0 text-[#ff9b3b]" />
           <p>
             <strong class="block text-white">{t.what}</strong>
-            <span data-cn-explain>{t.script.explainWeight}</span>
+            <span data-cn-explain>{explainWeight}</span>
           </p>
         </li>
         <li class="flex gap-4 has-[[data-cn-comparison][hidden]]:hidden">
@@ -341,6 +343,8 @@ const bigFieldClass =
   interface Config {
     locale: Locale;
     transitFrom: string;
+    /** The least a shipment by weight is billed for, in pounds. */
+    minimumLb: number;
     /** By the value of ?tarifa=. */
     rates: Record<string, Rate>;
     devices: Array<UnitItem>;
@@ -512,7 +516,7 @@ const bigFieldClass =
       const packages = this.count('paquetes');
       if (!pounds || !packages) return this.invalid(rate.transit);
 
-      const quote = quoteByWeight(pounds, rate.pricePerLb, packages);
+      const quote = quoteByWeight(pounds, rate.pricePerLb, packages, this.config.minimumLb);
       const [other] = Object.entries(rates).filter(([id]) => id !== mode);
       return {
         total: quote.total,
@@ -522,7 +526,7 @@ const bigFieldClass =
           other &&
           fill(text.comparison, {
             mode: other[1].word,
-            total: formatUSD(quoteByWeight(pounds, other[1].pricePerLb, packages).total),
+            total: formatUSD(quoteByWeight(pounds, other[1].pricePerLb, packages, this.config.minimumLb).total),
             transit: other[1].transit,
           }),
         transit: rate.transit,

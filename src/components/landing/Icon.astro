@@ -1,0 +1,22 @@
+---
+// An icon of the home page: it points at its drawing in the page's sprite (Sprite.astro), so each
+// drawing is in the page once. `name` is the icon's id without its "i-" (icons.ts). Arrows that
+// point forwards are marked, so they turn round in a page written from right to left.
+import type { IconId } from './icons';
+
+type Name = IconId extends infer Id ? (Id extends `i-${infer Rest}` ? Rest : never) : never;
+
+export interface Props {
+  name: Name;
+  class?: string;
+}
+
+/** The icons that say "forwards". The scripts of the page mark the same ones (scripts/dom.ts). */
+const FORWARD: ReadonlyArray<string> = ['arrow', 'chevron'];
+
+const { name, class: className } = Astro.props;
+---
+
+<svg aria-hidden="true" class:list={[className, FORWARD.includes(name) && 'is-forward']}
+  ><use href={`#i-${name}`}></use></svg
+>

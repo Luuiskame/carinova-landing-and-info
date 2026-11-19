@@ -92,7 +92,7 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
       },
       {
         title: '你们可以帮我代购商品吗？',
-        description: `可以。选择商店，并把链接分享给我们。代购需要确认库存、能否入境，以及商品、服务和运输的费用。${link('/#compras', '准备您的申请')}。`,
+        description: `可以。选择商店，并把链接分享给我们。代购需要确认库存、能否入境，以及商品、服务和运输的费用。${link('/#personal-shopper', '准备您的申请')}。`,
         featured: 8,
       },
       {

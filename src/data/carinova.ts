@@ -7,7 +7,11 @@
  *
  * Since 2026-11-13 the wording, the rates' conditions, the stores and the calls to action follow
  * Carinova's prototype page ("CARINOVA · Signature system v1.0"); what the prototype left to an
- * integration (accounts, tracking) is what the site and its database really do.
+ * integration (accounts, tracking) is what the site and its database really do. On 2026-11-18
+ * Carinova wrote its own home page (src/pages/index.astro) and with it changed some facts, which
+ * are the ones here now: by air in 2 to 4 days, laptops at US$75, a minimum of 1 lb billed,
+ * alcoholic drinks not carried, how to pay, the hours of the reception in the United States and
+ * the Facebook page (docs/PROJECT-LOG.md → D-103).
  *
  * This file holds the facts and their Spanish wording (the site's default language). The English
  * wording of the same exports is in en/carinova.ts, built on top of these facts so a price or an
@@ -61,7 +65,13 @@ export const CONTACT = {
  * shown beside them from CONTACT.
  */
 export const SOCIAL_LINKS = [
-  { name: 'Facebook', icon: 'tabler:brand-facebook', href: '', handle: '' }, // TODO: address of the "Carinova" page
+  {
+    name: 'Facebook',
+    icon: 'tabler:brand-facebook',
+    // From the page Carinova wrote (2026-11-18). TODO: confirm it is the official page.
+    href: 'https://www.facebook.com/profile.php?id=61591437427298',
+    handle: 'Carinova',
+  },
   {
     name: 'Instagram',
     icon: 'tabler:brand-instagram',
@@ -197,6 +207,26 @@ export const RECEPTION_POINTS = [
   { id: 'los-angeles', code: 'LAX', city: 'Los Ángeles', state: 'California', available: false },
 ];
 
+/** When packages are received in the United States, from Carinova's home page: Monday to Friday. */
+export const RECEPTION_HOURS: OpeningHours = {
+  days: 'Lunes a viernes',
+  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  opens: '08:00',
+  closes: '17:00',
+};
+
+/**
+ * How a shipment is paid, from Carinova's home page: in cash, or by transfer to one of these banks.
+ * The account numbers are not published: they are given on WhatsApp.
+ */
+export const PAYMENTS = { cash: true, banks: ['BAC', 'Banpro', 'LAFISE'] };
+
+/**
+ * The company behind Carinova, for the foot of the home page: its block shows once either has a
+ * value. TODO: legal name and RUC.
+ */
+export const COMPANY = { legalName: '', ruc: '' };
+
 /**
  * Delivery to the customer's door (última milla). From Carinova's prototype: it is coordinated case
  * by case, anywhere in the country, and has an additional charge that depends on the destination.
@@ -229,7 +259,7 @@ const transit = (min: number, max: number) => ({
 const ELECTRONICS: Array<ElectronicsItem> = [
   { id: 'celular', name: 'Celular', plural: 'Celulares', icon: 'tabler:device-mobile', price: 30 },
   { id: 'tablet', name: 'Tablet', plural: 'Tablets', icon: 'tabler:device-tablet', price: 40 },
-  { id: 'laptop', name: 'Laptop', plural: 'Laptops', icon: 'tabler:device-laptop', price: 80 },
+  { id: 'laptop', name: 'Laptop', plural: 'Laptops', icon: 'tabler:device-laptop', price: 75 },
   { id: 'xbox', name: 'Xbox', plural: 'Xbox', icon: 'tabler:device-gamepad-2', price: 85, brand: true },
   {
     id: 'playstation',
@@ -241,15 +271,30 @@ const ELECTRONICS: Array<ElectronicsItem> = [
   },
 ];
 
+/** The least a shipment by weight is billed for, in pounds (Carinova's home page, 2026-11-18). */
+const MINIMUM_LB = 1;
+
 /**
- * Rates and delivery estimates, from Carinova's prototype. A shipment is quoted on one basis at a
- * time: by the pound, by the cubic foot (sea) or per unit (some electronics, by air). Which basis
- * applies is decided by Carinova according to the cargo; the arithmetic is exact, with no minimum
- * weight and no rounding of pounds (utils/rates.ts).
+ * Rates and delivery estimates, from Carinova's prototype and, since 2026-11-18, its home page. A
+ * shipment is quoted on one basis at a time: by the pound, by the cubic foot (sea) or per unit
+ * (some electronics, by air). Which basis applies is decided by Carinova according to the cargo.
+ * By the pound, a shipment is billed for at least `minimumLb`; nothing else is rounded
+ * (utils/rates.ts).
  */
 export const RATES = {
   /** Delivery estimates count from the moment the package is physically received in the United States. */
   transitFrom: 'desde la recepción física de tu paquete',
+  /** The least a shipment by weight is billed for, in pounds: all its packages together. */
+  minimumLb: MINIMUM_LB,
+  /**
+   * "Express", the faster service Carinova's calculator offers beside "Standard": USD per pound and
+   * its days, by air and by sea. Carinova has published neither, so the calculator answers
+   * "A cotizar" and the team quotes it; a price here makes the calculator work it out.
+   */
+  express: {
+    air: null as { pricePerLb: number; transitDays: [number, number] } | null,
+    sea: null as { pricePerLb: number; transitDays: [number, number] } | null,
+  },
   air: {
     id: 'aereo',
     name: 'Aéreo',
@@ -258,7 +303,7 @@ export const RATES = {
     badge: 'Más rápido',
     /** USD per pound. */
     pricePerLb: 6.5,
-    ...transit(3, 4),
+    ...transit(2, 4),
   },
   sea: {
     id: 'maritimo',
@@ -275,7 +320,7 @@ export const RATES = {
     name: 'Electrónicos',
     icon: 'tabler:devices',
     /** They travel by air. */
-    ...transit(3, 4),
+    ...transit(2, 4),
     items: ELECTRONICS,
   },
   /** Shown under the rates and the calculator. */
@@ -284,6 +329,7 @@ export const RATES = {
     'Se verifican el peso, las dimensiones, la modalidad, la cobertura y las condiciones del servicio.',
     'Las tarifas contemplan seguro e impuestos cuando correspondan al envío. La cobertura, los límites, las exclusiones y los cargos adicionales están sujetos a las condiciones del servicio.',
     'Las tarifas de electrónicos corresponden a envíos aéreos por unidad.',
+    `Por peso, cada envío se factura por un mínimo de ${MINIMUM_LB} lb.`,
   ],
 };
 
@@ -388,6 +434,24 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
           'vape',
           'vapes',
           'vapeador',
+        ],
+      },
+      {
+        // Since Carinova's home page of 2026-11-18. "Alcohol" by itself stays among the flammables.
+        name: 'Bebidas alcohólicas',
+        match: [
+          'bebida alcoholica',
+          'bebidas alcoholicas',
+          'licor',
+          'licores',
+          'ron',
+          'whisky',
+          'vodka',
+          'tequila',
+          'cerveza',
+          'cervezas',
+          'vino',
+          'vinos',
         ],
       },
       { name: 'Accesorios para aeronaves', match: ['aeronave', 'aeronaves', 'avion', 'aviones', 'avioneta'] },
@@ -610,26 +674,8 @@ export const WA_MESSAGES = {
   channels: hello('Los encontré en su sitio web y quiero escribirles.'),
 
   // Home page
-  /** The calculator of the home page. */
-  homeQuote: (shipment: string, total: string) =>
-    hello(`Coticé en su página de inicio ${shipment}: ${total}. ¿Me ayudan a confirmarlo?`),
-  homeQuoteEmpty: hello('Estoy en la calculadora de su página de inicio y no sé qué datos poner.'),
-  /** "Compra asistida": the link the visitor pasted goes at the end. */
-  shopper: (link: string) =>
-    hello(
-      `Quiero solicitar una compra asistida. Producto: ${link} ¿Me confirman disponibilidad, si puede ingresar y el costo total?`
-    ),
-  /** A store's card. */
-  storeAssist: (store: string) => hello(`Quiero una compra asistida en ${store}. Este es el enlace del producto: `),
-  /** "Encomiendas", among the solutions. */
-  homeFamily: hello('Quiero enviar una encomienda familiar a Nicaragua. ¿Qué necesito?'),
-  /** "¿Puede ingresar?" in the tracker of the home page: the article the visitor searched for. */
-  itemCheck: (item: string) => hello(`Antes de comprar, quiero saber si pueden traer: ${item}`),
-  itemCheckEmpty: hello('Quiero consultar si un artículo puede ingresar a Nicaragua: '),
-  /** A branch's card on the home page. */
-  homeBranch: (city: string) => hello(`Quiero conocer la ubicación y el horario de la sucursal de ${city}.`),
-  homeDelivery: hello('Quiero consultar la entrega a domicilio. Mi dirección es: '),
-  homeFaq: hello('Leí sus preguntas frecuentes y tengo otra duda.'),
+  /** "Contactar al equipo", under the conditions of the service on the home page. */
+  homeConditions: hello('Leí las condiciones del servicio en su página de inicio y tengo una consulta.'),
 
   // Rastreo
   /** "¿Puede ingresar?" in the tracker of the tracking page. */

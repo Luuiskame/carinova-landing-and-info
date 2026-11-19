@@ -1,0 +1,137 @@
+---
+// "Carinova Bot": the search that says how an article travels, and under it the two lists of what
+// does not travel at all and of what cannot fly.
+//
+// - The lists are the ones of /articulos-prohibidos (RESTRICTED_ITEMS), in the page's language, so
+//   the home page and that page cannot disagree; their icons are RESTRICTED_ICONS.
+// - The search answers with Carinova's catalogue and, for what it does not know, with those lists
+//   (utils/articles.ts). The catalogue is not in the page: the script fetches it the first time
+//   someone searches (scripts/articles.ts). What the script says travels with the page (ScriptData).
+// - Without the script, the form leads to the page of the lists.
+import { ARTICLE_RULES } from '~/data/articles';
+import { CONTACT } from '~/data/carinova';
+import { RESTRICTED_ICONS } from '~/data/landing';
+import { i18n } from '~/i18n';
+
+import Icon from './Icon.astro';
+import ScriptData from './ScriptData.astro';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { RATES, RESTRICTED_ITEMS } = data;
+const t = ui.landing;
+const kinds: Record<string, string> = t.cat;
+
+const examples = [
+  { text: t.examplePerfume, icon: 'perfume' },
+  { text: t.examplePhone, icon: 'device' },
+  { text: t.exampleSofa, icon: 'sofa' },
+  { text: t.exampleDrone, icon: 'drone' },
+] as const;
+
+const lists = [
+  { id: 'prohibited', kind: 'rule-no', mark: 'ban', title: t.prohibited },
+  { id: 'seaOnly', kind: 'rule-air', mark: 'plane-off', title: t.noAir },
+] as const;
+
+/** What the script of the search needs: its sentences, the names of the kinds of article, the lists. */
+const config = {
+  locale,
+  whatsapp: CONTACT.whatsapp,
+  text: {
+    required: t.uiArticleRequired,
+    prohibitedTitle: t.uiArticleProhibitedTitle,
+    prohibitedNote: t.uiArticleProhibitedNote,
+    seaTitle: t.uiArticleSeaTitle,
+    seaNote: t.uiArticleSeaNote,
+    volumeTitle: t.uiArticleFurnitureTitle,
+    volumeText: t.uiArticleFurnitureText,
+    airTitle: t.uiArticleElectronicTitle,
+    airText: t.uiArticleElectronicText,
+    allowedTitle: t.uiArticleAllowedTitle,
+    allowedText: t.uiArticleAllowedText,
+    reviewTitle: t.uiArticleReviewTitle,
+    reviewText: t.uiArticleReviewText,
+    identified: t.uiArticleIdentified,
+    unknown: t.uiArticleUnknown,
+    quote: t.uiArticleQuote,
+    ask: t.uiAskArticle,
+    hello: t.uiMsgHello,
+    message: t.uiMsgArticle,
+  },
+  /** The names of the kinds of article, by the id of their rule. */
+  kinds: Object.fromEntries(ARTICLE_RULES.map(({ id }) => [id, kinds[id] ?? ''])),
+  /** The devices with a price per unit: their name and their price as the answer writes it. */
+  devices: Object.fromEntries(
+    RATES.electronics.items.map((item) => [item.id, { name: item.name, rate: item.price.toFixed(2) }])
+  ),
+  /** The lists of what cannot be brought, from the strictest to the mildest. */
+  groups: (['prohibited', 'notYet', 'seaOnly'] as const).map((id) => ({ id, ...RESTRICTED_ITEMS[id] })),
+};
+---
+
+<section class="hero-section section-mist" id="restricciones" aria-labelledby="check-title">
+  <div class="wrap">
+    <div class="hero-head is-center">
+      <h2 class="hero-title" id="check-title">{t.botName}</h2>
+      <p class="hero-tagline">{t.botTagline}</p>
+      <p class="hero-lead">{t.checkText}</p>
+    </div>
+    <div class="check-hero">
+      <form id="article-form" class="search search-xl" role="search" action={href('/articulos-prohibidos')} novalidate>
+        <input
+          id="article-query"
+          type="search"
+          enterkeyhint="search"
+          autocomplete="off"
+          maxlength="120"
+          required
+          dir="auto"
+          aria-label={t.articleQueryAria}
+        />
+        <button class="btn btn-primary search-go" type="submit" aria-label={t.consult}><Icon name="arrow" /></button>
+      </form>
+      <div class="suggestions">
+        <span>{t.tryExamples}</span>
+        {
+          examples.map(({ text, icon }) => (
+            <button class="chip" type="button" data-article={text}>
+              <Icon name={icon} />
+              <span>{text}</span>
+            </button>
+          ))
+        }
+      </div>
+      <div id="article-result" class="article-result" role="status" aria-live="polite"></div>
+    </div>
+    <div class="rules">
+      {
+        lists.map(({ id, kind, mark, title }) => (
+          <article class:list={['rule', kind]}>
+            <div class="rule-head">
+              <span class="rule-mark" aria-hidden="true">
+                <Icon name={mark} />
+              </span>
+              <h3>{title}</h3>
+            </div>
+            <ul class="rule-list">
+              {RESTRICTED_ITEMS[id].items.map((item, index) => (
+                <li>
+                  <span class="ri" aria-hidden="true">
+                    <svg>
+                      <use href={`#i-${RESTRICTED_ICONS[id][index] ?? 'ban'}`} />
+                    </svg>
+                  </span>
+                  <span>{item.name}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+    <p class="rules-more">
+      <a class="link" href={href('/terminos')} data-dialog="conditions">{t.conditions}</a>
+    </p>
+  </div>
+</section>
+<ScriptData name="articles" value={config} />

@@ -10,6 +10,7 @@ import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../dat
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
 import type { UI } from './es.ts';
+import { landing } from './landing/zh.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -94,15 +95,6 @@ export const ui: UI = {
     branch: (city: string) => `（${city} 网点）`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'Carinova Business · 企业货运',
-    title: ['您的生意从不停歇。', '我们也是。'],
-    intro: '运进原料、产品或商品，借助为您的业务量身打造的方案实现成长。我们会逐一评估每项需求。',
-    button: '了解 Business 方案',
-    tiles: { name: ['Carinova', 'Business'], route: ['USA', 'NIC'], pace: '按您的节奏' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: '介绍一下您的公司',
@@ -137,31 +129,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: '下一步由您决定',
-    title: ['就是', '这么简单。'],
-    text: '注册账户，获取您的 Carinova ID，开始准备您的下一次寄件。',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: '关于寄往尼加拉瓜的常见疑问',
-    title: ['常见', '问题。'],
-    intro: '第一次寄件前，您需要了解的重要解答。',
-    help: '还有其他问题？联系我们',
-    all: '查看所有问题',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: '如何从尼加拉瓜在美国购物',
-    title: ['三个步骤，', '从彼岸到身边。'],
-    intro: '三个步骤，开始接收您从美国购买的商品和寄来的包裹。',
-    closing: '毫不复杂。从头到尾，计划清晰。',
-    more: '查看每个步骤及示例',
-  },
-
   // components/carinova/QuoteCalculator.astro
   quoteCalculator: {
     title: '估算您的运费',
@@ -189,7 +156,8 @@ export const ui: UI = {
       '这是参考估算，并非合同报价。最终费用取决于对重量、尺寸、内容物、适用费率及可能的附加费用的核实。不包括商品费用和送货上门费用。',
     script: {
       delivery: '预计送达：{transit}，{from}。',
-      explainWeight: '每件包裹的重量乘以包裹数量。重量和适用的计费基础将在收货时核实。',
+      explainWeight:
+        '每件包裹的重量乘以包裹数量，每票货物最低按 {minimum} lb 计费。重量和适用的计费基础将在收货时核实。',
       explainVolume: '长 × 宽 × 高，换算为立方英尺（1 英尺 = 30.48 cm = 12 英寸），无最低限额，不做进位。',
       explainUnit: '所选物品的空运按件费率，不再另加按磅费用。',
       comparison: '仅供比较：同样的重量走{mode}，费用为 {total}（{transit}）。',
@@ -516,14 +484,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: '从美国寄往尼加拉瓜',
     title: `从美国寄往尼加拉瓜 | ${warehouse.city} 美国收货地址 | Carinova`,
     description: `从美国寄往尼加拉瓜，使用您专属的 ${warehouse.city} 美国收货地址：空运${air.transit}送达，每磅 ${formatUSD(air.pricePerLb)}；海运${sea.transit}送达，每磅 ${formatUSD(sea.pricePerLb)} 起。可在 ${cityNames.join(' 或 ')} 自提。`,
-    reviews: { tagline: '评价', title: '客户怎么说', source: 'Google 评价' },
-    calculator: {
-      eyebrow: '尼加拉瓜运费计算器',
-      title: ['计算', '您的运费。'],
-      intro: '清晰的估算，帮您做出更好的决定。无需注册。',
-    },
   },
 
   // pages/ingresar.astro
@@ -692,94 +655,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: '从美国寄往尼加拉瓜',
-    lead: '从美国购物、寄送，在尼加拉瓜收货。比您想象的更简单，方式由您选择。',
-    facts: [`空运${air.transit}`, `海运${sea.transit}`, `在 ${cityNames.join(' 和 ')} 自提`],
-    emblemAlt: 'Carinova 徽标：三个人共同高举一支燃烧的火炬',
-    origin: '起点',
-    originPlace: `${warehouse.city}，美国`,
-    destination: '目的地',
-    destinationPlace: '尼加拉瓜',
-    bridgeTitle: '连接两国的桥梁。',
-    bridgeText: '让彼此更近的简单方式。',
-    route: [warehouse.city, '尼加拉瓜'],
-    explore: '探索 Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'Carinova 概览',
-    items: [
-      { title: '两种寄送方式', text: '速度或经济，由您选择' },
-      { title: `从 ${warehouse.city} 到尼加拉瓜`, text: '一条路线，多种可能' },
-      { title: '按您的方式', text: '个人、家庭或企业' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: '寄往尼加拉瓜的寄送方案',
-    title: ['总有一种方案，', '满足您的需求。'],
-    aside: '选择最适合您的方式，我们为您指明下一步。',
-    cards: {
-      shopping: {
-        label: '网购',
-        title: '在您喜爱的美国商店购物，在尼加拉瓜收货',
-        text: `挑选您喜欢的商品，结账时填写您的 ${warehouse.city} 美国收货地址。我们负责运到尼加拉瓜。`,
-        action: '开始购物',
-        imageAlt: '',
-      },
-      assisted: {
-        label: '代购',
-        title: '分享链接，我们帮您买。',
-        text: '在网上看中了什么？把链接发给我们，我们为您提供指导。',
-        action: '申请代购',
-        imageAlt: '一个人用手机分享商品链接',
-      },
-      family: {
-        label: '亲友包裹',
-        title: '寄送您的亲友包裹',
-        text: '因为有些包裹承载的不只是物品，还有情意。',
-        action: '咨询包裹寄送',
-        imageAlt: '一家人打开从美国寄来的包裹',
-      },
-      business: {
-        label: '企业客户',
-        title: 'Carinova Business：按您的业务节奏设计的方案。',
-        text: '让您的业务持续运转。',
-        action: '聊聊您的业务',
-        imageAlt: '为企业准备好的成箱商品',
-      },
-    },
-    stores: {
-      label: '可以购物的美国商店',
-      previous: '上一家商店',
-      next: '下一家商店',
-      pause: '暂停商店轮播',
-      play: '继续商店轮播',
-      disclosure: '这些商店仅作示例展示，不代表任何合作或背书。价格和库存请以各商店网站为准。',
-      all: '查看所有商店',
-    },
-    storeNotice: '访问商店，挑选商品，并把链接分享给我们。在办理之前，我们会核实购买事宜、商品能否入境以及费率。',
-    visit: '前往商店网站',
-    assist: '请我们代购',
-    restricted: '购物前，请查看该物品能否寄送',
-    close: '关闭',
-    assistTitle: '发送链接，我们全程协助。',
-    assistIntro: '粘贴商品链接，准备您的申请。在办理之前，我们会确认商品费用、税费和运费。',
-    script: {
-      status: '{name}，第{index}家，共{total}家。',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: '包裹追踪',
-    title: ['了解您的包裹', '处于哪个阶段。'],
-    intro: '每件包裹都按清晰的阶段推进：从我们在美国收到它，直到它交到您手中。您可以在账户中凭参考号和历史记录跟踪它。',
-    stagesLabel: '包裹的各个阶段',
     switchLabel: '您想查询什么？',
     tabs: { track: '追踪包裹', check: '可以寄吗？' },
     track: {
@@ -810,21 +687,6 @@ export const ui: UI = {
         unknownText: '这并不代表可以入境：有些物品需要许可或审核。购买前请先咨询我们。',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `${cityNames.join(' 和 ')} 网点`,
-    title: ['我们离您', '更近。'],
-    intro: '在我们的网点领取您的货件，或咨询配送到尼加拉瓜其他地区的服务。',
-    country: '尼加拉瓜',
-    regions: { managua: '太平洋地区 · 首都', bluefields: '南加勒比海岸' },
-    see: (city: string) => `查看 ${city} 网点`,
-    ask: '咨询位置',
-    mapLabel: `尼加拉瓜示意图，标出 ${cities.join(' 和 ')} 的服务网点`,
-    mapCaption: '示意图：不显示实际地址或运营路线。',
-    fine: '地址、具体覆盖范围和送货上门费用将在安排配送时确认。',
-    delivery: '咨询送货上门',
   },
 
   // components/widgets/Footer.astro
@@ -1023,4 +885,7 @@ export const ui: UI = {
       lead: '对某家商店有疑问？',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };

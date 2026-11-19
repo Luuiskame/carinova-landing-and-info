@@ -1,0 +1,194 @@
+---
+// The one dialog of the home page and what its views say. Carinova's page draws every view inside
+// it: the choice a store opens (buy it yourself, or Personal Shopper), the directory of stores, the
+// two forms that end in a WhatsApp message (Personal Shopper and Carinova Business), the message
+// itself and the conditions of the service.
+//
+// The dialog is empty in the page: its script, its stylesheet and the directory with its hundred
+// logos are fetched the first time something opens it (scripts/boot.ts → scripts/dialogs.ts). Every
+// button that opens it is a link that leads somewhere useful by itself.
+//
+// Not here, because the site's own pages do it with the real account: creating an account, signing
+// in, the account and tracking (/registro, /ingresar, /mi-cuenta, /rastreo). The original drew them
+// in this dialog against a simulated account kept in the browser.
+import { CONTACT } from '~/data/carinova';
+import { FEATURED_STORES, LANDING_LIMITS, STORE_DIRECTORY } from '~/data/landing';
+import { i18n } from '~/i18n';
+import { whatsappLink } from '~/utils/whatsapp';
+
+import Icon from './Icon.astro';
+import ScriptData from './ScriptData.astro';
+
+const { data, ui } = i18n(Astro);
+const { RESTRICTED_ITEMS, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
+const t = ui.landing;
+const store: Record<string, string> = t.store;
+const kinds: Record<string, string> = t.cat;
+
+/** The conditions of the service: Carinova's summary, with the two lists as /articulos-prohibidos has them. */
+const conditions: Array<{ title: string; text?: string; items?: Array<string> }> = [
+  { title: t.uiRatesHeading, text: t.uiConditionsRates },
+  { title: t.uiPaymentsHeading, text: t.faq[8].a },
+  { title: t.uiElectronicsHeading, text: t.uiConditionsElectronics },
+  { title: t.uiVolumeHeading, text: t.uiConditionsVolume },
+  { title: t.prohibited, items: RESTRICTED_ITEMS.prohibited.items.map((item) => item.name) },
+  { title: t.noAir, items: RESTRICTED_ITEMS.seaOnly.items.map((item) => item.name) },
+  { title: t.uiCoverageHeading, text: t.uiConditionsCoverage },
+  { title: t.uiDeliveryHeading, text: t.uiConditionsDelivery },
+  { title: t.uiCustomsHeading, text: t.uiConditionsCustoms },
+];
+
+/** What the script of the dialogs needs (scripts/dialogs.ts, scripts/directory.ts). */
+const config = {
+  whatsapp: CONTACT.whatsapp,
+  limits: LANDING_LIMITS,
+  /** The departments of Nicaragua, for the forms: the ones of the sign-up form. */
+  departments: SIGNUP_COUNTRIES.find((country) => country.code === 'NI')?.states ?? [],
+  /** The stores of the home page: what each one is. */
+  stores: Object.fromEntries(FEATURED_STORES.map(({ id }) => [id, store[id] ?? ''])),
+  /** The names of the directory's categories. */
+  kinds: Object.fromEntries(STORE_DIRECTORY.map(({ id }) => [id, kinds[id] ?? ''])),
+  text: {
+    shopperEyebrow: t.uiPersonalShopper,
+    // The choice a store opens
+    choiceSelfTitle: t.uiChoiceSelfTitle,
+    choiceSelfText: t.uiChoiceSelfText,
+    choiceNoLink: t.uiChoiceNoLink,
+    storeGo: t.uiStoreGo,
+    choiceAssistTitle: t.uiChoiceAssistTitle,
+    choiceAssistText: t.uiChoiceAssistText,
+    shopperContinue: t.uiShopperContinue,
+    // The directory
+    dirEyebrow: t.dirEyebrow,
+    dirTitle: t.dirTitle,
+    dirIntro: t.dirIntro,
+    dirSearch: t.dirSearch,
+    dirFilters: t.dirFilters,
+    dirAll: t.dirAll,
+    dirCount: t.dirCount,
+    dirEmpty: t.dirEmpty,
+    dirOtherText: t.dirOtherText,
+    dirOther: t.dirOther,
+    dirBack: t.dirBack,
+    // The forms
+    shopperTitle: t.uiShopperTitle,
+    shopperIntro: t.uiShopperIntro,
+    firstName: t.uiFirstName,
+    firstNamePlaceholder: t.uiNamePlaceholder,
+    lastName: t.uiLastName,
+    lastNamePlaceholder: t.uiLastNamePlaceholder,
+    email: t.uiEmail,
+    emailPlaceholder: t.uiEmailPlaceholder,
+    phone: t.uiPhone,
+    phonePlaceholder: t.uiPhonePlaceholder,
+    department: t.uiDepartment,
+    departmentPlaceholder: t.uiDepartmentPlaceholder,
+    productNumber: t.uiProductNumber,
+    removeProduct: t.uiRemoveProduct,
+    productLink: t.uiProductLink,
+    productUrlPlaceholder: t.uiProductUrlPlaceholder,
+    productName: t.uiProductName,
+    productNamePlaceholder: t.uiProductNamePlaceholder,
+    productQuantity: t.uiProductQuantity,
+    linkCount: t.uiLinkCount,
+    addLink: t.uiAddLink,
+    contactChannel: t.uiContactChannel,
+    channelWhatsapp: t.uiWhatsApp,
+    channelPhone: t.uiPhoneChannel,
+    channelEmail: t.uiEmailChannel,
+    details: t.uiDetails,
+    shopperDetails: t.uiShopperDetails,
+    requestConsent: t.uiRequestConsent,
+    prepareRequest: t.uiPrepareRequest,
+    businessEyebrow: t.uiBusinessEyebrow,
+    businessTitle: t.uiBusinessTitle,
+    businessIntro: t.uiBusinessIntro,
+    company: t.uiCompany,
+    companyPlaceholder: t.uiCompanyPlaceholder,
+    merchandise: t.uiMerchandise,
+    goodsGeneral: t.uiGeneral,
+    goodsElectronics: t.uiElectronicsHeading,
+    goodsVolume: t.uiVolumeArticle,
+    goodsOther: t.uiOther,
+    frequency: t.uiFrequency,
+    frequencyFirst: t.uiFirstShipment,
+    frequencyMonthly: t.uiMonthly,
+    frequencyWeekly: t.uiWeekly,
+    frequencySeasonal: t.uiSeasonal,
+    businessPlaceholder: t.uiBusinessPlaceholder,
+    // What a form says when something is missing
+    invalidName: t.uiInvalidName,
+    invalidEmail: t.uiInvalidEmail,
+    invalidPhone: t.uiInvalidPhone,
+    invalidDepartment: t.uiInvalidDepartment,
+    invalidLinks: t.uiInvalidLinks,
+    invalidUrl: t.uiInvalidUrl,
+    invalidProductQuantity: t.uiInvalidProductQuantity,
+    consentRequired: t.uiConsentRequired,
+    requiredFields: t.uiRequiredFields,
+    // The message, ready to send
+    messageEyebrow: t.uiWhatsApp,
+    preparedTitle: t.uiRequestPreparedTitle,
+    preparedText: t.uiRequestPreparedText,
+    completeMessage: t.uiCompleteMessage,
+    continueWhatsapp: t.uiContinueWhatsApp,
+    openSalesChat: t.uiOpenSalesChat,
+    copyMessage: t.uiCopyMessage,
+    messageCopied: t.uiMessageCopied,
+    copyManually: t.uiCopyManually,
+    longMessage: t.uiLongMessage,
+    whatsappNote: t.uiWhatsAppNote,
+    // The lines of the message: the customer speaks
+    msgHello: t.uiMsgHello,
+    msgShopper: t.uiMsgShopper,
+    msgBusiness: t.uiMsgBusiness,
+    msgContact: t.uiMsgContact,
+    msgEmail: t.uiMsgEmail,
+    msgPhone: t.uiMsgPhone,
+    msgDepartment: t.uiMsgDepartment,
+    msgChannel: t.uiMsgChannel,
+    msgCompany: t.uiMsgCompany,
+    msgFrequency: t.uiMsgFrequency,
+    msgMerchandise: t.uiMsgMerchandise,
+    msgDetails: t.uiMsgDetails,
+    msgItems: t.uiMsgItems,
+    msgProduct: t.uiMsgProduct,
+  },
+};
+---
+
+<dialog class="modal" id="modal" aria-labelledby="modal-title">
+  <button class="modal-close" id="modal-close" type="button" aria-label={t.closeWindow}><Icon name="close" /></button>
+  <div class="modal-content" id="modal-content"></div>
+</dialog>
+
+{/* The conditions of the service, ready to be shown: the dialog copies them in. */}
+<template id="landing-conditions">
+  <p class="modal-eyebrow">{t.uiConditionsEyebrow}</p>
+  <h2 class="modal-title" id="modal-title" tabindex="-1">{t.uiConditionsTitle}</h2>
+  <p class="modal-intro">{t.uiConditionsIntro}</p>
+  <div class="conditions">
+    {
+      conditions.map(({ title, text, items }) => (
+        <>
+          <h3>{title}</h3>
+          {text && <p>{text}</p>}
+          {items && (
+            <ul>
+              {items.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      ))
+    }
+  </div>
+  <a
+    class="btn btn-primary btn-block"
+    href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.homeConditions)}
+    target="_blank"
+    rel="noopener">{t.uiContactTeam}</a
+  >
+</template>
+<ScriptData name="dialogs" value={config} />

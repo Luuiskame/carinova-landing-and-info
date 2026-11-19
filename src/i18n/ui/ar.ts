@@ -9,6 +9,7 @@ import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../dat
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
 import type { UI } from './es.ts';
+import { landing } from './landing/ar.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -93,15 +94,6 @@ export const ui: UI = {
     branch: (city: string) => `(فرع ${city})`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'شحن البضائع للشركات · Carinova Business',
-    title: ['عملك لا يتوقف.', 'ونحن كذلك.'],
-    intro: 'استورد المستلزمات أو المنتجات أو البضائع لتنمو بحلّ مصمَّم لعملياتك. ندرس كل احتياج على حدة.',
-    button: 'استكشف حلول Business',
-    tiles: { name: ['Carinova', 'Business'], route: ['أمريكا', 'نيكاراغوا'], pace: 'على وتيرتك' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: 'حدّثنا عن شركتك',
@@ -136,31 +128,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: 'الخطوة التالية بيدك',
-    title: ['بهذه', 'البساطة.'],
-    text: 'أنشئ حسابك، واحصل على معرّف Carinova ID، وابدأ في تجهيز شحنتك القادمة.',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: 'أسئلة عن الشحن إلى نيكاراغوا',
-    title: ['الأسئلة', 'الشائعة.'],
-    intro: 'الإجابات المهمة، قبل شحنتك الأولى.',
-    help: 'عندك سؤال آخر؟ راسلنا',
-    all: 'اعرض كل الأسئلة',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: 'كيف تشتري من الولايات المتحدة وأنت في نيكاراغوا',
-    title: ['ثلاث خطوات،', 'من هناك إلى هنا.'],
-    intro: 'ثلاث خطوات لتبدأ في استلام مشترياتك وطرودك من الولايات المتحدة.',
-    closing: 'بلا تعقيد. خطة واضحة من البداية إلى النهاية.',
-    more: 'اعرض كل خطوة مع أمثلة',
-  },
-
   // components/carinova/QuoteCalculator.astro
   quoteCalculator: {
     title: 'احسب تقديرك',
@@ -188,7 +155,8 @@ export const ui: UI = {
       'تقدير استرشادي، وليس عرض سعر ملزمًا. يتوقف المجموع النهائي على مراجعة الوزن والأبعاد والمحتوى والأسعار المطبَّقة وأي رسوم إضافية. ولا يشمل ثمن المنتجات ولا التوصيل إلى المنزل.',
     script: {
       delivery: 'التسليم المتوقع: {transit}، {from}.',
-      explainWeight: 'وزن كل طرد مضروبًا في عدد الطرود. ويُتحقق من الوزن ومن أساس الحساب المطبَّق عند الاستلام.',
+      explainWeight:
+        'وزن كل طرد مضروبًا في عدد الطرود، بحد أدنى محتسب قدره {minimum} رطل لكل شحنة. ويُتحقق من الوزن ومن أساس الحساب المطبَّق عند الاستلام.',
       explainVolume:
         'الطول × العرض × الارتفاع، محوَّلًا إلى أقدام مكعّبة (القدم الواحد = 30.48 سم = 12 بوصة)، دون حد أدنى ودون تقريب.',
       explainUnit: 'السعر الجوي لكل وحدة من الصنف الذي اخترته. ولا يُضاف إليه السعر بالرطل.',
@@ -528,14 +496,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: 'الشحن من الولايات المتحدة إلى نيكاراغوا',
     title: `الشحن من الولايات المتحدة إلى نيكاراغوا | عنوان أمريكي في ${warehouse.city} | Carinova`,
     description: `الشحن من الولايات المتحدة إلى نيكاراغوا بعنوانك الأمريكي الخاص في ${warehouse.city}: جوًا في مدة ${air.transit} بسعر ${formatUSD(air.pricePerLb)} للرطل، وبحرًا في مدة ${sea.transit} ابتداءً من ${formatUSD(sea.pricePerLb)}. استلم من ${cityNames.join(' أو ')}.`,
-    reviews: { tagline: 'التقييمات', title: 'ماذا يقول عملاؤنا', source: 'تقييم على Google' },
-    calculator: {
-      eyebrow: 'حاسبة الشحن إلى نيكاراغوا',
-      title: ['احسب تكلفة', 'شحنتك.'],
-      intro: 'تقدير واضح لتقرر بشكل أفضل. دون تسجيل.',
-    },
   },
 
   // pages/ingresar.astro
@@ -709,96 +672,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: 'الشحن من الولايات المتحدة إلى نيكاراغوا',
-    lead: 'اشترِ واشحن واستلم من الولايات المتحدة إلى نيكاراغوا. أسهل مما تتخيل، وبالطريقة التي تناسبك.',
-    facts: [`جوًا: ${air.transit}`, `بحرًا: ${sea.transit}`, `الاستلام في ${cityNames.join(' و')}`],
-    emblemAlt: 'شعار Carinova: ثلاثة أشخاص يرفعون معًا شعلة متّقدة',
-    origin: 'المنشأ',
-    originPlace: `${warehouse.city}، الولايات المتحدة`,
-    destination: 'الوجهة',
-    destinationPlace: 'نيكاراغوا',
-    bridgeTitle: 'جسر بين بلدين.',
-    bridgeText: 'طريقة أبسط لتكون قريبًا.',
-    route: [warehouse.city, 'نيكاراغوا'],
-    explore: 'اكتشف Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'لمحة عن Carinova',
-    items: [
-      { title: 'طريقتان للشحن', text: 'اختر السرعة أو التوفير' },
-      { title: `من ${warehouse.city} إلى نيكاراغوا`, text: 'طريق واحد وإمكانات كثيرة' },
-      { title: 'على طريقتك', text: 'شخصي أو عائلي أو تجاري' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: 'حلول الشحن إلى نيكاراغوا',
-    title: ['حلّ لكل', 'احتياج.'],
-    aside: 'اختر الطريق الأنسب لك. ونحن نريك الخطوة التالية.',
-    cards: {
-      shopping: {
-        label: 'التسوق عبر الإنترنت',
-        title: 'اشترِ من متاجرك المفضّلة في الولايات المتحدة واستلم في نيكاراغوا',
-        text: `اختر ما يعجبك وادفع مستخدمًا عنوانك الأمريكي في ${warehouse.city}. ونحن ننقله إلى نيكاراغوا.`,
-        action: 'ابدأ التسوق',
-        imageAlt: '',
-      },
-      assisted: {
-        label: 'الشراء بالنيابة عنك',
-        title: 'شارك الرابط. ونحن نساعدك في الشراء.',
-        text: 'وجدت شيئًا على الإنترنت؟ أرسل لنا الرابط وسنرشدك.',
-        action: 'اطلب المساعدة',
-        imageAlt: 'شخص يشارك رابط منتج من هاتفه',
-      },
-      family: {
-        label: 'الطرود العائلية',
-        title: 'أرسل طرودك العائلية',
-        text: 'لأن بعض الطرود تحمل أكثر من أشياء: تحمل المحبة.',
-        action: 'استفسر عن طرد',
-        imageAlt: 'عائلة تفتح طردًا وصل من الولايات المتحدة',
-      },
-      business: {
-        label: 'للأعمال',
-        title: 'حلول Carinova Business: مصمَّمة على إيقاع عملك.',
-        text: 'عملياتك، في حركة دائمة.',
-        action: 'لنتحدث عن عملك',
-        imageAlt: 'صناديق بضائع جاهزة لمتجر',
-      },
-    },
-    stores: {
-      label: 'متاجر في الولايات المتحدة يمكنك الشراء منها',
-      previous: 'المتجر السابق',
-      next: 'المتجر التالي',
-      pause: 'أوقف عرض المتاجر المتحرك مؤقتًا',
-      play: 'استأنف عرض المتاجر المتحرك',
-      disclosure: 'تُعرض المتاجر كأمثلة، دون أي اتفاق أو تزكية ضمنية. تُراجع الأسعار والتوفّر في موقع كل متجر.',
-      all: 'اعرض كل المتاجر',
-    },
-    storeNotice:
-      'زر المتجر، واختر منتجك، وشاركنا الرابط. نتحقق من عملية الشراء وإمكانية الإدخال والسعر قبل أن نباشر العملية.',
-    visit: 'انتقل إلى موقع المتجر',
-    assist: 'اطلب أن نشتري لك',
-    restricted: 'قبل أن تشتري، تحقّق إن كان يمكن إدخال الصنف',
-    close: 'إغلاق',
-    assistTitle: 'أرسل الرابط. ونحن نرافقك.',
-    assistIntro: 'الصق رابط المنتج وجهّز طلبك. تُؤكَّد تكلفة الشراء والضرائب وأجرة الشحن قبل أن نباشر العملية.',
-    script: {
-      status: '{name}، المتجر {index} من {total}.',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: 'تتبّع الطرود',
-    title: ['اعرف أين وصلت', 'شحنتك.'],
-    intro:
-      'يتقدّم كل طرد عبر مراحل واضحة، من لحظة استلامه في الولايات المتحدة حتى يصبح بين يديك. تتابعه من حسابك، برقم مرجعه وسجله.',
-    stagesLabel: 'مراحل الطرد',
     switchLabel: 'عمّ تريد أن تستعلم؟',
     tabs: { track: 'تتبّع طردًا', check: 'هل يمكن إدخاله؟' },
     track: {
@@ -829,21 +704,6 @@ export const ui: UI = {
         unknownText: 'هذا لا يعني أنه يمكن إدخاله: بعض الأصناف تحتاج إلى تصاريح أو مراجعة. اسألنا قبل أن تشتريه.',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `فروعنا في ${cityNames.join(' و')}`,
-    title: ['نحن', 'أقرب إليك.'],
-    intro: 'استلم شحناتك من فروعنا أو استفسر عن التوصيل إلى مناطق أخرى في نيكاراغوا.',
-    country: 'نيكاراغوا',
-    regions: { managua: 'المحيط الهادئ · العاصمة', bluefields: 'ساحل الكاريبي الجنوبي' },
-    see: (city: string) => `اعرض فرع ${city}`,
-    ask: 'استفسر عن الموقع',
-    mapLabel: `خريطة توضيحية لنيكاراغوا تُظهر نقاط الخدمة في ${cities.join(' و')}`,
-    mapCaption: 'خريطة توضيحية: لا تُظهر عناوين فعلية ولا مسارات تشغيل.',
-    fine: 'تُؤكَّد العناوين والتغطية المحددة ورسوم التوصيل إلى المنزل عند ترتيب التسليم.',
-    delivery: 'استفسر عن التوصيل إلى المنزل',
   },
 
   // components/widgets/Footer.astro
@@ -1044,4 +904,7 @@ export const ui: UI = {
       lead: 'عندك سؤال عن متجر ما؟',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };

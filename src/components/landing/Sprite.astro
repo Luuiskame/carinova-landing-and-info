@@ -1,0 +1,30 @@
+---
+// The drawings of the home page's icons, once: every icon in the page and in its dialogs points at
+// one of these (Icon.astro, and `icon()` in the scripts). Hidden, and read by nobody.
+//
+// In two parts, so that the drawings nobody sees yet are not in the way of the first screen: the
+// few icons of the bar of notices, the header, the opening and the WhatsApp button come before
+// them (`part="first"`), and all the others at the end of the page (`part="rest"`). An icon that
+// points at a drawing that has not arrived yet shows when it arrives.
+import { i18n } from '~/i18n';
+
+import { FLAGS } from './helpers';
+import { FIRST_SCREEN_ICONS, ICONS } from './icons';
+
+export interface Props {
+  part: 'first' | 'rest';
+}
+
+const { part } = Astro.props;
+const { locale } = i18n(Astro);
+
+/** The first screen's icons, with the flag of this page's language (the language button shows it). */
+const first = new Set<string>([...FIRST_SCREEN_ICONS, ...(FLAGS[locale] ? [FLAGS[locale]] : [])]);
+
+const symbols = Object.entries(ICONS)
+  .filter(([id]) => first.has(id) === (part === 'first'))
+  .map(([id, { viewBox, body }]) => `<symbol id="${id}" viewBox="${viewBox}">${body}</symbol>`)
+  .join('');
+---
+
+<svg class="sprite" aria-hidden="true" focusable="false"><defs set:html={symbols} /></svg>

@@ -1,0 +1,61 @@
+---
+// The layout of the home page: the page Carinova wrote on 2026-11-18, which has its own look, its
+// own header and its own footer (src/components/landing). It shares nothing visible with the rest
+// of the site (Layout.astro, Tailwind), only what a page needs in its <head>: the language and the
+// direction of the address, the metadata, the favicons and whether the visitor is signed in.
+//
+// What it does for the first paint:
+// - The stylesheet of the page (landing.css) is written into the page: nothing else has to arrive
+//   before the text is drawn. The dialogs' own rules load when a dialog opens (landing-dialog.css).
+// - The text shows at once, in a fallback with the metrics of Manrope, and Manrope takes its place
+//   when it arrives without moving anything. It is not fetched ahead (no preload): a browser holds
+//   the first paint back for a font it is already fetching, and by the time the font had come the
+//   whole page was waiting to be laid out in one go. On a slow phone that put the first paint at
+//   0.82 s instead of 0.37 to 0.59 s, to gain 0.06 s on the font (docs/PROJECT-LOG.md → D-108).
+//   The fallback is "Manrope Fallback", in landing.css.
+// - No client router: a link to another page of the site is a plain navigation, so the two
+//   stylesheets never meet.
+import { Font } from 'astro:assets';
+
+import css from '~/assets/styles/landing.css?inline';
+import SessionState from '~/components/carinova/SessionState.astro';
+import Analytics from '~/components/common/Analytics.astro';
+import CommonMeta from '~/components/common/CommonMeta.astro';
+import Metadata from '~/components/common/Metadata.astro';
+import SiteVerification from '~/components/common/SiteVerification.astro';
+import Favicons from '~/components/Favicons.astro';
+
+import { LOCALE_INFO, i18n } from '~/i18n';
+import type { MetaData as MetaDataType } from '~/types';
+
+export interface Props {
+  metadata?: MetaDataType;
+}
+
+const { metadata = {} } = Astro.props;
+const { locale } = i18n(Astro);
+const { htmlLang, dir } = LOCALE_INFO[locale];
+---
+
+<!doctype html>
+<html lang={htmlLang} dir={dir}>
+  <head>
+    <CommonMeta />
+    <meta name="theme-color" content="#001127" />
+    <meta name="color-scheme" content="light" />
+    <meta name="format-detection" content="telephone=no" />
+    <Favicons />
+    <Font cssVariable="--font-manrope" />
+    <style is:inline set:html={css}></style>
+    <SessionState />
+    <Metadata {...metadata} />
+    <SiteVerification />
+    <Analytics />
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    <slot />
+  </body>
+</html>

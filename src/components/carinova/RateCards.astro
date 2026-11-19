@@ -54,7 +54,7 @@ const cards = [
 ];
 
 // Worked examples of each way of pricing.
-const byWeight = quoteByWeight(5, air.pricePerLb);
+const byWeight = quoteByWeight(5, air.pricePerLb, 1, RATES.minimumLb);
 const byVolume = quoteByVolume(FORMULA_EXAMPLE.dims, sea.pricePerCubicFoot, { unit: FORMULA_EXAMPLE.unit });
 const byUnit = quoteUnits({ [electronics.items[0].id]: 2 }, electronics.items);
 

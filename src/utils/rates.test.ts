@@ -58,7 +58,7 @@ test('several pieces of the same size multiply the volume', () => {
   assert.equal(quoteByVolume({ length: 48, width: 40, height: 72 }, 20, { pieces: 2.9 }).pieces, 2);
 });
 
-test('by weight the pounds are charged as they are: no minimum and no rounding up', () => {
+test('by weight the pounds are charged as they are: no rounding up', () => {
   const air = quoteByWeight(3, 6.5);
   assert.equal(air.total, 19.5);
   assert.equal(describeWeight(air), '3 lb × US$6.50 = US$19.50');
@@ -68,6 +68,25 @@ test('by weight the pounds are charged as they are: no minimum and no rounding u
   assert.equal(quoteByWeight(0.4, 6.5).total, 2.6);
   assert.equal(quoteByWeight(5, 6.5).total, 32.5);
   assert.equal(quoteByWeight(18, 2.5).total, 45);
+});
+
+test('a shipment that weighs less than the minimum is billed for the minimum', () => {
+  // Carinova's minimum: 1 lb for the whole shipment (RATES.minimumLb).
+  const light = quoteByWeight(0.4, 6.5, 1, 1);
+  assert.equal(light.totalPounds, 0.4);
+  assert.equal(light.billedPounds, 1);
+  assert.equal(light.total, 6.5);
+  assert.equal(describeWeight(light), '0.4 lb → 1 lb × US$6.50 = US$6.50');
+
+  // All the packages together count: three of 0.1 lb are still under it, three of 0.5 lb are not.
+  assert.equal(describeWeight(quoteByWeight(0.1, 6.5, 3, 1)), '3 × 0.1 lb = 0.3 lb → 1 lb × US$6.50 = US$6.50');
+  const enough = quoteByWeight(0.5, 6.5, 3, 1);
+  assert.equal(enough.billedPounds, 1.5);
+  assert.equal(describeWeight(enough), '3 × 0.5 lb = 1.5 lb × US$6.50 = US$9.75');
+
+  // At the minimum and above it, nothing changes.
+  assert.equal(describeWeight(quoteByWeight(1, 2.5, 1, 1)), '1 lb × US$2.50 = US$2.50');
+  assert.equal(quoteByWeight(5, 6.5, 1, 1).total, 32.5);
 });
 
 test('several packages of the same weight multiply the pounds', () => {

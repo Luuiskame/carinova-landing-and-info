@@ -1,0 +1,129 @@
+---
+// The header of the home page, as Carinova drew it: the wordmark, three sections of the page, the
+// language, the account and a menu with the rest.
+//
+// What the original did with a simulated account is done here by the site's own pages: "Crear
+// cuenta" leads to /registro, the account icon to /ingresar, and a customer who is signed in gets
+// "Mi cuenta" in both places (data-auth: SessionState.astro). The languages are links: each one is
+// this page at the address of that language, not a text swapped by a script.
+import wordmarkSvg from '~/assets/images/landing/wordmark.svg?raw';
+import { LOCALE_INFO, i18n, languagesOf } from '~/i18n';
+import { getPermalink } from '~/utils/permalinks';
+
+import { FLAGS } from './helpers';
+import Icon from './Icon.astro';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { CTA } = data;
+const t = ui.landing;
+
+const languages = languagesOf(Astro.url.pathname);
+// The wordmark is drawn in the page: it is the first thing seen, and it waits for no request.
+const wordmark = wordmarkSvg.replace('<svg ', '<svg class="logo" aria-hidden="true" ');
+
+/** The sections the bar names, and the ones only the menu has. */
+const sections = [
+  { id: 'como-funciona', text: t.navHow },
+  { id: 'restricciones', text: t.navCheck },
+  { id: 'cotizador', text: t.navRates },
+];
+const more = [
+  { id: 'business', text: t.businessName },
+  { id: 'sucursales', text: t.navLocations },
+  { id: 'preguntas', text: t.faqTitle },
+];
+---
+
+<header class="site-header on-navy">
+  <div class="wrap header-inner">
+    <a class="brand" href="#inicio" aria-label={t.homeAria}><Fragment set:html={wordmark} /></a>
+    <nav class="nav-desktop" aria-label={t.mainNavAria}>
+      {
+        sections.map(({ id, text }) => (
+          <a href={`#${id}`} data-spy={id}>
+            {text}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="header-tools">
+      <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-auth="out">{t.createCta}</a>
+      <a class="btn btn-primary btn-sm header-cta" href={href(CTA.account.path)} data-auth="in">{t.account}</a>
+      {
+        languages.length > 0 && (
+          <div class="lang-wrap">
+            <button
+              class="lang-btn"
+              id="lang-button"
+              type="button"
+              aria-label={t.language}
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="lang-menu"
+            >
+              {FLAGS[locale] ? (
+                <svg class="lang-flag" aria-hidden="true">
+                  <use href={`#${FLAGS[locale]}`} />
+                </svg>
+              ) : (
+                <Icon name="globe" class="lang-glyph" />
+              )}
+              <span aria-hidden="true">{LOCALE_INFO[locale].code}</span>
+            </button>
+            <div class="lang-menu" id="lang-menu" hidden>
+              {languages.map(({ locale: code, path, current }) => (
+                <a
+                  href={getPermalink(path)}
+                  hreflang={LOCALE_INFO[code].htmlLang}
+                  lang={LOCALE_INFO[code].htmlLang}
+                  dir={LOCALE_INFO[code].dir}
+                  aria-current={current ? 'true' : undefined}
+                >
+                  <Icon name="check" class="lang-check" />
+                  {FLAGS[code] ? (
+                    <svg class="lang-flag" aria-hidden="true">
+                      <use href={`#${FLAGS[code]}`} />
+                    </svg>
+                  ) : (
+                    <Icon name="globe" class="lang-glyph" />
+                  )}
+                  <span>{LOCALE_INFO[code].name}</span>
+                  <span class="lang-code">{LOCALE_INFO[code].code}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
+      <a class="icon-btn" href={href(CTA.signin.path)} aria-label={t.uiSignIn} data-auth="out"><Icon name="user" /></a>
+      <a class="icon-btn" href={href(CTA.account.path)} aria-label={t.account} data-auth="in"
+        ><Icon name="user" /><span class="account-dot"></span></a
+      >
+      <button
+        class="icon-btn"
+        id="menu-button"
+        type="button"
+        aria-label={t.menu}
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        data-open={t.menu}
+        data-close={t.uiClose}><Icon name="menu" /></button
+      >
+    </div>
+    <nav class="mobile-nav" id="mobile-menu" aria-label={t.menuAria} hidden>
+      {
+        [...sections, ...more].map(({ id, text }) => (
+          <a href={`#${id}`}>
+            <span>{text}</span>
+            <Icon name="chevron" />
+          </a>
+        ))
+      }
+      <div class="mobile-nav-actions">
+        <a class="btn btn-ghost btn-sm" href={href(CTA.track.path)}>{t.trackCta}</a>
+        <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-auth="out">{t.createCta}</a>
+        <a class="btn btn-primary btn-sm" href={href(CTA.account.path)} data-auth="in">{t.account}</a>
+      </div>
+    </nav>
+  </div>
+</header>

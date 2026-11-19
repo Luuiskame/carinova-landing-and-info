@@ -1,0 +1,34 @@
+---
+// "Nuestras raíces": Carinova's emblem and where it comes from, in Carinova's words.
+//
+// The emblem came inside the original page as 67 KB of text. Here it is a picture: the browser
+// picks the size its screen needs, in AVIF or WebP, and fetches it when the section is near.
+import { Picture } from 'astro:assets';
+
+import emblem from '~/assets/images/landing/emblem.webp';
+import { i18n } from '~/i18n';
+
+const { ui } = i18n(Astro);
+const t = ui.landing;
+---
+
+<section class="about hero-section on-navy" id="sobre-nosotros" aria-labelledby="about-title">
+  <div class="wrap about-stack">
+    <figure class="about-emblem">
+      <Picture
+        src={emblem}
+        alt={t.emblemAlt}
+        width={912}
+        height={878}
+        widths={[320, 440, 640, 880]}
+        sizes="(max-width: 564px) 78vw, 440px"
+        formats={['avif', 'webp']}
+        fallbackFormat="jpg"
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+    <h2 class="hero-title" id="about-title">{t.aboutTitle}</h2>
+    <p class="hero-lead about-text">{t.aboutHeroText}</p>
+  </div>
+</section>

@@ -178,7 +178,7 @@ export const SERVICES: Array<Service> = [
       'Llega a nuestra bodega y viaja como cualquier encomienda.',
     ],
     available: true,
-    link: { text: 'Preparar mi solicitud', path: '/#compras' },
+    link: { text: 'Preparar mi solicitud', path: '/#personal-shopper' },
     whatsappText: 'Pedir una compra asistida',
   },
   {
@@ -449,7 +449,7 @@ export const exampleQuoter =
 
     const bySea = example.tariff === 'maritimo';
     const rate = bySea ? rates.sea : rates.air;
-    const quote = quoteByWeight(example.pounds ?? 0, rate.pricePerLb);
+    const quote = quoteByWeight(example.pounds ?? 0, rate.pricePerLb, 1, rates.minimumLb);
     return {
       tariff: bySea ? words.seaWeight : words.airWeight,
       lines: [describeWeight(quote)],

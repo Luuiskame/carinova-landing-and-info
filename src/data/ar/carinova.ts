@@ -79,6 +79,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   state: STATE_NAMES[point.state] ?? point.state,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** How Arabic counts days after a number: "3 أيام", "20 يومًا", "100 يوم". */
 const daysAfter = (count: number): string => {
   const rest = count % 100;
@@ -114,6 +120,7 @@ export const RATES: typeof es.RATES = {
     'نتحقق من الوزن والأبعاد وطريقة النقل والتغطية وشروط الخدمة.',
     'تشمل الأسعار التأمين والضرائب حين تنطبق على الشحنة. وتخضع التغطية والحدود والاستثناءات والرسوم الإضافية لشروط الخدمة.',
     'أسعار الإلكترونيات خاصة بالشحن الجوي، وتُحتسب لكل وحدة.',
+    `عند الحساب بالوزن، تُحتسب كل شحنة بحد أدنى قدره ${es.RATES.minimumLb} رطل.`,
   ],
 };
 
@@ -216,6 +223,26 @@ const RESTRICTED_TEXT: Record<
           'الفيب',
           'فيبات',
           'فايب',
+        ],
+      },
+      {
+        name: 'المشروبات الكحولية',
+        match: [
+          'مشروب كحولي',
+          'مشروبات كحولية',
+          'المشروبات الكحولية',
+          'خمر',
+          'الخمر',
+          'خمور',
+          'الخمور',
+          'نبيذ',
+          'النبيذ',
+          'بيرة',
+          'البيرة',
+          'ويسكي',
+          'فودكا',
+          'روم',
+          'تكيلا',
         ],
       },
       {
@@ -451,18 +478,8 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   footer: hello('وصلت إليكم من موقعكم الإلكتروني وأريد بعض المعلومات.'),
   channels: hello('وجدتكم في موقعكم الإلكتروني وأريد مراسلتكم.'),
 
-  homeQuote: (shipment: string, total: string) =>
-    hello(`حسبت في صفحتكم الرئيسية تكلفة ${shipment}: ${total}. هل تساعدونني في تأكيدها؟`),
-  homeQuoteEmpty: hello('أنا في حاسبة صفحتكم الرئيسية ولا أعرف ما البيانات التي أدخلها.'),
-  shopper: (link: string) =>
-    hello(`أريد طلب شراء بالنيابة عني. المنتج: ${link} هل تؤكدون لي توفّره، وإن كان يمكن إدخاله، وتكلفته الإجمالية؟`),
-  storeAssist: (store: string) => hello(`أريد شراءً بالنيابة عني من ${store}. هذا رابط المنتج: `),
-  homeFamily: hello('أريد إرسال طرد عائلي إلى نيكاراغوا. ماذا أحتاج؟'),
-  itemCheck: (item: string) => hello(`قبل أن أشتري، أريد أن أعرف إن كان بإمكانكم نقل: ${item}`),
-  itemCheckEmpty: hello('أريد أن أسأل إن كان يمكن إدخال صنف ما إلى نيكاراغوا: '),
-  homeBranch: (city: string) => hello(`أريد معرفة موقع فرع ${city} ومواعيد عمله.`),
-  homeDelivery: hello('أريد الاستفسار عن التوصيل إلى المنزل. عنواني هو: '),
-  homeFaq: hello('قرأت أسئلتكم الشائعة وعندي سؤال آخر.'),
+  /** "Contactar al equipo", under the conditions of the service on the home page. */
+  homeConditions: hello('قرأت شروط الخدمة في صفحتكم الرئيسية وعندي استفسار.'),
 
   trackItemCheck: (item: string) => hello(`أنا في صفحة التتبّع لديكم وأريد أن أعرف إن كان بإمكانكم نقل: ${item}`),
   trackItemCheckEmpty: hello('أنا في صفحة التتبّع لديكم وأريد الاستفسار عن صنف: '),

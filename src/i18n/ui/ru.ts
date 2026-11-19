@@ -12,6 +12,7 @@ import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../dat
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
 import type { UI } from './es.ts';
+import { landing } from './landing/ru.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -112,16 +113,6 @@ export const ui: UI = {
     branch: (city: string) => `(отделение: ${city})`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'Carinova Business · Грузы для компаний',
-    title: ['Ваш бизнес не стоит на месте.', 'Мы тоже.'],
-    intro:
-      'Привозите сырьё, товары и продукцию для роста — с решением, продуманным под вашу работу. Каждую задачу мы оцениваем индивидуально.',
-    button: 'Решения для бизнеса',
-    tiles: { name: ['Carinova', 'Business'], route: ['США', 'NIC'], pace: 'В вашем ритме' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: 'Расскажите о своей компании',
@@ -160,31 +151,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: 'Следующий шаг за вами',
-    title: ['Вот так', 'просто.'],
-    text: 'Создайте аккаунт, получите Carinova ID и начните готовить следующую отправку.',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: 'Вопросы о доставке в Никарагуа',
-    title: ['Частые', 'вопросы.'],
-    intro: 'Главные ответы — до вашей первой отправки.',
-    help: 'Остался вопрос? Напишите нам',
-    all: 'Все вопросы',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: 'Как покупать в США из Никарагуа',
-    title: ['Три шага —', 'оттуда сюда.'],
-    intro: 'Три шага, чтобы начать получать покупки и посылки из США.',
-    closing: 'Без сложностей. С понятным планом от начала до конца.',
-    more: 'Каждый шаг с примерами',
-  },
-
   // components/carinova/QuoteCalculator.astro
   quoteCalculator: {
     title: 'Рассчитайте стоимость',
@@ -213,7 +179,7 @@ export const ui: UI = {
     script: {
       delivery: 'Ориентировочный срок доставки: {transit} {from}.',
       explainWeight:
-        'Вес каждой посылки, умноженный на количество посылок. Вес и применимая основа расчёта проверяются при получении.',
+        'Вес каждой посылки, умноженный на количество посылок; минимальный оплачиваемый вес отправления — {minimum} lb. Вес и применимая основа расчёта проверяются при получении.',
       explainVolume:
         'Длина × ширина × высота в пересчёте на кубические футы (1 фут = 30.48 см = 12 дюймов), без минимумов и округлений.',
       explainUnit: 'Авиатариф за штуку выбранного товара. Тариф за фунт к нему не добавляется.',
@@ -566,14 +532,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: 'Доставка из США в Никарагуа',
     title: `Доставка из США в Никарагуа | Адрес в ${warehouse.city} | Carinova`,
     description: `Доставка из США в Никарагуа с собственным адресом в ${warehouse.city}: самолётом за ${air.transit} по ${formatUSD(air.pricePerLb)} за фунт и морем за ${sea.transit} от ${formatUSD(sea.pricePerLb)}. Пункты выдачи: ${cityNames.join(' или ')}.`,
-    reviews: { tagline: 'Отзывы', title: 'Что говорят наши клиенты', source: 'Отзыв в Google' },
-    calculator: {
-      eyebrow: 'Калькулятор доставки в Никарагуа',
-      title: ['Рассчитайте', 'доставку.'],
-      intro: 'Понятная оценка, чтобы принять верное решение. Без регистрации.',
-    },
   },
 
   // pages/ingresar.astro
@@ -751,98 +712,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: 'Доставка из США в Никарагуа',
-    lead: 'Покупайте, отправляйте и получайте — из США в Никарагуа. Проще, чем кажется, и тем способом, который подходит вам.',
-    facts: [`Самолётом за ${air.transit}`, `Морем за ${sea.transit}`, `Пункты выдачи: ${cityNames.join(' и ')}`],
-    emblemAlt: 'Эмблема Carinova: три человека вместе поднимают горящий факел',
-    origin: 'Откуда',
-    originPlace: `${warehouse.city}, США`,
-    destination: 'Куда',
-    destinationPlace: 'Никарагуа',
-    bridgeTitle: 'Мост между двумя странами.',
-    bridgeText: 'Простой способ быть ближе.',
-    route: [warehouse.city, 'Никарагуа'],
-    explore: 'Познакомьтесь с Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'Carinova коротко',
-    items: [
-      { title: 'Два способа доставки', text: 'Скорость или экономия — на выбор' },
-      { title: `Из ${warehouse.city} в Никарагуа`, text: 'Один маршрут, много возможностей' },
-      { title: 'Как удобно вам', text: 'Для себя, для семьи или для бизнеса' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: 'Решения для доставки в Никарагуа',
-    title: ['Решение для', 'любой задачи.'],
-    aside: 'Выберите путь, который подходит вам лучше всего. Следующий шаг мы подскажем.',
-    cards: {
-      shopping: {
-        label: 'Онлайн-покупки',
-        title: 'Покупайте в любимых магазинах США и получайте в Никарагуа',
-        text: `Выбирайте, что нравится, и оформляйте заказ на свой адрес в ${warehouse.city}. В Никарагуа его доставим мы.`,
-        action: 'Начать покупки',
-        imageAlt: '',
-      },
-      assisted: {
-        label: 'Покупка за вас',
-        title: 'Пришлите ссылку — поможем купить.',
-        text: 'Нашли что-то в интернете? Пришлите ссылку, и мы подскажем, что делать.',
-        action: 'Запросить помощь',
-        imageAlt: 'Человек отправляет со смартфона ссылку на товар',
-      },
-      family: {
-        label: 'Семейные посылки',
-        title: 'Отправляйте семейные посылки',
-        text: 'Потому что некоторые посылки везут не только вещи, но и тепло.',
-        action: 'Спросить о посылке',
-        imageAlt: 'Семья открывает посылку, пришедшую из США',
-      },
-      business: {
-        label: 'Для бизнеса',
-        title: 'Carinova Business: решения в ритме вашего бизнеса.',
-        text: 'Ваш бизнес — в движении.',
-        action: 'Обсудим ваш бизнес',
-        imageAlt: 'Коробки с товаром, готовые для бизнеса',
-      },
-    },
-    stores: {
-      label: 'Магазины США, где можно покупать',
-      previous: 'Предыдущий магазин',
-      next: 'Следующий магазин',
-      pause: 'Остановить карусель магазинов',
-      play: 'Возобновить карусель магазинов',
-      disclosure:
-        'Магазины приведены как примеры: это не означает соглашения с ними или их одобрения. Цены и наличие уточняйте на сайте каждого магазина.',
-      all: 'Все магазины',
-    },
-    storeNotice:
-      'Зайдите в магазин, выберите товар и пришлите нам ссылку. Покупка, возможность ввоза и тариф проверяются до оформления заказа.',
-    visit: 'Перейти на сайт магазина',
-    assist: 'Попросить купить за меня',
-    restricted: 'Перед покупкой проверьте, можно ли ввезти товар',
-    close: 'Закрыть',
-    assistTitle: 'Пришлите ссылку. Мы поможем.',
-    assistIntro:
-      'Вставьте ссылку на товар и подготовьте заявку. Стоимость покупки, налоги и фрахт подтверждаются до оформления заказа.',
-    script: {
-      status: '{name}, магазин {index} из {total}.',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: 'Отслеживание посылок',
-    title: ['Узнайте, на каком этапе', 'ваша посылка.'],
-    intro:
-      'Каждая посылка проходит понятные этапы — с момента, когда мы получаем её в США, до момента, когда она у вас в руках. Следите за ней в аккаунте по её номеру и истории.',
-    stagesLabel: 'Этапы доставки посылки',
     switchLabel: 'Что вы хотите узнать?',
     tabs: { track: 'Отследить посылку', check: 'Можно ли ввезти?' },
     track: {
@@ -876,21 +747,6 @@ export const ui: UI = {
           'Это не значит, что товар можно ввезти: некоторым товарам нужны разрешения или проверка. Спросите нас перед покупкой.',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `Отделения: ${cityNames.join(' и ')}`,
-    title: ['Мы ещё', 'ближе.'],
-    intro: 'Забирайте отправления в наших отделениях или узнайте о доставке в другие места Никарагуа.',
-    country: 'Никарагуа',
-    regions: { managua: 'Тихоокеанское побережье · Столица', bluefields: 'Южное Карибское побережье' },
-    see: (city: string) => `Подробнее об отделении: ${city}`,
-    ask: 'Уточнить местоположение',
-    mapLabel: `Схематичная карта Никарагуа с пунктами обслуживания: ${cities.join(' и ')}`,
-    mapCaption: 'Схематичная карта: на ней нет точных адресов и маршрутов.',
-    fine: 'Адреса, зона обслуживания и стоимость доставки на дом подтверждаются при согласовании.',
-    delivery: 'Узнать о доставке на дом',
   },
 
   // components/widgets/Footer.astro
@@ -1100,4 +956,7 @@ export const ui: UI = {
       lead: 'Есть вопрос о магазине?',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };

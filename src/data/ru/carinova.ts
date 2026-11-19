@@ -103,6 +103,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   ...RECEPTION_PLACES[point.id],
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3–4 дня", "15–20 дней": the word agrees with the last number. */
 const transit = ([min, max]: [number, number]): string => `${min}–${max} ${plural(max, 'день', 'дня', 'дней')}`;
 
@@ -140,6 +146,7 @@ export const RATES: typeof es.RATES = {
     'Мы проверяем вес, габариты, способ доставки, зону обслуживания и условия услуги.',
     'Тарифы включают страховку и налоги, если они применимы к отправке. Покрытие, лимиты, исключения и дополнительные сборы зависят от условий услуги.',
     'Тарифы на электронику действуют для авиадоставки и считаются за штуку.',
+    `При расчёте по весу каждое отправление оплачивается минимум за ${es.RATES.minimumLb} lb.`,
   ],
 };
 
@@ -230,6 +237,23 @@ const RESTRICTED_TEXT: Record<
       {
         name: 'Электронные сигареты',
         match: ['электронная сигарета', 'электронные сигареты', 'электронную сигарету', 'электронка', 'вейп', 'вейпы'],
+      },
+      {
+        name: 'Алкогольные напитки',
+        match: [
+          'алкогольный напиток',
+          'алкогольные напитки',
+          'алкогольных напитков',
+          'алкоголь',
+          'спиртные напитки',
+          'ром',
+          'виски',
+          'водка',
+          'водку',
+          'текила',
+          'пиво',
+          'вино',
+        ],
       },
       {
         name: 'Комплектующие для летательных аппаратов',
@@ -424,20 +448,8 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   footer: hello('Пишу с вашего сайта, хочу получить информацию.'),
   channels: hello('Вижу ваши контакты на сайте и хочу вам написать.'),
 
-  homeQuote: (shipment: string, total: string) =>
-    hello(`Мой расчёт в калькуляторе на главной странице: ${shipment} — ${total}. Поможете его подтвердить?`),
-  homeQuoteEmpty: hello('Я в калькуляторе на главной странице и не знаю, какие данные ввести.'),
-  shopper: (link: string) =>
-    hello(
-      `Хочу заказать услугу «Покупка за вас». Товар: ${link} Подтвердите, пожалуйста, наличие, возможность ввоза и итоговую стоимость.`
-    ),
-  storeAssist: (store: string) => hello(`Хочу заказать покупку за меня в магазине ${store}. Вот ссылка на товар: `),
-  homeFamily: hello('Хочу отправить семейную посылку в Никарагуа. Что для этого нужно?'),
-  itemCheck: (item: string) => hello(`Перед покупкой хочу узнать, сможете ли вы привезти: ${item}`),
-  itemCheckEmpty: hello('Хочу узнать, можно ли ввезти в Никарагуа такой товар: '),
-  homeBranch: (city: string) => hello(`Хочу узнать адрес и часы работы отделения в городе ${city}.`),
-  homeDelivery: hello('Хочу узнать о доставке на дом. Мой адрес: '),
-  homeFaq: hello('После ваших частых вопросов у меня остался ещё один.'),
+  /** "Contactar al equipo", under the conditions of the service on the home page. */
+  homeConditions: hello('У меня вопрос по условиям услуги, которые указаны на вашей главной странице.'),
 
   trackItemCheck: (item: string) =>
     hello(`Я на вашей странице отслеживания и хочу узнать, сможете ли вы привезти: ${item}`),

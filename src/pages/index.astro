@@ -1,27 +1,34 @@
 ---
-// Inicio. The sections, their look and their order follow Carinova's "Signature" design: hero, the
-// three facts under it, the four solutions (with the stores), the two ways of shipping, the
-// calculator, the three steps, tracking (with the article search), the band for companies, the
-// branches, the questions and the closing call (docs/INFORMATION-ARCHITECTURE.md → "The home page").
-// Each section is a component; what it says comes from src/data and src/i18n/ui, so the pages that
-// own each subject cannot disagree with it. Like every page, it renders in Spanish at its own
-// address and in each translation under its prefix (src/i18n).
-import Layout from '~/layouts/PageLayout.astro';
-
-import HomeHero from '~/components/carinova/HomeHero.astro';
-import ProofStrip from '~/components/carinova/ProofStrip.astro';
-import SectionHeading from '~/components/carinova/SectionHeading.astro';
-import Solutions from '~/components/carinova/Solutions.astro';
-import ShippingModes from '~/components/carinova/ShippingModes.astro';
-import QuoteCalculator from '~/components/carinova/QuoteCalculator.astro';
-import HowItWorks from '~/components/carinova/HowItWorks.astro';
-import TrackingSection from '~/components/carinova/TrackingSection.astro';
-import BusinessBand from '~/components/carinova/BusinessBand.astro';
-import Locations from '~/components/carinova/Locations.astro';
-import HomeFaq from '~/components/carinova/HomeFaq.astro';
-import HomeClosing from '~/components/carinova/HomeClosing.astro';
-import Testimonials from '~/components/widgets/Testimonials.astro';
+// Inicio: the page Carinova wrote on 2026-11-18, section by section, in its order and in its words
+// (docs/INFORMATION-ARCHITECTURE.md → "The home page"): the notices, the header, the opening with
+// the rates, "Nuestras raíces", the four steps, Carinova Bot, Personal Shopper, the calculator,
+// Carinova Business, what customers say (once there are reviews), the questions and the closing.
+//
+// It keeps Carinova's look (src/assets/styles/landing.css) and is built the way the rest of the
+// site is: a static page per language (like every page, it renders in Spanish at its own address
+// and in each translation under its prefix), its words in the dictionaries (`ui.landing`), its
+// facts in src/data. What the original did against an account simulated in the browser (sign-up,
+// sign-in, tracking) is done by the site's own pages and its Worker.
+//
+// For speed, each part comes when it is needed: the page itself is HTML and one stylesheet written
+// into it; the calculator's script, the article search with its catalogue, the dialogs and the
+// directory of stores with its logos are fetched when they are used (components/landing/scripts).
 import StructuredData from '~/components/common/StructuredData.astro';
+import About from '~/components/landing/About.astro';
+import Announce from '~/components/landing/Announce.astro';
+import ArticleCheck from '~/components/landing/ArticleCheck.astro';
+import Business from '~/components/landing/Business.astro';
+import Calculator from '~/components/landing/Calculator.astro';
+import Dialogs from '~/components/landing/Dialogs.astro';
+import Faq from '~/components/landing/Faq.astro';
+import Footer from '~/components/landing/Footer.astro';
+import Header from '~/components/landing/Header.astro';
+import Hero from '~/components/landing/Hero.astro';
+import Shopper from '~/components/landing/Shopper.astro';
+import Sprite from '~/components/landing/Sprite.astro';
+import Steps from '~/components/landing/Steps.astro';
+import Testimonials from '~/components/landing/Testimonials.astro';
+import Layout from '~/layouts/LandingLayout.astro';
 
 import { REVIEWS } from '~/data/carinova';
 import { i18n } from '~/i18n';
@@ -29,58 +36,38 @@ import { homeSchema } from '~/utils/schema';
 
 const page = i18n(Astro);
 const { ui } = page;
-const t = ui.homePage;
 
+// The title and the description are the ones written for search engines (they say what people
+// search for); what the page itself says is Carinova's.
+const metadata = { title: ui.homePage.title, ignoreTitleTemplate: true, description: ui.homePage.description };
 const hasReviews = REVIEWS.length > 0;
-const metadata = { title: t.title, ignoreTitleTemplate: true, description: t.description };
 ---
 
 <Layout metadata={metadata}>
   <StructuredData slot="head" schema={homeSchema(page)} />
 
-  <HomeHero />
+  <Sprite part="first" />
+  <a href="#main" class="skip-link">{ui.landing.skipContent}</a>
+  <Announce />
+  <Header />
 
-  <ProofStrip />
+  <main id="main" tabindex="-1">
+    <Hero />
+    <About />
+    <Steps />
+    <ArticleCheck />
+    <Shopper />
+    <Calculator />
+    <Business />
+    {hasReviews && <Testimonials />}
+    <Faq />
+  </main>
 
-  <Solutions />
+  <Footer />
+  <Dialogs />
+  <Sprite part="rest" />
 
-  <ShippingModes />
-
-  <section id="cotizador" class="scroll-mt-20 bg-white">
-    <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:py-28">
-      <SectionHeading number="03" eyebrow={t.calculator.eyebrow} title={t.calculator.title} />
-      <p class="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{t.calculator.intro}</p>
-      <div class="mt-10">
-        <QuoteCalculator place="home" headingTag="h3" />
-      </div>
-    </div>
-  </section>
-
-  <HowItWorks />
-
-  <TrackingSection />
-
-  <BusinessBand />
-
-  <Locations />
-
-  {
-    hasReviews && (
-      <Testimonials
-        id="resenas"
-        tagline={t.reviews.tagline}
-        title={t.reviews.title}
-        testimonials={REVIEWS.map((review) => ({
-          testimonial: review.text,
-          name: review.name,
-          job: review.source ?? t.reviews.source,
-          rating: review.rating,
-        }))}
-      />
-    )
-  }
-
-  <HomeFaq />
-
-  <HomeClosing />
+  <script>
+    import '~/components/landing/scripts/boot';
+  </script>
 </Layout>

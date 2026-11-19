@@ -1,0 +1,50 @@
+---
+// "Lo que dicen nuestros clientes": the reviews of REVIEWS, one card at a time, advancing by
+// themselves (scripts/carousel.ts). The page renders this section only when there are real reviews:
+// Carinova's page showed three cards that said a review would go there, and the site does not show
+// a place for proof it does not have.
+import { REVIEWS } from '~/data/carinova';
+import { i18n } from '~/i18n';
+
+import Icon from './Icon.astro';
+import ScriptData from './ScriptData.astro';
+
+const { ui } = i18n(Astro);
+const t = ui.landing;
+
+const config = { carousel: t.uiCarousel, slide: t.uiSlide, slideLabel: t.uiSlideLabel };
+---
+
+<section class="hero-section testimonials on-navy" id="clientes" aria-labelledby="testimonials-title">
+  <div class="wrap">
+    <h2 class="hero-title" id="testimonials-title">{t.testimonialsTitle}</h2>
+    <div
+      class="t-viewport"
+      id="t-viewport"
+      role="group"
+      aria-roledescription={t.uiCarousel}
+      aria-labelledby="testimonials-title"
+      aria-describedby="t-keys"
+      tabindex="0"
+    >
+      <div class="t-track" id="t-track" aria-live="off">
+        {
+          REVIEWS.map((review, index) => (
+            <div class:list={['t-card', index === 0 && 'is-active']} role="group">
+              <Icon name="quote" class="t-mark" />
+              <blockquote>
+                <p dir="auto">{review.text}</p>
+              </blockquote>
+              <p class="t-who">
+                <strong dir="auto">{review.name}</strong>
+                {review.source && <span>{review.source}</span>}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+    <p class="sr-only" id="t-keys">{t.uiCarouselKeys}</p>
+  </div>
+</section>
+<ScriptData name="carousel" value={config} />

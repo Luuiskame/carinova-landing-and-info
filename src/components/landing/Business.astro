@@ -1,0 +1,32 @@
+---
+// "Carinova Business": the band for companies. "Hablemos" opens the form Carinova designed, which
+// ends in a WhatsApp message (scripts/dialogs.ts); without the script it leads to /empresas, where
+// the site's own form for companies is.
+import globe from '~/assets/images/landing/globe.svg';
+import { i18n } from '~/i18n';
+
+import Icon from './Icon.astro';
+
+const { href, ui } = i18n(Astro);
+const t = ui.landing;
+---
+
+<section class="business hero-section on-navy" id="business" aria-labelledby="business-title">
+  <div class="wrap business-grid">
+    <div class="business-art" aria-hidden="true">
+      <span class="orbit"></span><span class="orbit two"></span>
+      <span class="business-globe"
+        ><img src={globe.src} alt="" width={globe.width} height={globe.height} loading="lazy" decoding="async" /></span
+      >
+      <span class="parcel one"><Icon name="box" /></span>
+      <span class="parcel two"><Icon name="box" /></span>
+    </div>
+    <div class="business-copy hero-head">
+      <h2 class="hero-title" id="business-title">{t.businessTitle}</h2>
+      <p class="hero-lead">{t.businessLead}</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href={href('/empresas')} data-dialog="business">{t.businessCta}</a>
+      </div>
+    </div>
+  </div>
+</section>

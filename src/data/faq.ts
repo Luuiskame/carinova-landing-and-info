@@ -131,7 +131,7 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
       {
         // TODO: confirm whether the service has a fee and how customers pay for the product.
         title: '¿Pueden comprar un producto por mí?',
-        description: `Sí. Elegí la tienda y compartinos el enlace. La compra asistida requiere confirmación de disponibilidad, admisibilidad, costos del producto, servicio y transporte. ${link('/#compras', 'Prepará tu solicitud')}.`,
+        description: `Sí. Elegí la tienda y compartinos el enlace. La compra asistida requiere confirmación de disponibilidad, admisibilidad, costos del producto, servicio y transporte. ${link('/#personal-shopper', 'Prepará tu solicitud')}.`,
         featured: 8,
       },
       {

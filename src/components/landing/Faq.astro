@@ -1,0 +1,35 @@
+---
+// "Preguntas Frecuentes": the nine questions of Carinova's page, in Carinova's words; their prices
+// and times are the ones of src/data (the dictionaries read them). One opens at a time, with no
+// script: they are native <details> that share a name. The whole list of the site is
+// /preguntas-frecuentes.
+import { i18n } from '~/i18n';
+
+import Icon from './Icon.astro';
+
+const { ui } = i18n(Astro);
+const t = ui.landing;
+---
+
+<section class="hero-section section-mist" id="preguntas" aria-labelledby="faq-title">
+  <div class="wrap faq-grid">
+    <div class="faq-aside">
+      <h2 class="hero-title one-line" id="faq-title">{t.faqTitle}</h2>
+    </div>
+    <div class="faq-list">
+      {
+        t.faq.map(({ q, a }) => (
+          <details class="faq-item" name="faq">
+            <summary>
+              <span>{q}</span>
+              <span class="faq-plus" aria-hidden="true">
+                <Icon name="plus" />
+              </span>
+            </summary>
+            <p>{a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

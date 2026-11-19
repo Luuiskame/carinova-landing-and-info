@@ -1,0 +1,331 @@
+---
+// "Calculador Iterativo": what a shipment costs by air and by sea, side by side, as Carinova's page
+// works it out (utils/quote.ts). The visitor describes the cargo on the left; the ticket on the
+// right prices it both ways, and the one that is chosen is the estimate.
+//
+// - The first estimate (5 lb of general merchandise, by air) is rendered here, when the page is
+//   built, with the same code the script uses: the section is right before any script runs, and
+//   the script is fetched only when the page is idle or the calculator is touched
+//   (scripts/boot.ts → scripts/calculator.ts).
+// - The rates, the devices and the limits are the ones of src/data: the script gets them, and its
+//   sentences, with the page (ScriptData).
+// - "Empezar mi envío" leads to /registro: the account is where a shipment starts (its address in
+//   the United States is there). A customer who is signed in goes to their account.
+// - On a phone, a bar with the price stays in sight while the form is on screen and the ticket is
+//   not (`quote-dock`).
+import { LANDING_LIMITS } from '~/data/landing';
+import { i18n } from '~/i18n';
+import { calculateQuote, type QuoteInput, type QuoteRates } from '~/utils/quote';
+import { formatUSD } from '~/utils/rates';
+import { fill } from '~/utils/template';
+
+import { daysRange } from './helpers';
+import Icon from './Icon.astro';
+import ScriptData from './ScriptData.astro';
+import { amount, formulaText } from './scripts/quote-view';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { CTA, RATES, RECEPTION_POINTS, SIGNUP_COUNTRIES } = data;
+const { air, sea, electronics, express, minimumLb } = RATES;
+const t = ui.landing;
+const soon = ui.serviceBadge.soon;
+
+const rates: QuoteRates = {
+  air: air.pricePerLb,
+  sea: sea.pricePerLb,
+  cubicFoot: sea.pricePerCubicFoot,
+  minimumLb,
+  devices: Object.fromEntries(electronics.items.map((item) => [item.id, item.price])),
+  express: { air: express.air?.pricePerLb ?? null, sea: express.sea?.pricePerLb ?? null },
+  maxQuantity: LANDING_LIMITS.quantity,
+};
+const days = {
+  air: daysRange(locale, air.transitDays, t.uiDays),
+  sea: daysRange(locale, sea.transitDays, t.uiDays),
+};
+/** The days of the express service, once Carinova publishes them. */
+const expressDays = {
+  air: express.air ? daysRange(locale, express.air.transitDays, t.uiDays) : '',
+  sea: express.sea ? daysRange(locale, express.sea.transitDays, t.uiDays) : '',
+};
+
+/** The departments of Nicaragua a shipment goes to: the ones of the sign-up form. */
+const departments = SIGNUP_COUNTRIES.find((country) => country.code === 'NI')?.states ?? [];
+const defaultDepartment = departments.includes('Managua') ? 'Managua' : departments[0];
+
+const categories: Array<[string, string]> = [
+  ['general', t.general],
+  ['restricted', t.categoryRestricted],
+  ...electronics.items.map((item): [string, string] => [
+    item.id,
+    fill(t.categoryDevice, { name: item.name, price: formatUSD(item.price) }),
+  ]),
+  ['volume', t.categoryVolume],
+];
+
+// The form as the page opens, and what it comes to each way.
+const initial: QuoteInput = {
+  mode: 'air',
+  service: 'standard',
+  category: 'general',
+  quantity: '1',
+  weight: '5',
+  weightUnit: 'lb',
+  length: '',
+  width: '',
+  height: '',
+  dimensionUnit: 'in',
+};
+const formula = {
+  complete: t.uiCompleteQuote,
+  expressPending: t.uiExpressPending,
+  formulaWeight: t.uiFormulaWeight,
+  formulaMinimum: t.uiFormulaMinimum,
+  formulaUnit: t.uiFormulaUnit,
+  formulaVolume: t.uiFormulaVolume,
+};
+const byAir = calculateQuote(initial, rates);
+const bySea = calculateQuote({ ...initial, mode: 'sea' }, rates);
+const saving = (byAir.total ?? 0) - (bySea.total ?? 0);
+
+/** What the script of the calculator needs (scripts/calculator.ts). */
+const config = {
+  rates,
+  days,
+  expressDays,
+  text: {
+    ...formula,
+    air: t.air,
+    sea: t.sea,
+    standard: t.uiServiceStandard,
+    express: t.uiServiceExpress,
+    estimate: t.estimate,
+    toQuote: t.uiToQuote,
+    save: t.uiCompareSave,
+    extra: t.uiCompareExtra,
+    dimensionsOptional: t.uiDimensionsOptional,
+    dimensionsRequired: t.uiDimensionsRequired,
+    dimensionsNoApply: t.uiDimensionsNoApply,
+    dimensionsSea: t.uiDimensionsSea,
+    unitIn: t.unitInShort,
+    unitCm: t.unitCmShort,
+    uiErrorMode: t.uiErrorMode,
+    uiErrorQuantity: t.uiErrorQuantity,
+    uiErrorElectronics: t.uiErrorElectronics,
+    uiErrorCategory: t.uiErrorCategory,
+    uiErrorVolumeMode: t.uiErrorVolumeMode,
+    uiErrorRestrictedAir: t.uiErrorRestrictedAir,
+    uiErrorDimensions: t.uiErrorDimensions,
+    uiErrorDimensionUnit: t.uiErrorDimensionUnit,
+    uiErrorTooLarge: t.uiErrorTooLarge,
+    uiErrorWeight: t.uiErrorWeight,
+    uiErrorWeightUnit: t.uiErrorWeightUnit,
+    uiErrorWeightOrDimensions: t.uiErrorWeightOrDimensions,
+  },
+};
+
+const sides = [
+  { name: 'length', label: t.length },
+  { name: 'width', label: t.width },
+  { name: 'height', label: t.height },
+];
+---
+
+<section class="hero-section" id="cotizador" aria-labelledby="calc-title">
+  <div class="wrap">
+    <div class="calc-head">
+      <h2 class="hero-title one-line" id="calc-title">{t.calcTitle}</h2>
+      <p class="hero-lead">{t.calcText}</p>
+    </div>
+    <div class="calculator">
+      <form id="quote-form" class="quote-form" novalidate>
+        <div class="qf-block route-row">
+          <label class="field">
+            <span>{t.origin}</span>
+            <select class="input" name="origin" id="origin">
+              {
+                RECEPTION_POINTS.map((point) => (
+                  <option value={point.id} disabled={!point.available}>
+                    {[`${point.city}, ${point.state}`, !point.available && soon].filter(Boolean).join(' · ')}
+                  </option>
+                ))
+              }
+            </select>
+          </label>
+          <label class="field">
+            <span>{t.department}</span>
+            <select class="input" name="department" id="department">
+              {
+                departments.map((name) => (
+                  <option value={name} selected={name === defaultDepartment}>
+                    {name}
+                  </option>
+                ))
+              }
+            </select>
+          </label>
+        </div>
+        <div class="qf-block">
+          <div class="grid-3 cargo">
+            <label class="field">
+              <span>{t.article}</span>
+              <select class="input" id="category" name="category">
+                {categories.map(([value, label]) => <option value={value}>{label}</option>)}
+              </select>
+            </label>
+            <label class="field">
+              <span>{t.weightUnit}</span>
+              <select class="input" id="weight-unit" name="weightUnit">
+                <option value="lb" aria-label={t.unitPounds}>lb</option>
+                <option value="kg" aria-label={t.unitKilograms}>kg</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>{t.dimensionUnit}</span>
+              <select class="input" id="dimension-unit" name="dimensionUnit">
+                <option value="in" aria-label={t.unitInches}>{t.unitInShort}</option>
+                <option value="cm" aria-label={t.unitCentimeters}>{t.unitCmShort}</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid-2 qf-gap">
+            <div class="field">
+              <span id="quantity-label">{t.quantity}</span>
+              <div class="stepper">
+                <button type="button" id="quantity-minus" aria-label={t.decreaseQuantity} disabled
+                  ><Icon name="minus" /></button
+                >
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value="1"
+                  min="1"
+                  max={LANDING_LIMITS.quantity}
+                  step="1"
+                  inputmode="numeric"
+                  aria-labelledby="quantity-label"
+                />
+                <button type="button" id="quantity-plus" aria-label={t.increaseQuantity}><Icon name="plus" /></button>
+              </div>
+            </div>
+            <label class="field">
+              <span>{t.weight}</span>
+              <span class="suffix">
+                <input
+                  class="input num"
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  value="5"
+                  min="0.01"
+                  step="0.1"
+                  inputmode="decimal"
+                /><span id="weight-suffix">lb</span>
+              </span>
+            </label>
+          </div>
+        </div>
+        <fieldset class="qf-block dims">
+          <legend class="dims-legend">
+            <span>{t.dimensions}</span>
+            <span class="field-hint" id="dimensions-hint">{t.uiDimensionsOptional}</span>
+          </legend>
+          <div class="grid-3 dims">
+            {
+              sides.map(({ name, label }) => (
+                <label class="field">
+                  <span>{label}</span>
+                  <span class="suffix">
+                    <input
+                      class="input num"
+                      id={name}
+                      name={name}
+                      type="number"
+                      min="0.01"
+                      step="0.1"
+                      placeholder="0"
+                      inputmode="decimal"
+                    />
+                    <span class="dimension-suffix">{t.unitInShort}</span>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+      </form>
+
+      <aside class="ticket on-navy" id="ticket" aria-labelledby="ticket-label">
+        <p class="ticket-label" id="ticket-label">{t.estimate}</p>
+        <fieldset class="service" id="service">
+          <legend class="sr-only">{t.uiServiceLegend}</legend>
+          <div class="segmented">
+            <label>
+              <input type="radio" name="service" value="standard" form="quote-form" checked />
+              <span>{t.uiServiceStandard}</span>
+            </label>
+            <label>
+              <input type="radio" name="service" value="express" form="quote-form" />
+              <span>{t.uiServiceExpress}</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="alts" id="alts">
+          <legend class="sr-only">{t.uiCompareLegend}</legend>
+          <label class="alt is-selected" data-alt="air">
+            <input type="radio" name="mode" value="air" form="quote-form" checked />
+            <span class="alt-head">
+              <Icon name="plane" />
+              <span class="alt-name">{t.air}</span>
+              <span class="alt-days" id="days-air">{days.air}</span>
+            </span>
+            <span class="alt-price" dir="ltr">
+              <span class="cur">US$</span>
+              <strong id="total-air">{amount(byAir.total ?? 0)}</strong>
+            </span>
+            <span class="alt-detail" id="detail-air" dir="auto">{formulaText(initial, byAir, formula)}</span>
+          </label>
+          <label class="alt" data-alt="sea">
+            <input type="radio" name="mode" value="sea" form="quote-form" />
+            <span class="alt-head">
+              <Icon name="ship" />
+              <span class="alt-name">{t.sea}</span>
+              <span class="alt-days" id="days-sea">{days.sea}</span>
+            </span>
+            <span class="alt-price" dir="ltr">
+              <span class="cur">US$</span>
+              <strong id="total-sea">{amount(bySea.total ?? 0)}</strong>
+            </span>
+            <span class="alt-detail" id="detail-sea" dir="auto"
+              >{fill(t.uiCompareSave, { amount: amount(saving) })}</span
+            >
+          </label>
+        </fieldset>
+        <p class="quote-error" id="quote-error" role="alert" hidden><Icon name="alert" /><span></span></p>
+        <div class="ticket-actions">
+          <a class="btn btn-primary btn-block" id="start-shipment" href={href(CTA.signup.path)} data-auth="out"
+            >{t.startShipment}</a
+          >
+          <a class="btn btn-primary btn-block" href={href(CTA.account.path)} data-auth="in">{t.startShipment}</a>
+          <p class="ticket-note">
+            <span>{t.estimateNote}</span>
+            <a class="link link-light" href={href('/terminos')} data-dialog="conditions">{t.viewConditions}</a>
+          </p>
+        </div>
+        <p class="sr-only" id="quote-live" aria-live="polite"></p>
+      </aside>
+    </div>
+    <div class="quote-dock" id="quote-dock" aria-hidden="true" hidden>
+      <svg><use id="dock-mode-icon" href="#i-plane"></use></svg>
+      <span class="dock-text">
+        <span class="dock-label" id="dock-mode">{t.air}</span>
+        <span class="dock-days" id="dock-days">{[t.uiServiceStandard, days.air].join(' · ')}</span>
+      </span>
+      <strong class="dock-total" dir="ltr"
+        ><small>US$</small> <span id="dock-total">{amount(byAir.total ?? 0)}</span></strong
+      >
+    </div>
+  </div>
+</section>
+<ScriptData name="calculator" value={config} />
