@@ -82,6 +82,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   city: CITY_NAMES[point.id] ?? point.city,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3至4天" */
 const transit = ([min, max]: [number, number]): string => `${min}至${max}天`;
 
@@ -109,6 +115,7 @@ export const RATES: typeof es.RATES = {
     '我们会核实重量、尺寸、运输方式、覆盖范围和服务条件。',
     '如适用于该货件，运费已包含保险和税费。保障范围、限额、除外情形和附加费用以服务条件为准。',
     '电子产品费率适用于空运，按件计算。',
+    `按重量计费时，每票货物最低按 ${es.RATES.minimumLb} lb 计费。`,
   ],
 };
 
@@ -155,6 +162,22 @@ const RESTRICTED_TEXT: Record<
         match: ['烟草', '香烟', '卷烟', '雪茄', '烟丝', '烟草制品'],
       },
       { name: '电子烟', match: ['电子烟', '电子香烟', '烟弹'] },
+      {
+        name: '酒精饮料',
+        match: [
+          '酒精饮料',
+          '含酒精饮料',
+          '烈酒',
+          '白酒',
+          '啤酒',
+          '葡萄酒',
+          '红酒',
+          '威士忌',
+          '伏特加',
+          '朗姆酒',
+          '龙舌兰酒',
+        ],
+      },
       { name: '飞机配件', match: ['飞机配件', '飞机零件', '航空器', '飞机'] },
       { name: '无线电发射器', match: ['无线电发射器', '无线电', '发射器', '对讲机'] },
       { name: '无人机', match: ['无人机', '航拍器'] },

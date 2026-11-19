@@ -46,6 +46,7 @@ type CarinovaWords = Pick<
   | 'formatHours'
   | 'describeHours'
   | 'RECEPTION_POINTS'
+  | 'RECEPTION_HOURS'
   | 'RATES'
   | 'MIAMI_ADDRESS'
   | 'miamiAddressRows'
@@ -79,6 +80,7 @@ const build = (carinova: CarinovaWords, services: ServicesWords, SIGNUP_COUNTRIE
   formatHours: carinova.formatHours,
   describeHours: carinova.describeHours,
   RECEPTION_POINTS: carinova.RECEPTION_POINTS,
+  RECEPTION_HOURS: carinova.RECEPTION_HOURS,
   RATES: carinova.RATES,
   MIAMI_ADDRESS: carinova.MIAMI_ADDRESS,
   miamiAddressRows: carinova.miamiAddressRows,

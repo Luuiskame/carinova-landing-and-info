@@ -76,6 +76,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   city: CITY_NAMES[point.id] ?? point.city,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3 a 4 dias" */
 const transit = ([min, max]: [number, number]): string => `${min} a ${max} dias`;
 
@@ -103,6 +109,7 @@ export const RATES: typeof es.RATES = {
     'São verificados o peso, as dimensões, a modalidade, a cobertura e as condições do serviço.',
     'As tarifas incluem seguro e impostos quando se aplicam ao envio. A cobertura, os limites, as exclusões e as cobranças adicionais estão sujeitos às condições do serviço.',
     'As tarifas de eletrônicos correspondem a envios aéreos, por unidade.',
+    `Por peso, cada envio é cobrado por um mínimo de ${es.RATES.minimumLb} lb.`,
   ],
 };
 
@@ -176,6 +183,25 @@ const RESTRICTED_TEXT: Record<
       {
         name: 'Cigarros eletrônicos',
         match: ['cigarro eletronico', 'cigarros eletronicos', 'vape', 'vapes', 'pod descartavel'],
+      },
+      {
+        name: 'Bebidas alcoólicas',
+        match: [
+          'bebida alcoolica',
+          'bebidas alcoolicas',
+          'licor',
+          'rum',
+          'uisque',
+          'whisky',
+          'vodca',
+          'vodka',
+          'tequila',
+          'cachaca',
+          'cerveja',
+          'cervejas',
+          'vinho',
+          'vinhos',
+        ],
       },
       {
         name: 'Acessórios para aeronaves',

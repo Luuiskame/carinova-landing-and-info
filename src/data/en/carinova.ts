@@ -65,6 +65,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   city: CITY_NAMES[point.id] ?? point.city,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3 to 4 days" */
 const transit = ([min, max]: [number, number]): string => `${min} to ${max} days`;
 
@@ -92,6 +98,7 @@ export const RATES: typeof es.RATES = {
     'Weight, dimensions, mode of transport, coverage and the conditions of the service are verified.',
     'Rates include insurance and taxes where they apply to the shipment. Coverage, limits, exclusions and additional charges are subject to the conditions of the service.',
     'The rates for electronics are for air shipments, per unit.',
+    `By weight, each shipment is billed for a minimum of ${es.RATES.minimumLb} lb.`,
   ],
 };
 
@@ -153,6 +160,23 @@ const RESTRICTED_TEXT: Record<
       {
         name: 'Electronic cigarettes',
         match: ['electronic cigarette', 'electronic cigarettes', 'e cigarette', 'e cigarettes', 'vape', 'vapes'],
+      },
+      {
+        name: 'Alcoholic drinks',
+        match: [
+          'alcoholic drink',
+          'alcoholic drinks',
+          'alcoholic beverage',
+          'alcoholic beverages',
+          'liquor',
+          'rum',
+          'whisky',
+          'whiskey',
+          'vodka',
+          'tequila',
+          'beer',
+          'wine',
+        ],
       },
       { name: 'Aircraft accessories', match: ['aircraft', 'airplane', 'airplanes', 'plane parts', 'aircraft parts'] },
       {

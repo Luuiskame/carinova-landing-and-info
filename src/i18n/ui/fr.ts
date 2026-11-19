@@ -200,7 +200,7 @@ export const ui: UI = {
     script: {
       delivery: 'Livraison estimée : {transit}, {from}.',
       explainWeight:
-        'Poids de chaque colis multiplié par le nombre de colis. Le poids et la base applicable sont validés à la réception.',
+        'Poids de chaque colis multiplié par le nombre de colis, avec un minimum facturable de {minimum} lb par envoi. Le poids et la base applicable sont validés à la réception.',
       explainVolume:
         'Longueur × largeur × hauteur, converties en pieds cubes (1 pied = 30.48 cm = 12 pouces), sans minimum ni arrondi.',
       explainUnit: 'Tarif aérien à l’unité de l’article choisi. Le tarif à la livre ne s’y ajoute pas.',

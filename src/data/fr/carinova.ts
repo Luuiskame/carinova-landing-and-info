@@ -70,6 +70,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   city: CITY_NAMES[point.id] ?? point.city,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3 à 4 jours" */
 const transit = ([min, max]: [number, number]): string => `${min} à ${max} jours`;
 
@@ -102,6 +108,7 @@ export const RATES: typeof es.RATES = {
     'Le poids, les dimensions, le mode de transport, la couverture et les conditions du service sont vérifiés.',
     'Les tarifs incluent l’assurance et les taxes lorsqu’elles s’appliquent à l’envoi. La couverture, les limites, les exclusions et les frais supplémentaires sont soumis aux conditions du service.',
     'Les tarifs de l’électronique s’appliquent aux envois aériens, à l’unité.',
+    `Au poids, chaque envoi est facturé pour un minimum de ${es.RATES.minimumLb} lb.`,
   ],
 };
 
@@ -198,6 +205,23 @@ const RESTRICTED_TEXT: Record<
           'vapoteuses',
           'vape',
           'vapes',
+        ],
+      },
+      {
+        name: 'Boissons alcoolisées',
+        match: [
+          'boisson alcoolisee',
+          'boissons alcoolisees',
+          'spiritueux',
+          'liqueur',
+          'rhum',
+          'whisky',
+          'vodka',
+          'tequila',
+          'biere',
+          'bieres',
+          'vin',
+          'vins',
         ],
       },
       {

@@ -79,6 +79,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   state: STATE_NAMES[point.state] ?? point.state,
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** How Arabic counts days after a number: "3 أيام", "20 يومًا", "100 يوم". */
 const daysAfter = (count: number): string => {
   const rest = count % 100;
@@ -114,6 +120,7 @@ export const RATES: typeof es.RATES = {
     'نتحقق من الوزن والأبعاد وطريقة النقل والتغطية وشروط الخدمة.',
     'تشمل الأسعار التأمين والضرائب حين تنطبق على الشحنة. وتخضع التغطية والحدود والاستثناءات والرسوم الإضافية لشروط الخدمة.',
     'أسعار الإلكترونيات خاصة بالشحن الجوي، وتُحتسب لكل وحدة.',
+    `عند الحساب بالوزن، تُحتسب كل شحنة بحد أدنى قدره ${es.RATES.minimumLb} رطل.`,
   ],
 };
 
@@ -216,6 +223,26 @@ const RESTRICTED_TEXT: Record<
           'الفيب',
           'فيبات',
           'فايب',
+        ],
+      },
+      {
+        name: 'المشروبات الكحولية',
+        match: [
+          'مشروب كحولي',
+          'مشروبات كحولية',
+          'المشروبات الكحولية',
+          'خمر',
+          'الخمر',
+          'خمور',
+          'الخمور',
+          'نبيذ',
+          'النبيذ',
+          'بيرة',
+          'البيرة',
+          'ويسكي',
+          'فودكا',
+          'روم',
+          'تكيلا',
         ],
       },
       {

@@ -103,6 +103,12 @@ export const RECEPTION_POINTS: typeof es.RECEPTION_POINTS = es.RECEPTION_POINTS.
   ...RECEPTION_PLACES[point.id],
 }));
 
+/** When packages are received in the United States, in this language. */
+export const RECEPTION_HOURS: OpeningHours = {
+  ...es.RECEPTION_HOURS,
+  days: daysOf(es.RECEPTION_HOURS.dayOfWeek),
+};
+
 /** "3–4 дня", "15–20 дней": the word agrees with the last number. */
 const transit = ([min, max]: [number, number]): string => `${min}–${max} ${plural(max, 'день', 'дня', 'дней')}`;
 
@@ -140,6 +146,7 @@ export const RATES: typeof es.RATES = {
     'Мы проверяем вес, габариты, способ доставки, зону обслуживания и условия услуги.',
     'Тарифы включают страховку и налоги, если они применимы к отправке. Покрытие, лимиты, исключения и дополнительные сборы зависят от условий услуги.',
     'Тарифы на электронику действуют для авиадоставки и считаются за штуку.',
+    `При расчёте по весу каждое отправление оплачивается минимум за ${es.RATES.minimumLb} lb.`,
   ],
 };
 
@@ -230,6 +237,23 @@ const RESTRICTED_TEXT: Record<
       {
         name: 'Электронные сигареты',
         match: ['электронная сигарета', 'электронные сигареты', 'электронную сигарету', 'электронка', 'вейп', 'вейпы'],
+      },
+      {
+        name: 'Алкогольные напитки',
+        match: [
+          'алкогольный напиток',
+          'алкогольные напитки',
+          'алкогольных напитков',
+          'алкоголь',
+          'спиртные напитки',
+          'ром',
+          'виски',
+          'водка',
+          'водку',
+          'текила',
+          'пиво',
+          'вино',
+        ],
       },
       {
         name: 'Комплектующие для летательных аппаратов',

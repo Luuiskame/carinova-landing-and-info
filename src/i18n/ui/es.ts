@@ -225,7 +225,7 @@ export const ui = {
     script: {
       delivery: 'Entrega estimada: {transit}, {from}.',
       explainWeight:
-        'Peso de cada paquete multiplicado por la cantidad. El peso y la base aplicable se validan en la recepción.',
+        'Peso de cada paquete multiplicado por la cantidad, con un mínimo facturable de {minimum} lb por envío. El peso y la base aplicable se validan en la recepción.',
       explainVolume:
         'Largo × ancho × alto, convertido a pies cúbicos (1 pie = 30.48 cm = 12 pulgadas), sin mínimos ni redondeos.',
       explainUnit: 'Tarifa aérea por unidad del artículo elegido. No se le suma la tarifa por libra.',

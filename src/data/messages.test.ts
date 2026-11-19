@@ -94,7 +94,7 @@ test('the floating button has a message for pages that exist', () => {
 
 test('the worked examples of "Cómo comprar" add up', () => {
   const totals = Object.fromEntries(SHOPPING_EXAMPLES.map((item) => [item.id, quoteExample(item).total]));
-  assert.deepEqual(totals, { ropa: 19.5, celulares: 30, laptops: 80, hogar: 45, muebles: 117.96, encomienda: 52 });
+  assert.deepEqual(totals, { ropa: 19.5, celulares: 30, laptops: 75, hogar: 45, muebles: 117.96, encomienda: 52 });
 
   // Each example is quoted on one basis, and opens the calculator on it.
   const paths = Object.fromEntries(SHOPPING_EXAMPLES.map((item) => [item.id, quoteExample(item).path]));

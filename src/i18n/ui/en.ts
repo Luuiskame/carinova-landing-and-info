@@ -209,7 +209,7 @@ export const ui: UI = {
     script: {
       delivery: 'Estimated delivery: {transit}, {from}.',
       explainWeight:
-        'Weight of each package multiplied by the number of packages. The weight and the basis that applies are validated on reception.',
+        'Weight of each package multiplied by the number of packages, with a minimum of {minimum} lb billed per shipment. The weight and the basis that applies are validated on reception.',
       explainVolume:
         'Length × width × height, converted to cubic feet (1 foot = 30.48 cm = 12 inches), with no minimums and no rounding.',
       explainUnit: 'Air rate per unit of the item you chose. The rate per pound is not added to it.',
