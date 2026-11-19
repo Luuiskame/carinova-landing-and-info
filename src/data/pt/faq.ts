@@ -90,7 +90,7 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
       },
       {
         title: 'Vocês podem comprar um produto para mim?',
-        description: `Sim. Escolha a loja e compartilhe o link conosco. A compra assistida exige a confirmação da disponibilidade, da admissibilidade e dos custos do produto, do serviço e do transporte. ${link('/#compras', 'Prepare sua solicitação')}.`,
+        description: `Sim. Escolha a loja e compartilhe o link conosco. A compra assistida exige a confirmação da disponibilidade, da admissibilidade e dos custos do produto, do serviço e do transporte. ${link('/#personal-shopper', 'Prepare sua solicitação')}.`,
         featured: 8,
       },
       {

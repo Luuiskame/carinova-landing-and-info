@@ -28,6 +28,7 @@ import { sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
+import { landing } from './landing/es.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -1087,6 +1088,9 @@ export const ui = {
       lead: '¿Tenés dudas con una tienda?',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };
 
 export type UI = typeof ui;

@@ -1,0 +1,196 @@
+---
+// The end of the home page, as Carinova drew it: the closing call, the links to the sections, the
+// branches with their hours, how to reach Carinova, and the floating WhatsApp button.
+//
+// - "Crear cuenta personal" leads to /registro (a customer who is signed in gets their account);
+//   "Crear cuenta empresarial" leads to /empresas, where a company starts.
+// - The branches and their hours are the ones of src/data. Los Ángeles is listed, as "Próximamente":
+//   it has no address yet.
+// - Contact shows what Carinova has: the WhatsApp number, the e-mail once CONTACT has one, and the
+//   networks of SOCIAL_LINKS that have an icon here.
+// - The company's legal name and RUC show once COMPANY has them.
+// - "Privacidad" is the site's privacy policy; "Condiciones del servicio" opens Carinova's summary
+//   in a dialog (Dialogs.astro) and, without the script, the terms.
+import { COMPANY, CONTACT, SOCIAL_LINKS } from '~/data/carinova';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { whatsappLink } from '~/utils/whatsapp';
+
+import { SOCIAL_ICONS } from './helpers';
+import Icon from './Icon.astro';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { BRANCHES, CTA, RECEPTION_HOURS, RECEPTION_POINTS, WA_MESSAGES, formatHours } = data;
+const t = ui.landing;
+const { wordGap } = LOCALE_INFO[locale];
+
+const open = RECEPTION_POINTS.filter((point) => point.available);
+const coming = RECEPTION_POINTS.filter((point) => !point.available);
+/** The branches open at the same times: their hours are said once (the first one's). */
+const [branchHours] = BRANCHES[0].hours;
+
+const services = [
+  { text: t.footerQuote, href: '#cotizador' },
+  { text: t.trackCta, href: href(CTA.track.path) },
+  { text: t.shopperName, href: '#personal-shopper' },
+  { text: t.businessName, href: '#business' },
+];
+const help = [
+  { text: t.navHow, href: '#como-funciona' },
+  { text: t.navCheck, href: '#restricciones' },
+  { text: t.faqTitle, href: '#preguntas' },
+  { text: t.footerAbout, href: '#sobre-nosotros' },
+];
+const networks = SOCIAL_LINKS.filter((link) => SOCIAL_ICONS[link.name]);
+const hasCompany = Boolean(COMPANY.legalName || COMPANY.ruc);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer on-navy">
+  <div class="footer-cta hero-section">
+    <div class="wrap final">
+      <div class="final-head">
+        <h2 class="final-title" id="final-title">{t.finalHeading}</h2>
+        <p class="final-lead">{t.finalLead}</p>
+      </div>
+      <div class="final-actions hero-cta">
+        <a class="btn btn-primary" href={href(CTA.signup.path)} data-auth="out">
+          <Icon name="user" />
+          <span>{t.finalCtaPersonal}</span>
+        </a>
+        <a class="btn btn-primary" href={href(CTA.account.path)} data-auth="in">
+          <Icon name="user" />
+          <span>{CTA.account.text}</span>
+        </a>
+        <a class="btn btn-ghost" href={href('/empresas')}>
+          <Icon name="briefcase" />
+          <span>{t.finalCtaBusiness}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-body">
+    <div class="wrap footer-main">
+      <nav class="footer-col" aria-labelledby="footer-services">
+        <h2 id="footer-services">{t.footerServices}</h2>
+        <ul>
+          {
+            services.map((link) => (
+              <li>
+                <a href={link.href}>{link.text}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-labelledby="footer-help">
+        <h2 id="footer-help">{t.footerHelp}</h2>
+        <ul>
+          {
+            help.map((link) => (
+              <li>
+                <a href={link.href}>{link.text}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <section class="footer-col footer-branches" id="sucursales" aria-labelledby="footer-places">
+        <h2 id="footer-places">{t.navLocations}</h2>
+        <div class="footer-places">
+          <div>
+            <p class="footer-city">{open.map((point) => point.city).join(' · ')}</p>
+            <p class="footer-hours">
+              <span>{RECEPTION_HOURS.days}</span>
+              {
+                /* No `dir` here: in Arabic the hours carry Arabic letters ("8:00 ص – 5:00 م") and
+                  read from the right like the rest of the line. */
+              }
+              <span>{formatHours(RECEPTION_HOURS)}</span>
+            </p>
+            {
+              coming.map((point) => (
+                <p class="footer-soon">
+                  <span>{point.city}</span>
+                  <span class="footer-badge">{ui.serviceBadge.soon}</span>
+                </p>
+              ))
+            }
+          </div>
+          <div>
+            <p class="footer-city">{BRANCHES.map((branch) => branch.city).join(' · ')}</p>
+            <p class="footer-hours">
+              <span>{branchHours.days}</span>
+              <span>{formatHours(branchHours)}</span>
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="footer-col footer-contact" aria-labelledby="footer-contact">
+        <h2 id="footer-contact">{t.footerContactTitle}</h2>
+        <a
+          class="footer-email"
+          href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.footer)}
+          target="_blank"
+          rel="noopener"
+          dir="ltr">{CONTACT.whatsappDisplay}</a
+        >
+        {
+          CONTACT.email && (
+            <a class="footer-email" href={`mailto:${CONTACT.email}`} dir="ltr">
+              {CONTACT.email}
+            </a>
+          )
+        }
+        {
+          networks.length > 0 && (
+            <ul class="socials">
+              {networks.map((link) => (
+                <li>
+                  <a class="social" href={link.href} target="_blank" rel="noopener" aria-label={link.name}>
+                    <svg aria-hidden="true">
+                      <use href={`#${SOCIAL_ICONS[link.name]}`} />
+                    </svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </section>
+    </div>
+    {
+      hasCompany && (
+        <section class="wrap footer-company" aria-labelledby="footer-company-title">
+          <div>
+            <h2 id="footer-company-title">{t.footerCorporateInfo}</h2>
+            <p>{t.footerEntityType}</p>
+          </div>
+          <dl>
+            <div>
+              <dt>{t.footerLegalName}</dt>
+              <dd>{COMPANY.legalName || '—'}</dd>
+            </div>
+            <div>
+              <dt>{t.footerRuc}</dt>
+              <dd dir="ltr">{COMPANY.ruc || '—'}</dd>
+            </div>
+          </dl>
+        </section>
+      )
+    }
+    <div class="wrap footer-bottom">
+      <p class="footer-copy">© {year} Carinova.{wordGap}{t.allRights}</p>
+      <div class="footer-legal">
+        <a href={href('/privacidad')}>{t.footerPrivacy}</a>
+        <a href={href('/terminos')} data-dialog="conditions">{t.serviceConditions}</a>
+      </div>
+    </div>
+  </div>
+  <a
+    class="wa-fab"
+    href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.floating['/'] ?? WA_MESSAGES.floatingDefault)}
+    target="_blank"
+    rel="noopener"
+    aria-label={t.whatsappAria}><Icon name="chat" /></a
+  >
+</footer>

@@ -1,0 +1,143 @@
+---
+// The bar of notices above the header: the one that is on today (src/data/notices.ts), or several,
+// one at a time. A visitor who closes a notice does not see it again until its next year.
+//
+// In the original the bar was drawn by the page's script once everything had loaded, and pushed the
+// whole page down when it appeared. Here the calendar of the next year is worked out when the page
+// is built, in the language of the page, and a few lines of script that run as the bar is read pick
+// today's: the bar is in its place from the first paint, and the page ships no calendar code. A
+// notice shows from the next build after it is turned on, and the calendar runs for
+// HORIZON_DAYS after a build.
+import { NOTICES, NOTICE_BUFFER_DAYS, type NoticeCta, type NoticeKind } from '~/data/notices';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { cutoffsOf, scheduleOf, todayInNicaragua, type ChipFact } from '~/utils/notices';
+import { fill } from '~/utils/template';
+
+import { escapeHtml } from './helpers';
+import type { IconId } from './icons';
+
+/** How far ahead of a build the calendar is written into the page. */
+const HORIZON_DAYS = 400;
+/** Where what a visitor closed is kept, in their browser. */
+const STORAGE_KEY = 'carinova-avisos-cerrados';
+
+const { locale, data, ui } = i18n(Astro);
+const { RATES } = data;
+const t = ui.landing;
+const words: Record<string, string> = t.ann;
+const { intl, wordGap } = LOCALE_INFO[locale];
+
+const date = (day: number, options: Intl.DateTimeFormatOptions): string =>
+  new Intl.DateTimeFormat(intl, { timeZone: 'UTC', ...options }).format(new Date(day * 86_400_000));
+const short = (day: number) => date(day, { day: 'numeric', month: 'short' });
+const long = (day: number) => date(day, { weekday: 'long', day: 'numeric', month: 'long' });
+const dayAndMonth = (day: number) => date(day, { day: 'numeric', month: 'long' });
+const list = (items: Array<string>) => new Intl.ListFormat(intl, { style: 'long', type: 'conjunction' }).format(items);
+
+const chipText = (chip: ChipFact): string => {
+  if (!chip) return '';
+  if (chip.type === 'cutoffs') return fill(t.annCutoffs, { sea: short(chip.sea), air: short(chip.air) });
+  if (chip.type === 'cutoffAir') return fill(t.annCutoffAir, { air: short(chip.air) });
+  return fill(t.annDeadline, { date: short(chip.date) });
+};
+
+const KIND_ICON: Record<NoticeKind, IconId> = {
+  promo: 'i-tag',
+  deadline: 'i-clock',
+  info: 'i-globe',
+  closure: 'i-calendar',
+};
+/** Where a notice's link leads, and what it says. */
+const CTAS: Record<Exclude<NoticeCta, 'none'>, { href: string; text: string }> = {
+  calculator: { href: '#cotizador', text: t.annCtaQuote },
+  shopper: { href: '#personal-shopper', text: t.annCtaStores },
+};
+const icon = (id: IconId, forward = false) =>
+  `<svg aria-hidden="true"${forward ? ' class="is-forward"' : ''}><use href="#${id}"></use></svg>`;
+
+const today = todayInNicaragua();
+const cutoffs = cutoffsOf({ air: RATES.air.transitDays, sea: RATES.sea.transitDays }, NOTICE_BUFFER_DAYS);
+
+// Each stretch of days as the script needs it: [what closing it remembers, first day, last day, kind, HTML].
+const slots = scheduleOf(NOTICES, today - 1, today + HORIZON_DAYS, cutoffs).map((slot) => {
+  const { notice } = slot;
+  // A title names its day when the notice is about a day ("Black Friday · viernes, 27 de noviembre").
+  const named = notice.dated ? [dayAndMonth(slot.anchor)] : slot.named.length ? [list(slot.named.map(long))] : [];
+  const title = [words[notice.title], ...named].join(' · ');
+  const text = fill(words[notice.text] ?? '', { date: dayAndMonth(slot.anchor) });
+  const chip = chipText(slot.chip);
+  const cta = notice.cta === 'none' ? null : CTAS[notice.cta];
+  const html =
+    `<p class="announce-msg"><span class="announce-icon" aria-hidden="true">${icon(KIND_ICON[notice.kind])}</span>` +
+    `<strong>${escapeHtml(title)}</strong>` +
+    (text ? `${wordGap}<span>${escapeHtml(text)}</span>` : '') +
+    (chip ? ` <span class="announce-chip">${escapeHtml(chip)}</span>` : '') +
+    `</p>` +
+    (cta
+      ? `<a class="announce-cta" href="${cta.href}"><span>${escapeHtml(cta.text)}</span>${icon('i-arrow', true)}</a>`
+      : '');
+  return [slot.key, slot.from, slot.to, notice.kind, html] as const;
+});
+
+/** The pieces the script puts around a notice. */
+const parts = {
+  next: `<button class="announce-next" type="button" aria-label="${escapeHtml(t.annNext)}"><span>${escapeHtml(t.annCount)}</span>${icon('i-chevron', true)}</button>`,
+  close: `<button class="announce-close" type="button" aria-label="${escapeHtml(t.annClose)}">${icon('i-close')}</button>`,
+};
+---
+
+<div class="announce" id="announce" role="region" aria-label={t.annLabel} hidden></div>
+{/* The script runs as it is read, before anything below it is drawn: the bar takes its place at once. */}
+<script is:inline define:vars={{ slots, parts, key: STORAGE_KEY }}>
+  (() => {
+    const root = document.getElementById('announce');
+    if (!root || !slots.length) return;
+    // Today in Nicaragua, six hours behind UTC all year, as a count of days.
+    const today = Math.floor((Date.now() - 216e5) / 864e5);
+    let closed = [];
+    try {
+      closed = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      closed = [];
+    }
+    if (!Array.isArray(closed)) closed = [];
+    let index = 0;
+    let shown = null;
+
+    const render = () => {
+      const live = slots.filter((slot) => slot[1] <= today && today <= slot[2] && !closed.includes(slot[0]));
+      if (!live.length) {
+        root.hidden = true;
+        root.innerHTML = '';
+        return;
+      }
+      index = ((index % live.length) + live.length) % live.length;
+      shown = live[index];
+      root.setAttribute('data-kind', shown[3]);
+      root.innerHTML =
+        '<div class="announce-inner">' +
+        shown[4] +
+        (live.length > 1 ? parts.next.replace('{current}', index + 1).replace('{total}', live.length) : '') +
+        '</div>' +
+        parts.close;
+      root.hidden = false;
+    };
+
+    root.addEventListener('click', (event) => {
+      if (event.target.closest('.announce-next')) {
+        index += 1;
+        render();
+        root.querySelector('.announce-next')?.focus();
+      } else if (event.target.closest('.announce-close') && shown) {
+        closed.push(shown[0]);
+        try {
+          localStorage.setItem(key, JSON.stringify(closed.slice(-200)));
+        } catch {
+          // It stays closed for this visit.
+        }
+        render();
+      }
+    });
+    render();
+  })();
+</script>

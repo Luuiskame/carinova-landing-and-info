@@ -1,0 +1,76 @@
+---
+// The opening of the home page: the promise, the two ways in and the three rates. A rate leads to
+// the calculator and sets it to that way of shipping (scripts/boot.ts → scripts/calculator.ts).
+// The sea rate alternates between its two prices, per pound and per cubic foot; where movement is
+// reduced, both are shown (landing.css).
+import { i18n } from '~/i18n';
+
+import { daysRange, emphasize, unitAfter } from './helpers';
+import Icon from './Icon.astro';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { CTA, RATES } = data;
+const { air, sea, electronics } = RATES;
+const t = ui.landing;
+
+const airDays = daysRange(locale, air.transitDays, t.uiDays);
+const seaDays = daysRange(locale, sea.transitDays, t.uiDays);
+const deviceDays = daysRange(locale, electronics.transitDays, t.uiDays);
+/** The device the "Electrónicos" rate starts the calculator with: the first one, the cheapest. */
+const [firstDevice] = electronics.items;
+---
+
+<section class="hero hero-section on-navy" id="inicio" aria-labelledby="hero-title">
+  <div class="wrap">
+    {/* The two lines are one sentence to whoever hears it: the space between them is written out. */}
+    <h1 id="hero-title">
+      <span>{t.heroTitleA}</span>{' '}<span class="hero-accent">{t.heroTitleB}</span>
+    </h1>
+    <p class="hero-lead">{t.valueSummary}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href={href(CTA.signup.path)} data-auth="out">{t.createCta}</a>
+      <a class="btn btn-primary" href={href(CTA.account.path)} data-auth="in">{t.account}</a>
+      <a class="btn btn-ghost" href={href(CTA.track.path)}>{t.trackCta}</a>
+    </div>
+    <ul class="hero-rates" aria-label={t.heroRatesLabel}>
+      <li>
+        <a class="hero-rate" href="#cotizador" data-set-mode="air">
+          <Icon name="plane" />
+          <strong>{t.air}</strong>
+          <span class="rate-days">{airDays}</span>
+          <span class="rate-price"
+            ><span set:html={emphasize(t.heroAirPrice)} /><small>{unitAfter(locale, t.heroPerPound)}</small></span
+          >
+        </a>
+      </li>
+      <li>
+        <a class="hero-rate" href="#cotizador" data-set-mode="sea">
+          <Icon name="ship" />
+          <strong>{t.sea}</strong>
+          <span class="rate-days">{seaDays}</span>
+          <span class="rate-price rate-rotator" data-rotator aria-hidden="true">
+            <span class="rate-face is-active"
+              ><span set:html={emphasize(t.heroSeaPrice)} /><small>{unitAfter(locale, t.heroPerPound)}</small></span
+            >
+            <span class="rate-face"
+              ><span set:html={emphasize(t.heroSeaVolumePrice)} /><small>{unitAfter(locale, t.heroPerCubicFoot)}</small
+              ></span
+            >
+          </span>
+          <span class="sr-only">{t.heroSeaRatesSr}</span>
+        </a>
+      </li>
+      <li>
+        <a class="hero-rate" href="#cotizador" data-set-category={firstDevice.id}>
+          <Icon name="device" />
+          <strong>{t.heroElectronics}</strong>
+          <span class="rate-days">{deviceDays}</span>
+          <span class="rate-price"
+            ><span set:html={emphasize(t.heroElectronicsPrice)} /><small>{unitAfter(locale, t.heroPerUnit)}</small
+            ></span
+          >
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>

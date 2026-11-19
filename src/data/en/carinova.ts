@@ -332,6 +332,8 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   homeBranch: (city: string) => hello(`I would like to know the location and the hours of the ${city} branch.`),
   homeDelivery: hello('I would like to ask about home delivery. My address is: '),
   homeFaq: hello('I read your frequently asked questions and have another one.'),
+  /** "Contactar al equipo", under the conditions of the service on the home page. */
+  homeConditions: hello('I read the conditions of the service on your home page and I have a question.'),
 
   trackItemCheck: (item: string) =>
     hello(`I am on your tracking page and would like to know if you can bring: ${item}`),

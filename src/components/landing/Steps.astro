@@ -1,0 +1,36 @@
+---
+// "Tu próximo envío. A solo cuatro pasos.": the route from the account to the pickup, as Carinova's
+// page draws it. The last stop is the arrival.
+import { i18n } from '~/i18n';
+
+const { ui } = i18n(Astro);
+const t = ui.landing;
+
+const steps = [
+  { title: t.step1, text: t.step1Text },
+  { title: t.step2, text: t.step2Text },
+  { title: t.step3, text: t.step3Text },
+  { title: t.step4, text: t.step4Text },
+];
+---
+
+<section class="hero-section how" id="como-funciona" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="hero-head how-head">
+      <h2 class="hero-title" id="how-title">{t.howTitle}</h2>
+    </div>
+    <ol class="journey">
+      {
+        steps.map(({ title, text }, index) => (
+          <li class:list={['stop', index === steps.length - 1 && 'is-arrival']}>
+            <span class="stop-node" aria-hidden="true">
+              {index + 1}
+            </span>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

@@ -10,6 +10,7 @@ import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../dat
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
 import type { UI } from './es.ts';
+import { landing } from './landing/zh.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -189,7 +190,8 @@ export const ui: UI = {
       '这是参考估算，并非合同报价。最终费用取决于对重量、尺寸、内容物、适用费率及可能的附加费用的核实。不包括商品费用和送货上门费用。',
     script: {
       delivery: '预计送达：{transit}，{from}。',
-      explainWeight: '每件包裹的重量乘以包裹数量，每票货物最低按 {minimum} lb 计费。重量和适用的计费基础将在收货时核实。',
+      explainWeight:
+        '每件包裹的重量乘以包裹数量，每票货物最低按 {minimum} lb 计费。重量和适用的计费基础将在收货时核实。',
       explainVolume: '长 × 宽 × 高，换算为立方英尺（1 英尺 = 30.48 cm = 12 英寸），无最低限额，不做进位。',
       explainUnit: '所选物品的空运按件费率，不再另加按磅费用。',
       comparison: '仅供比较：同样的重量走{mode}，费用为 {total}（{transit}）。',
@@ -1023,4 +1025,7 @@ export const ui: UI = {
       lead: '对某家商店有疑问？',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };

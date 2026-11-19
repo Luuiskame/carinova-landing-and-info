@@ -178,7 +178,7 @@ export const SERVICES: Array<Service> = [
       'Llega a nuestra bodega y viaja como cualquier encomienda.',
     ],
     available: true,
-    link: { text: 'Preparar mi solicitud', path: '/#compras' },
+    link: { text: 'Preparar mi solicitud', path: '/#personal-shopper' },
     whatsappText: 'Pedir una compra asistida',
   },
   {

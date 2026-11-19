@@ -38,7 +38,7 @@ export const getHeaderData = ({ href, data, ui }: PageI18n, pathname: string) =>
       { text: CTA.account.short, href: href(CTA.account.path), class: 'lg:hidden', auth: 'in' as const },
       { text: CTA.track.text, href: href(CTA.track.path), class: 'lg:hidden' },
       { text: t.services, href: href('/servicios') },
-      { text: t.shopper, href: href('/#compras') },
+      { text: t.shopper, href: href('/#personal-shopper') },
       { text: t.rates, href: href(CTA.quote.path) },
       { text: t.howItWorks, href: href('/como-comprar') },
       { text: t.business, href: href('/empresas') },
@@ -86,7 +86,7 @@ export const getFooterData = ({ href, data, ui }: PageI18n, pathname: string) =>
           { text: t.calculator, href: href(CTA.quote.path) },
           { text: t.locker, href: href('/casillero-en-miami') },
           { text: t.stores, href: href('/tiendas') },
-          { text: t.shopper, href: href('/#compras') },
+          { text: t.shopper, href: href('/#personal-shopper') },
         ],
       },
       {

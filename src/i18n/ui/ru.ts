@@ -12,6 +12,7 @@ import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../dat
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
 import type { UI } from './es.ts';
+import { landing } from './landing/ru.ts';
 
 // The facts the sentences below are written around, in this language.
 const { air, sea } = RATES;
@@ -1100,4 +1101,7 @@ export const ui: UI = {
       lead: 'Есть вопрос о магазине?',
     },
   },
+
+  // pages/index.astro and components/landing: the home page Carinova wrote (./landing)
+  landing,
 };

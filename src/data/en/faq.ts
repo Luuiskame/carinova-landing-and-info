@@ -88,7 +88,7 @@ export const faqGroups = (link: LinkTo): Array<FaqGroup> => [
       },
       {
         title: 'Can you buy a product for me?',
-        description: `Yes. Choose the store and share the link with us. An assisted purchase requires confirmation of availability, admissibility, and the costs of the product, the service and the transport. ${link('/#compras', 'Prepare your request')}.`,
+        description: `Yes. Choose the store and share the link with us. An assisted purchase requires confirmation of availability, admissibility, and the costs of the product, the service and the transport. ${link('/#personal-shopper', 'Prepare your request')}.`,
         featured: 8,
       },
       {

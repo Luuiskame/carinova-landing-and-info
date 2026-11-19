@@ -92,6 +92,19 @@ export default defineConfig({
       subsets: ['latin', 'cyrillic'],
       fallbacks: ['sans-serif'],
     },
+    // The home page is the one Carinova wrote, set in Manrope (src/layouts/LandingLayout.astro). The
+    // page came with the font inside its stylesheet; here it is a file of its own, so it is cached,
+    // only the letters a page is written with are fetched and the text shows at once in a fallback
+    // of the same metrics.
+    {
+      provider: fontProviders.fontsource(),
+      name: 'Manrope',
+      cssVariable: '--font-manrope',
+      weights: ['200 800'],
+      styles: ['normal'],
+      subsets: ['latin', 'cyrillic'],
+      fallbacks: ['sans-serif'],
+    },
   ],
 
   integrations: [

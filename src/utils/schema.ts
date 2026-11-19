@@ -78,10 +78,11 @@ export const homeSchema = ({ locale, data, ui }: PageI18n) => {
         { '@type': 'Country', name: 'Nicaragua' },
         ...BRANCHES.map((branch) => ({ '@type': 'City', name: branch.city })),
       ],
+      // Named as the opening of the home page names them: "Tarifas por modalidad", "Aéreo", "Marítimo".
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
-        name: ui.shippingModes.eyebrow,
-        itemListElement: [offer(air, ui.shippingModes.air.overline), offer(sea, ui.shippingModes.sea.overline)],
+        name: ui.landing.heroRatesLabel,
+        itemListElement: [offer(air, ui.landing.air), offer(sea, ui.landing.sea)],
       },
     },
   ];

@@ -694,6 +694,8 @@ export const WA_MESSAGES = {
   homeBranch: (city: string) => hello(`Quiero conocer la ubicación y el horario de la sucursal de ${city}.`),
   homeDelivery: hello('Quiero consultar la entrega a domicilio. Mi dirección es: '),
   homeFaq: hello('Leí sus preguntas frecuentes y tengo otra duda.'),
+  /** "Contactar al equipo", under the conditions of the service on the home page. */
+  homeConditions: hello('Leí las condiciones del servicio en su página de inicio y tengo una consulta.'),
 
   // Rastreo
   /** "¿Puede ingresar?" in the tracker of the tracking page. */
