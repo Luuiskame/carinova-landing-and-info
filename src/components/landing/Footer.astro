@@ -2,35 +2,33 @@
 // The end of the home page, as Carinova drew it: the closing call, the links to the sections, the
 // branches with their hours, how to reach Carinova, and the floating WhatsApp button.
 //
-// - "Crear cuenta personal" leads to /registro (a customer who is signed in gets their account);
-//   "Crear cuenta empresarial" leads to /empresas, where a company starts.
-// - The branches and their hours are the ones of src/data. Los Ángeles is listed, as "Próximamente":
-//   it has no address yet.
-// - Contact shows what Carinova has: the WhatsApp number, the e-mail once CONTACT has one, and the
-//   networks of SOCIAL_LINKS that have an icon here.
+// - "Crear cuenta personal" and "Crear cuenta empresarial" open the account's dialog on that kind of
+//   account (scripts/account.ts); without the script they lead to /registro and to /empresas.
+// - The branches are the ones of Carinova's page ("Miami · Los Ángeles", "Managua · Bluefields") and
+//   their hours the ones of src/data, written as that page writes them (helpers.ts → hoursRange).
+// - Contact is one line, as in Carinova's page: the e-mail once CONTACT has one and, until then, the
+//   WhatsApp number (the address the page came with, info@carinova.com, is on a domain that is not
+//   Carinova's: docs/PROJECT-LOG.md → D-116). Under it, the networks of SOCIAL_LINKS that have an icon.
 // - The company's legal name and RUC show once COMPANY has them.
-// - "Privacidad" is the site's privacy policy; "Condiciones del servicio" opens Carinova's summary
-//   in a dialog (Dialogs.astro) and, without the script, the terms.
+// - "Privacidad" opens Carinova's note on privacy, which leads to the site's policy; "Condiciones del
+//   servicio" opens Carinova's summary (Dialogs.astro). Without the script: the policy and the terms.
 import { COMPANY, CONTACT, SOCIAL_LINKS } from '~/data/carinova';
-import { LOCALE_INFO, i18n } from '~/i18n';
+import { i18n } from '~/i18n';
 import { whatsappLink } from '~/utils/whatsapp';
 
-import { SOCIAL_ICONS } from './helpers';
+import { SOCIAL_ICONS, hoursRange } from './helpers';
 import Icon from './Icon.astro';
 
 const { locale, href, data, ui } = i18n(Astro);
-const { BRANCHES, CTA, RECEPTION_HOURS, RECEPTION_POINTS, WA_MESSAGES, formatHours } = data;
+const { BRANCHES, CTA, RECEPTION_HOURS, RECEPTION_POINTS, WA_MESSAGES } = data;
 const t = ui.landing;
-const { wordGap } = LOCALE_INFO[locale];
 
-const open = RECEPTION_POINTS.filter((point) => point.available);
-const coming = RECEPTION_POINTS.filter((point) => !point.available);
 /** The branches open at the same times: their hours are said once (the first one's). */
 const [branchHours] = BRANCHES[0].hours;
 
 const services = [
   { text: t.footerQuote, href: '#cotizador' },
-  { text: t.trackCta, href: href(CTA.track.path) },
+  { text: t.trackCta, href: href(CTA.track.path), dialog: 'tracking' },
   { text: t.shopperName, href: '#personal-shopper' },
   { text: t.businessName, href: '#business' },
 ];
@@ -53,15 +51,11 @@ const year = new Date().getFullYear();
         <p class="final-lead">{t.finalLead}</p>
       </div>
       <div class="final-actions hero-cta">
-        <a class="btn btn-primary" href={href(CTA.signup.path)} data-auth="out">
+        <a class="btn btn-primary" href={href(CTA.signup.path)} data-dialog="account" data-account-kind="personal">
           <Icon name="user" />
           <span>{t.finalCtaPersonal}</span>
         </a>
-        <a class="btn btn-primary" href={href(CTA.account.path)} data-auth="in">
-          <Icon name="user" />
-          <span>{CTA.account.text}</span>
-        </a>
-        <a class="btn btn-ghost" href={href('/empresas')}>
+        <a class="btn btn-ghost" href={href('/empresas')} data-dialog="account" data-account-kind="business">
           <Icon name="briefcase" />
           <span>{t.finalCtaBusiness}</span>
         </a>
@@ -76,7 +70,9 @@ const year = new Date().getFullYear();
           {
             services.map((link) => (
               <li>
-                <a href={link.href}>{link.text}</a>
+                <a href={link.href} data-dialog={link.dialog}>
+                  {link.text}
+                </a>
               </li>
             ))
           }
@@ -98,46 +94,39 @@ const year = new Date().getFullYear();
         <h2 id="footer-places">{t.navLocations}</h2>
         <div class="footer-places">
           <div>
-            <p class="footer-city">{open.map((point) => point.city).join(' · ')}</p>
+            <p class="footer-city">{RECEPTION_POINTS.map((point) => point.city).join(' · ')}</p>
             <p class="footer-hours">
               <span>{RECEPTION_HOURS.days}</span>
               {
-                /* No `dir` here: in Arabic the hours carry Arabic letters ("8:00 ص – 5:00 م") and
-                  read from the right like the rest of the line. */
+                /* No `dir` here: in Arabic the hours carry Arabic letters ("8:00 ص – 5:00 م") and read from the right like the rest of the line. */
               }
-              <span>{formatHours(RECEPTION_HOURS)}</span>
+              <span>{hoursRange(locale, RECEPTION_HOURS)}</span>
             </p>
-            {
-              coming.map((point) => (
-                <p class="footer-soon">
-                  <span>{point.city}</span>
-                  <span class="footer-badge">{ui.serviceBadge.soon}</span>
-                </p>
-              ))
-            }
           </div>
           <div>
             <p class="footer-city">{BRANCHES.map((branch) => branch.city).join(' · ')}</p>
             <p class="footer-hours">
               <span>{branchHours.days}</span>
-              <span>{formatHours(branchHours)}</span>
+              <span>{hoursRange(locale, branchHours)}</span>
             </p>
           </div>
         </div>
       </section>
       <section class="footer-col footer-contact" aria-labelledby="footer-contact">
         <h2 id="footer-contact">{t.footerContactTitle}</h2>
-        <a
-          class="footer-email"
-          href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.footer)}
-          target="_blank"
-          rel="noopener"
-          dir="ltr">{CONTACT.whatsappDisplay}</a
-        >
         {
-          CONTACT.email && (
-            <a class="footer-email" href={`mailto:${CONTACT.email}`} dir="ltr">
-              {CONTACT.email}
+          CONTACT.email ? (
+            <a class="footer-email" href={`mailto:${CONTACT.email}`}>
+              <span dir="ltr">{CONTACT.email}</span>
+            </a>
+          ) : (
+            <a
+              class="footer-email"
+              href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.footer)}
+              target="_blank"
+              rel="noopener"
+            >
+              <span dir="ltr">{CONTACT.whatsappDisplay}</span>
             </a>
           )
         }
@@ -179,9 +168,9 @@ const year = new Date().getFullYear();
       )
     }
     <div class="wrap footer-bottom">
-      <p class="footer-copy">© {year} Carinova.{wordGap}{t.allRights}</p>
+      <p class="footer-copy">© <span id="year">{year}</span> Carinova. <span>{t.allRights}</span></p>
       <div class="footer-legal">
-        <a href={href('/privacidad')}>{t.footerPrivacy}</a>
+        <a href={href('/privacidad')} data-dialog="privacy">{t.footerPrivacy}</a>
         <a href={href('/terminos')} data-dialog="conditions">{t.serviceConditions}</a>
       </div>
     </div>
@@ -193,4 +182,6 @@ const year = new Date().getFullYear();
     rel="noopener"
     aria-label={t.whatsappAria}><Icon name="chat" /></a
   >
+  {/* A short notice that goes away by itself ("Sesión cerrada."): written by scripts/dialogs.ts. */}
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 </footer>

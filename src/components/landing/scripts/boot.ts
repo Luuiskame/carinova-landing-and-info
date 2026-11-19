@@ -5,7 +5,10 @@
 // when they are about to be used (lazy.ts): a visitor who reads the page and leaves downloads none
 // of them.
 import { $, $$, reducedMotion, whenIdle } from './dom';
-import { loadArticles, loadCalculator, loadCarousel, loadDialogs } from './lazy';
+import { loadAccount, loadArticles, loadCalculator, loadCarousel, loadDialogs } from './lazy';
+
+/** Where the browser keeps the language the visitor chose: the name Carinova's page gave it. */
+const LANGUAGE_KEY = 'carinova-language';
 
 // ───────── Header: the language menu and the menu ─────────
 const langButton = $<HTMLButtonElement>('#lang-button');
@@ -37,6 +40,26 @@ const closeMenu = () => {
 };
 
 if (langButton && langMenu) {
+  // Each language is a page of its own. Carinova's page changed its words in place and remembered
+  // the choice: the link carries the section the visitor is reading, so the other language opens
+  // there, and the choice is kept for the next visit (LandingLayout.astro reads it).
+  langMenu.addEventListener('click', (event) => {
+    const link = (event.target as Element).closest<HTMLAnchorElement>('a[data-lang]');
+    if (!link) return;
+    try {
+      localStorage.setItem(LANGUAGE_KEY, JSON.stringify(link.dataset.lang));
+    } catch {
+      /* Without storage the language still changes. */
+    }
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const reading = $$('main > section[id], footer [id="sucursales"]')
+      .filter((section) => section.getBoundingClientRect().top <= window.innerHeight * 0.4)
+      .at(-1);
+    // At the top of the page there is no place to keep.
+    if (!reading || window.scrollY < 80) return;
+    event.preventDefault();
+    window.location.assign(`${link.href.split('#')[0]}#${reading.id}`);
+  });
   langButton.addEventListener('click', () => {
     if (langMenu.hidden) {
       closeMenu();
@@ -182,13 +205,16 @@ if ('IntersectionObserver' in window) {
 // All the titles are measured first and sized after, so the page is laid out once, and only when
 // the browser is idle (they are below the opening), when the font arrives and when the window changes.
 //
-// What is measured is the words, not the box that holds them: the box cuts what does not fit until
-// this has run (landing.css), so its own width says nothing about them.
+// The measure is the one of Carinova's page, to the pixel: the width the title's box has against the
+// width its words need. Until this has run the box cuts what does not fit (landing.css), and a box
+// that cuts does not say what its words need: from here on it does not cut, as in Carinova's page.
 {
   const titles = $$('.one-line');
-  const words = document.createRange();
   const fit = () => {
-    for (const title of titles) title.style.fontSize = '';
+    for (const title of titles) {
+      title.style.fontSize = '';
+      title.style.overflowX = 'visible';
+    }
     const sizes = titles.map((title) => {
       const box = title.parentElement;
       if (!box) return null;
@@ -197,9 +223,8 @@ if ('IntersectionObserver' in window) {
         title.clientWidth,
         box.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
       );
-      words.selectNodeContents(title);
-      const needed = words.getBoundingClientRect().width;
-      return room && needed > room ? (parseFloat(getComputedStyle(title).fontSize) * room * 0.98) / needed : null;
+      const needed = title.scrollWidth;
+      return room && needed > room ? ((parseFloat(getComputedStyle(title).fontSize) * room) / needed) * 0.98 : null;
     });
     titles.forEach((title, position) => {
       const size = sizes[position];
@@ -227,6 +252,10 @@ const follow = (link: HTMLAnchorElement) => {
 
 /** The elements that open the dialog: the stores, and whatever says which view it opens. */
 const DOORS = '.store[data-store], [data-dialog]';
+/** The views of the account: a file of their own (account.ts), which talks to the site's API. */
+const ACCOUNT_VIEWS: ReadonlyArray<string> = ['account', 'tracking', 'privacy', 'prealert'];
+const viewsOf = (door: HTMLElement) =>
+  ACCOUNT_VIEWS.includes(door.dataset.dialog ?? '') ? loadAccount() : loadDialogs();
 
 document.addEventListener('click', (event) => {
   const door = (event.target as Element).closest<HTMLAnchorElement>(DOORS);
@@ -243,8 +272,10 @@ document.addEventListener('click', (event) => {
     return;
   }
   event.preventDefault();
-  loadDialogs()
-    .then((dialogs) => dialogs.open(door))
+  // "Empezar mi envío" while the calculator has nothing to quote: it waits, as a disabled button does.
+  if (door.hasAttribute('disabled')) return;
+  viewsOf(door)
+    .then((views) => views.open(door))
     .catch(() => follow(door));
 });
 // The dialogs start to arrive as soon as a door is about to be used, so they open without a wait.
@@ -252,7 +283,8 @@ for (const type of ['pointerover', 'focusin', 'touchstart'] as const) {
   document.addEventListener(
     type,
     (event) => {
-      if ((event.target as Element).closest?.(DOORS)) void loadDialogs().catch(() => {});
+      const door = (event.target as Element).closest?.<HTMLElement>(DOORS);
+      if (door) void viewsOf(door).catch(() => {});
     },
     { passive: true }
   );
@@ -312,7 +344,36 @@ for (const type of ['pointerover', 'focusin', 'touchstart'] as const) {
   }
 }
 
-// The reviews, when the page has them: the cards start to advance when they are near.
+// The stores invite a touch: a wave spreads from the finger (landing.css). Not where movement is reduced.
+document.addEventListener(
+  'pointerdown',
+  (event) => {
+    const tile = (event.target as Element).closest?.<HTMLElement>('.store');
+    if (!tile || reducedMotion.matches) return;
+    const box = tile.getBoundingClientRect();
+    const size = Math.max(box.width, box.height) * 2.2;
+    const wave = document.createElement('span');
+    wave.className = 'store-ripple';
+    wave.setAttribute('aria-hidden', 'true');
+    Object.assign(wave.style, {
+      width: `${size}px`,
+      height: `${size}px`,
+      left: `${event.clientX - box.left - size / 2}px`,
+      top: `${event.clientY - box.top - size / 2}px`,
+    });
+    tile.append(wave);
+    wave.addEventListener('animationend', () => wave.remove(), { once: true });
+  },
+  { passive: true }
+);
+
+// The year of the footer is today's, not the one of the day the page was built.
+{
+  const year = $('#year');
+  if (year) year.textContent = String(new Date().getFullYear());
+}
+
+// The cards of "Lo que dicen nuestros clientes": they start to advance when the page is idle.
 {
   const reviews = $('#clientes');
   if (reviews) whenIdle(() => void loadCarousel().catch(() => {}));

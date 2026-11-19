@@ -1,5 +1,6 @@
 // The article search of the home page: Carinova's catalogue first, the lists of what cannot be
-// brought for what it does not know, and "requires review" for the rest.
+// brought for what it does not know, and general merchandise for any other word, as Carinova's
+// page answers.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
@@ -166,15 +167,20 @@ test('what the catalogue does not know is looked up in the lists, in the languag
   assert.equal(kind('أريكة', 'ar'), 'volume furniture');
 });
 
-test('it never says an article is allowed because it does not know it', () => {
-  for (const query of ['qzqzqz', '12345', 'cosa rara', '', '   ', '???']) {
+test('a word it does not know is general merchandise, as in Carinova’s page; anything less is for the team', () => {
+  for (const query of ['qzqzqz', 'cosa rara', 'joyas', 'штука', '东西']) {
+    const result = answer(query);
+    assert.deepEqual([result.status, result.known, result.id], ['allowed', false, 'general'], `"${query}"`);
+  }
+  // Not a word: a number, one letter, punctuation, nothing.
+  for (const query of ['12345', 'a', '', '   ', '???']) {
     const result = answer(query);
     assert.deepEqual([result.status, result.known, result.id], ['review', false, ''], `"${query}"`);
   }
   // What the catalogue sets aside on purpose is not picked up by a list for one of its words.
   assert.equal(lookupCatalogue('cerveza sin alcohol', catalogue).excluded, true);
-  assert.deepEqual([answer('cerveza sin alcohol').status, answer('cerveza sin alcohol').known], ['review', false]);
-  assert.equal(answer('non alcoholic beer', 'en').status, 'review');
+  assert.deepEqual([answer('cerveza sin alcohol').status, answer('cerveza sin alcohol').known], ['allowed', false]);
+  assert.equal(answer('non alcoholic beer', 'en').status, 'allowed');
   // A car seat for a baby and parts for a car are not a car.
   assert.equal(kind('asiento de carro para bebé'), 'allowed baby');
   assert.equal(kind('repuestos para carro'), 'allowed tools');

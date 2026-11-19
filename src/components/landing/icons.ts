@@ -51,6 +51,10 @@ export const ICONS = {
     body: '<circle cx="12" cy="12" r="9" style="fill:var(--ia,currentColor);fill-opacity:var(--iao,.22);stroke:none"/><circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
   },
   'i-user': { viewBox: '0 0 24 24', body: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>' },
+  'i-logout': {
+    viewBox: '0 0 24 24',
+    body: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+  },
   'i-menu': { viewBox: '0 0 24 24', body: '<path d="M4 6h16M4 12h16M4 18h16"/>' },
   'i-close': { viewBox: '0 0 24 24', body: '<path d="M18 6 6 18M6 6l12 12"/>' },
   'i-search': {

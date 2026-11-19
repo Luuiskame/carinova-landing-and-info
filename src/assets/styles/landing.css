@@ -10,7 +10,6 @@
  * - what only a dialog needs is in landing-dialog.css, loaded when a dialog opens;
  * - the rules of what is not part of the site are gone (the partner panel, the account and
  *   tracking views, the notices editor);
- * - no blur behind the header, the rates and the price bar, and none behind a dialog on a phone.
  */
 
 /* ───────── What shows until Manrope arrives ─────────
@@ -136,6 +135,7 @@ body {
   font-weight: 460;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 h1,
 h2,
@@ -361,9 +361,11 @@ svg {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--navy-950);
+  background: rgba(0, 17, 39, 0.94);
   color: var(--on-navy);
   border-bottom: 1px solid var(--navy-line);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  backdrop-filter: saturate(150%) blur(14px);
 }
 .header-inner {
   position: relative;
@@ -705,6 +707,8 @@ svg {
   border: 1px solid var(--navy-line);
   border-radius: var(--r-md);
   background: rgba(5, 25, 47, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   overflow: hidden;
 }
 .hero-rates li + li {
@@ -834,6 +838,8 @@ svg {
 .about-emblem img {
   width: 100%;
   height: auto;
+  /* The shape of the drawing, not of the copy the browser picked (a whole number of pixels high). */
+  aspect-ratio: 912 / 878;
   -webkit-mask-image:
     linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent),
     linear-gradient(180deg, transparent, #000 4%, #000 96%, transparent);
@@ -2195,6 +2201,8 @@ fieldset:disabled .segmented label {
   color: #fff;
   box-shadow: 0 18px 40px -12px rgba(0, 17, 39, 0.6);
   cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   animation: dock-in 0.28s var(--ease);
 }
 .quote-dock > svg {
@@ -3211,32 +3219,149 @@ html.has-dock {
   .grid-3.dims > .field:last-child {
     grid-column: 1/-1;
   }
-  /* A rate's name and its days share a line: where the name is long ("ÉLECTRONIQUE") they get the
-     room they lack. */
+}
+/* Where the three rates first stand side by side, each has the least room it will ever have, and as
+   Carinova drew them their words leave their boxes ("ELECTRÓNICOS" and its days, "a partir de
+   US$20/pé³"): they take a little of the padding. Only where they do not fit as drawn, which is up
+   to a width of each language's own (measured on Carinova's file: Chinese 991 px, English 999,
+   Spanish 1023, French 1039, Portuguese 1047); from there on they are as drawn. Russian and Arabic
+   were not in that file: they take it for the whole stretch. */
+@media (min-width: 960px) and (max-width: 991px) {
   .hero-rate {
-    padding-inline: 16px;
-    column-gap: 10px;
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  .rate-price {
+    font-size: 1rem;
+  }
+  .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+@media (min-width: 992px) and (max-width: 999px) {
+  html:not(:lang(zh)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:not(:lang(zh)) .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  html:not(:lang(zh)) .rate-price {
+    font-size: 1rem;
+  }
+  html:not(:lang(zh)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1023px) {
+  html:not(:lang(zh), :lang(en)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:not(:lang(zh), :lang(en)) .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  html:not(:lang(zh), :lang(en)) .rate-price {
+    font-size: 1rem;
+  }
+  html:not(:lang(zh), :lang(en)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1039px) {
+  html:is(:lang(fr), :lang(pt), :lang(ru), :lang(ar)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:is(:lang(fr), :lang(pt), :lang(ru), :lang(ar)) .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  html:is(:lang(fr), :lang(pt), :lang(ru), :lang(ar)) .rate-price {
+    font-size: 1rem;
+  }
+  html:is(:lang(fr), :lang(pt), :lang(ru), :lang(ar)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+@media (min-width: 1040px) and (max-width: 1047px) {
+  html:is(:lang(pt), :lang(ru), :lang(ar)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:is(:lang(pt), :lang(ru), :lang(ar)) .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  html:is(:lang(pt), :lang(ru), :lang(ar)) .rate-price {
+    font-size: 1rem;
+  }
+  html:is(:lang(pt), :lang(ru), :lang(ar)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+@media (min-width: 1048px) and (max-width: 1079px) {
+  html:is(:lang(ru), :lang(ar)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:is(:lang(ru), :lang(ar)) .hero-rate > strong {
+    letter-spacing: 0.06em;
+  }
+  html:is(:lang(ru), :lang(ar)) .rate-price {
+    font-size: 1rem;
+  }
+  html:is(:lang(ru), :lang(ar)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+/* Arabic writes its units as words ("للقدم المكعّب"): where a price and its unit do not fit on one
+   line, the unit goes under it instead of being cut. */
+html:lang(ar) .rate-price {
+  white-space: normal;
+}
+html:lang(ar) .rate-price small {
+  display: inline-block;
+  white-space: nowrap;
+}
+/* On a phone, the two languages the file did not have need the same room at widths where the
+   file's five fit. */
+@media (min-width: 352px) and (max-width: 379px) {
+  html:is(:lang(ru), :lang(ar)) .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
+  }
+  html:is(:lang(ru), :lang(ar)) .hero-rate > strong {
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+  }
+  html:is(:lang(ru), :lang(ar)) .rate-price {
+    font-size: 1rem;
+  }
+  html:is(:lang(ru), :lang(ar)) .rate-price strong {
+    font-size: 1.3125rem;
+  }
+}
+/* The narrowest phones (320 and 344 px, and a page that is zoomed in): the logo and the tools of the
+   bar give way until they fit, and so do the rates. As Carinova drew the bar its menu button ends at
+   349 to 351 px, whatever the screen: at 320 px it was 29 px past the edge and the whole page could
+   be dragged sideways. From 352 px on the file fits, and the page is the file's as drawn. */
+@media (max-width: 351px) {
+  .hero-rate {
+    padding-inline: 14px;
+    column-gap: 8px;
   }
   .hero-rate > strong {
     font-size: 0.8125rem;
     letter-spacing: 0.06em;
   }
-}
-/* Where the three rates first stand side by side, each has the least room it will ever have: the
-   longest name ("ÉLECTRONIQUE") and its days need a little of the padding. */
-@media (min-width: 960px) and (max-width: 1079px) {
-  .hero-rate {
-    padding-inline: 16px;
-    column-gap: 10px;
+  .rate-price {
+    font-size: 1rem;
   }
-  .hero-rate > strong {
-    letter-spacing: 0.06em;
+  .rate-price strong {
+    font-size: 1.3125rem;
   }
-}
-/* The narrowest phones (and a page that is zoomed in): the logo and the tools of the bar give way
-   until they fit. As drawn they needed 369 px, so at 320 px the menu button ended 29 px past the
-   edge of the screen and the whole page could be dragged sideways. */
-@media (max-width: 383px) {
   .header-inner {
     gap: 12px;
   }
@@ -3292,7 +3417,8 @@ html.has-dock {
 }
 
 /* ───────── Where the site's markup differs from the original ─────────
-   The account is a link (to the site's own pages), not a button that opens a dialog. */
+   What opens the account is a link drawn as the file's button (it leads to the site's own page
+   without the script). */
 .icon-btn {
   text-decoration: none;
 }
@@ -3303,32 +3429,6 @@ html.has-dock {
 }
 .lang-menu .lang-glyph {
   color: var(--muted);
-}
-/* The ways to reach Carinova, one under the other. */
-.footer-contact .footer-email {
-  display: block;
-  width: fit-content;
-}
-.footer-contact .footer-email + .footer-email {
-  margin-top: 6px;
-}
-/* A reception point that is not open yet: its city and "Próximamente". */
-.footer-places .footer-soon {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  margin-top: 8px;
-  font-size: 0.8125rem;
-  color: var(--on-navy-3);
-}
-.footer-badge {
-  padding: 1px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--r-pill);
-  font-size: 0.6875rem;
-  font-weight: 720;
-  color: var(--on-navy-2);
 }
 
 /* ───────── Signed in or not ─────────

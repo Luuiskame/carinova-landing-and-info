@@ -5,7 +5,8 @@
 //
 // Fetched, with its stylesheet, the first time something opens the dialog (boot.ts). Nothing here
 // talks to a server: a request is a message the visitor sends from their own WhatsApp. The
-// sentences come with the page (ScriptData "dialogs").
+// sentences come with the page (ScriptData "dialogs"). The views of the account are a file of
+// their own (account.ts), which does talk to the site's API.
 import stylesheet from '~/assets/styles/landing-dialog.css?url';
 import { fill } from '~/utils/template';
 import { whatsappLink } from '~/utils/whatsapp';
@@ -16,7 +17,9 @@ import { loadDirectory } from './lazy';
 export interface DialogConfig {
   whatsapp: string;
   limits: { links: number; quantity: number; phoneDigits: [number, number]; urlLength: number };
-  departments: Array<string>;
+  /** Where in Nicaragua: the name the messages use and how the form writes it ("Managua (MG)"). */
+  departments: Array<{ value: string; label: string }>;
+  defaultDepartment: string;
   /** What each store of the home page is, by its id. */
   stores: Record<string, string>;
   /** The names of the directory's categories. */
@@ -26,9 +29,11 @@ export interface DialogConfig {
 
 export const config = pageData<DialogConfig>('dialogs');
 const { text, limits, departments } = config;
+/** A department as the forms and the messages write it: "Managua (MG)". */
+export const departmentLabel = (name: string): string => departments.find((item) => item.value === name)?.label ?? name;
 
 const modal = need<HTMLDialogElement>('#modal');
-const content = need('#modal-content');
+export const content = need('#modal-content');
 const coarsePointer = matchMedia('(pointer: coarse)');
 
 /**
@@ -36,7 +41,7 @@ const coarsePointer = matchMedia('(pointer: coarse)');
  * page names in its <head> holds up the first paint, and nobody has opened a dialog yet. A view is
  * drawn once it has arrived (or has failed to: the dialog still works, plainer).
  */
-const styles = new Promise<void>((resolve) => {
+export const styles = new Promise<void>((resolve) => {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = stylesheet;
@@ -130,11 +135,12 @@ export const heading = (eyebrow: string, title: string, intro = ''): string =>
   `<p class="modal-eyebrow">${esc(eyebrow)}</p><h2 class="modal-title" id="modal-title" tabindex="-1">${esc(title)}</h2>` +
   (intro ? `<p class="modal-intro">${esc(intro)}</p>` : '');
 
-const errorBox = `<p id="form-error" class="form-error" role="alert" tabindex="-1" hidden>${icon('alert')}<span></span></p>`;
+export const errorBox = (id = 'form-error'): string =>
+  `<p id="${id}" class="form-error" role="alert" tabindex="-1" hidden>${icon('alert')}<span></span></p>`;
 
 /** Says what is wrong with a form and takes the visitor to the field. */
-const showError = (message: string, fieldId = ''): void => {
-  const box = need('#form-error', content);
+export const showError = (message: string, fieldId = '', boxId = 'form-error'): void => {
+  const box = need(`#${boxId}`, content);
   need('span', box).textContent = message;
   box.hidden = false;
   for (const node of $$('[aria-invalid="true"]', content)) node.removeAttribute('aria-invalid');
@@ -159,7 +165,7 @@ const restore = (fields: ReturnType<typeof snapshot>): void => {
   }
 };
 
-interface Contact {
+export interface Contact {
   firstName: string;
   lastName: string;
   email: string;
@@ -168,7 +174,7 @@ interface Contact {
 }
 
 /** Who asks: the fields the two forms start with. `prefix` keeps their ids apart. */
-const contactFields = (prefix: string): string =>
+export const contactFields = (prefix: string): string =>
   `<div class="grid-2">` +
   `<label class="field"><span>${esc(text.firstName)}</span><input class="input" name="firstName" id="${prefix}-first" required maxlength="80" autocomplete="given-name" dir="auto" placeholder="${esc(text.firstNamePlaceholder)}"></label>` +
   `<label class="field"><span>${esc(text.lastName)}</span><input class="input" name="lastName" id="${prefix}-last" required maxlength="80" autocomplete="family-name" dir="auto" placeholder="${esc(text.lastNamePlaceholder)}"></label>` +
@@ -177,10 +183,10 @@ const contactFields = (prefix: string): string =>
   `<label class="field"><span>${esc(text.phone)}</span><input class="input" name="phone" id="${prefix}-phone" type="tel" inputmode="tel" required maxlength="25" autocomplete="tel" placeholder="${esc(text.phonePlaceholder)}"></label>` +
   `</div><label class="field"><span>${esc(text.department)}</span><select class="input" name="department" id="${prefix}-department" required>` +
   `<option value="">${esc(text.departmentPlaceholder)}</option>` +
-  departments.map((name) => `<option value="${esc(name)}">${esc(name)}</option>`).join('') +
+  departments.map(({ value: name, label }) => `<option value="${esc(name)}">${esc(label)}</option>`).join('') +
   `</select></label>`;
 
-const contactOf = (form: HTMLFormElement): Contact => {
+export const contactOf = (form: HTMLFormElement): Contact => {
   const data = new FormData(form);
   const value = (name: string) => String(data.get(name) ?? '').trim();
   return {
@@ -199,12 +205,13 @@ const isPhone = (value: string) => {
 };
 
 /** What is wrong with who asks, and in which field; null when nothing is. */
-const contactProblem = (contact: Contact, prefix: string): [string, string] | null => {
+export const contactProblem = (contact: Contact, prefix: string): [string, string] | null => {
   if (!contact.firstName) return [text.invalidName, `${prefix}-first`];
   if (!contact.lastName) return [text.invalidName, `${prefix}-last`];
   if (!isEmail(contact.email)) return [text.invalidEmail, `${prefix}-email`];
   if (!isPhone(contact.phone)) return [text.invalidPhone, `${prefix}-phone`];
-  if (!departments.includes(contact.department)) return [text.invalidDepartment, `${prefix}-department`];
+  if (!departments.some((item) => item.value === contact.department))
+    return [text.invalidDepartment, `${prefix}-department`];
   return null;
 };
 
@@ -220,17 +227,17 @@ const channelField = (prefix: string): string =>
     .join('') +
   `</select></label>`;
 
-/** The lines of a message that say who asks. */
-const contactLines = (contact: Contact, channel: string): Array<string> => [
+/** The lines of a message that say who asks, and how they want to be answered when the form asked. */
+export const contactLines = (contact: Contact, channel?: string): Array<string> => [
   fill(text.msgContact, { name: `${contact.firstName} ${contact.lastName}`.trim() }),
   fill(text.msgEmail, { email: contact.email }),
   fill(text.msgPhone, { phone: contact.phone }),
-  fill(text.msgDepartment, { department: contact.department }),
-  fill(text.msgChannel, { channel: CHANNELS[channel] ?? CHANNELS.whatsapp }),
+  fill(text.msgDepartment, { department: departmentLabel(contact.department) }),
+  ...(channel === undefined ? [] : [fill(text.msgChannel, { channel: CHANNELS[channel] ?? CHANNELS.whatsapp })]),
 ];
 
 // ───────── The message, ready to send ─────────
-const showMessage = (message: string): void =>
+export const showMessage = (message: string): void =>
   showView(() => {
     const link = whatsappLink(config.whatsapp, message);
     // WhatsApp does not take a link that long: the visitor copies the message and pastes it in the chat.
@@ -323,7 +330,7 @@ const renderShopper = (): void => {
     channelField('shopper') +
     `<label class="field"><span>${esc(text.details)}</span><textarea class="input" name="details" id="shopper-details" maxlength="2000" dir="auto" placeholder="${esc(text.shopperDetails)}"></textarea></label>` +
     `<label class="check-label"><input type="checkbox" name="consent" id="shopper-consent" required><span>${esc(text.requestConsent)}</span></label>` +
-    `${errorBox}<button class="btn btn-primary btn-block" type="submit">${esc(text.prepareRequest)}</button></form>`;
+    `${errorBox()}<button class="btn btn-primary btn-block" type="submit">${esc(text.prepareRequest)}</button></form>`;
 
   const form = need<HTMLFormElement>('#shopper-form', content);
   const redraw = () => {
@@ -411,7 +418,7 @@ const showBusiness = (): void =>
       channelField('business') +
       `<label class="field"><span>${esc(text.details)}</span><textarea class="input" name="details" id="business-details" required maxlength="2000" dir="auto" placeholder="${esc(text.businessPlaceholder)}"></textarea></label>` +
       `<label class="check-label"><input name="consent" id="business-consent" type="checkbox" required><span>${esc(text.requestConsent)}</span></label>` +
-      `${errorBox}<button class="btn btn-primary btn-block" type="submit">${esc(text.prepareRequest)}</button></form>`;
+      `${errorBox()}<button class="btn btn-primary btn-block" type="submit">${esc(text.prepareRequest)}</button></form>`;
 
     const form = need<HTMLFormElement>('#business-form', content);
     form.addEventListener('submit', (event) => {
@@ -494,6 +501,12 @@ export const showDirectory = (): void => {
       const link = $<HTMLAnchorElement>('#store-more');
       if (link) window.location.assign(link.href);
     });
+};
+
+/** The message of something the page itself prepared (the article search), ready to send. */
+export const openMessage = async (message: string): Promise<void> => {
+  await styles;
+  showMessage(message);
 };
 
 /** Opens the view a door of the page asks for: a store's tile, or `data-dialog`. */

@@ -2,8 +2,9 @@
 // time someone searches. It says how the article travels and offers to quote it or to ask the team.
 //
 // How a search is answered is utils/articles.ts (it has unit tests): the catalogue, then the lists
-// of what cannot be brought in the language of the page, then "requires review". The sentences, the
-// names of the kinds of article and those lists come with the page (ScriptData "articles").
+// of what cannot be brought in the language of the page, then general merchandise. The sentences,
+// the names of the kinds of article and those lists come with the page (ScriptData "articles").
+// "Consultar con un asesor" opens the message ready to send, in the dialog.
 import {
   ACCESSORY_WORDS,
   ARTICLE_RULES,
@@ -18,7 +19,7 @@ import { fill } from '~/utils/template';
 import { whatsappLink } from '~/utils/whatsapp';
 
 import { esc, icon, need, pageData, smooth } from './dom';
-import { loadCalculator } from './lazy';
+import { loadCalculator, loadDialogs } from './lazy';
 
 interface Config {
   locale: string;
@@ -144,8 +145,19 @@ export const search = (value: string): void => {
     (view.quote
       ? `<button class="btn btn-secondary btn-sm" type="button" id="article-quote">${icon('calculator')}<span>${esc(text.quote)}</span></button>`
       : '') +
-    `<a class="link" href="${esc(whatsappLink(whatsapp, message))}" target="_blank" rel="noopener">${icon('chat')}<span>${esc(text.ask)}</span></a>` +
+    `<a class="link" id="article-ask" href="${esc(whatsappLink(whatsapp, message))}" target="_blank" rel="noopener">${icon('chat')}<span>${esc(text.ask)}</span></a>` +
     `</div></div></div>`;
+
+  // The message is shown ready to send, as in Carinova's page; if the dialog cannot be fetched, the
+  // link opens WhatsApp with it.
+  need<HTMLAnchorElement>('#article-ask', host).addEventListener('click', (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const link = event.currentTarget as HTMLAnchorElement;
+    loadDialogs()
+      .then((dialogs) => dialogs.openMessage(message))
+      .catch(() => window.open(link.href, '_blank', 'noopener'));
+  });
 
   const { quote } = view;
   if (quote) {

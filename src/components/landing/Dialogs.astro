@@ -8,31 +8,33 @@
 // logos are fetched the first time something opens it (scripts/boot.ts → scripts/dialogs.ts). Every
 // button that opens it is a link that leads somewhere useful by itself.
 //
-// Not here, because the site's own pages do it with the real account: creating an account, signing
-// in, the account and tracking (/registro, /ingresar, /mi-cuenta, /rastreo). The original drew them
-// in this dialog against a simulated account kept in the browser.
+// The views of the account (creating one, signing in, "Mi cuenta", a new shipment, tracking and the
+// note on privacy) are drawn in this same dialog by scripts/account.ts, with what Account.astro
+// hands it: they work on the site's API, where Carinova's file had an account simulated in the
+// browser.
 import { CONTACT } from '~/data/carinova';
-import { FEATURED_STORES, LANDING_LIMITS, STORE_DIRECTORY } from '~/data/landing';
+import { DEFAULT_DEPARTMENT, FEATURED_STORES, LANDING_LIMITS, STORE_DIRECTORY } from '~/data/landing';
 import { i18n } from '~/i18n';
 import { whatsappLink } from '~/utils/whatsapp';
 
+import { departmentOptions } from './helpers';
 import Icon from './Icon.astro';
 import ScriptData from './ScriptData.astro';
 
 const { data, ui } = i18n(Astro);
-const { RESTRICTED_ITEMS, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
+const { WA_MESSAGES } = data;
 const t = ui.landing;
 const store: Record<string, string> = t.store;
 const kinds: Record<string, string> = t.cat;
 
-/** The conditions of the service: Carinova's summary, with the two lists as /articulos-prohibidos has them. */
+/** The conditions of the service: Carinova's summary, heading by heading. */
 const conditions: Array<{ title: string; text?: string; items?: Array<string> }> = [
   { title: t.uiRatesHeading, text: t.uiConditionsRates },
   { title: t.uiPaymentsHeading, text: t.faq[8].a },
   { title: t.uiElectronicsHeading, text: t.uiConditionsElectronics },
   { title: t.uiVolumeHeading, text: t.uiConditionsVolume },
-  { title: t.prohibited, items: RESTRICTED_ITEMS.prohibited.items.map((item) => item.name) },
-  { title: t.noAir, items: RESTRICTED_ITEMS.seaOnly.items.map((item) => item.name) },
+  { title: t.uiRestrictionsHeading, text: t.uiArticleProhibitedText },
+  { title: t.noAir, text: t.uiArticleSeaText },
   { title: t.uiCoverageHeading, text: t.uiConditionsCoverage },
   { title: t.uiDeliveryHeading, text: t.uiConditionsDelivery },
   { title: t.uiCustomsHeading, text: t.uiConditionsCustoms },
@@ -42,8 +44,9 @@ const conditions: Array<{ title: string; text?: string; items?: Array<string> }>
 const config = {
   whatsapp: CONTACT.whatsapp,
   limits: LANDING_LIMITS,
-  /** The departments of Nicaragua, for the forms: the ones of the sign-up form. */
-  departments: SIGNUP_COUNTRIES.find((country) => country.code === 'NI')?.states ?? [],
+  /** Where in Nicaragua, for the forms: Carinova's list, each place with its two letters. */
+  departments: departmentOptions({ north: t.uiNorthCaribbean, south: t.uiSouthCaribbean }),
+  defaultDepartment: DEFAULT_DEPARTMENT,
   /** The stores of the home page: what each one is. */
   stores: Object.fromEntries(FEATURED_STORES.map(({ id }) => [id, store[id] ?? ''])),
   /** The names of the directory's categories. */

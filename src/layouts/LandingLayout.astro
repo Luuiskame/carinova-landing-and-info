@@ -15,6 +15,11 @@
 //   The fallback is "Manrope Fallback", in landing.css.
 // - No client router: a link to another page of the site is a plain navigation, so the two
 //   stylesheets never meet.
+//
+// The language a visitor chose in the page's menu is remembered, as Carinova's page remembered it:
+// whoever arrives from elsewhere at the Spanish home page (the address without a language) is taken
+// to the home page of their language. Only from elsewhere: inside the site, the address says which
+// language is wanted (docs/PROJECT-LOG.md → D-121).
 import { Font } from 'astro:assets';
 
 import css from '~/assets/styles/landing.css?inline';
@@ -25,7 +30,9 @@ import Metadata from '~/components/common/Metadata.astro';
 import SiteVerification from '~/components/common/SiteVerification.astro';
 import Favicons from '~/components/Favicons.astro';
 
-import { LOCALE_INFO, i18n } from '~/i18n';
+import { LOCALE_INFO, i18n, languagesOf } from '~/i18n';
+import { DEFAULT_LOCALE } from '~/i18n/locales';
+import { getPermalink } from '~/utils/permalinks';
 import type { MetaData as MetaDataType } from '~/types';
 
 export interface Props {
@@ -35,6 +42,19 @@ export interface Props {
 const { metadata = {} } = Astro.props;
 const { locale } = i18n(Astro);
 const { htmlLang, dir } = LOCALE_INFO[locale];
+/** On the Spanish home page: the home page of each other language that is live, for the visitor who chose one. */
+const others =
+  locale === DEFAULT_LOCALE && Astro.url.pathname === '/'
+    ? languagesOf('/').filter((language) => language.locale !== DEFAULT_LOCALE)
+    : [];
+const homes = Object.fromEntries(others.map((language) => [language.locale, getPermalink(language.home)]));
+/**
+ * Runs before the page is drawn. The language is the one the menu stored (scripts/boot.ts), under
+ * the name Carinova's page used; a visit that comes from a page of the site is left alone.
+ */
+const remembered = others.length
+  ? `try{var c=JSON.parse(localStorage.getItem('carinova-language')||'null'),h=${JSON.stringify(homes).replace(/</g, '\\u003c')},i=document.referrer&&new URL(document.referrer).origin===location.origin;if(!i&&typeof c==='string'&&h.hasOwnProperty(c))location.replace(h[c]+location.search+location.hash)}catch(e){}`
+  : '';
 ---
 
 <!doctype html>
@@ -48,6 +68,7 @@ const { htmlLang, dir } = LOCALE_INFO[locale];
     <Font cssVariable="--font-manrope" />
     <style is:inline set:html={css}></style>
     <SessionState />
+    {remembered && <script is:inline set:html={remembered} />}
     <Metadata {...metadata} />
     <SiteVerification />
     <Analytics />

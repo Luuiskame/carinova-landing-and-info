@@ -25,7 +25,7 @@ const { locale, data, ui } = i18n(Astro);
 const { RATES } = data;
 const t = ui.landing;
 const words: Record<string, string> = t.ann;
-const { intl, wordGap } = LOCALE_INFO[locale];
+const { intl } = LOCALE_INFO[locale];
 
 const date = (day: number, options: Intl.DateTimeFormatOptions): string =>
   new Intl.DateTimeFormat(intl, { timeZone: 'UTC', ...options }).format(new Date(day * 86_400_000));
@@ -70,7 +70,7 @@ const slots = scheduleOf(NOTICES, today - 1, today + HORIZON_DAYS, cutoffs).map(
   const html =
     `<p class="announce-msg"><span class="announce-icon" aria-hidden="true">${icon(KIND_ICON[notice.kind])}</span>` +
     `<strong>${escapeHtml(title)}</strong>` +
-    (text ? `${wordGap}<span>${escapeHtml(text)}</span>` : '') +
+    (text ? ` <span>${escapeHtml(text)}</span>` : '') +
     (chip ? ` <span class="announce-chip">${escapeHtml(chip)}</span>` : '') +
     `</p>` +
     (cta

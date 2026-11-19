@@ -4,8 +4,8 @@
 // src/data/carinova.ts, written in every language of the site). Shared by the page's script (in the
 // browser) and the unit tests, so both read a text the same way.
 //
-// It is a catalogue, not a permission: an article neither of them knows gets "requires review" and
-// the way to ask, never "allowed".
+// What neither of them knows is general merchandise, as in Carinova's page, when it is a word at
+// all; "12345" or one letter is for the team to look at.
 import type { ArticleRule, ArticleStatus } from '../data/articles.ts';
 import { findRestricted, plain, type SearchGroup } from './restricted.ts';
 
@@ -144,7 +144,9 @@ const LIST_STATUS: Record<string, ArticleAnswer['status']> = {
 
 /**
  * The answer to a search: the catalogue's, then the lists' (`groups`, from the strictest to the
- * mildest, in the language of the page), then "requires review".
+ * mildest, in the language of the page), then general merchandise for anything that is a word
+ * (two letters together, or a Chinese character), as Carinova's page answers; "requires review"
+ * for the rest.
  */
 export const classifyArticle = (
   query: string,
@@ -158,5 +160,7 @@ export const classifyArticle = (
   if (listed && LIST_STATUS[listed.group.id]) {
     return { status: LIST_STATUS[listed.group.id], id: '', item: listed.name, known: true };
   }
-  return { status: 'review', id: '', known: false };
+  return /\p{L}{2,}|\p{Script=Han}/u.test(normalizeArticle(query))
+    ? { status: 'allowed', id: 'general', known: false }
+    : { status: 'review', id: '', known: false };
 };
