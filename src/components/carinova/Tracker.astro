@@ -11,29 +11,24 @@
 //   on /articulos-prohibidos.
 //
 // Without JavaScript there is no switch: both parts are in view, one under the other, and the lists'
-// page is the answer to the second. It is on the home page (inside "Seguimiento") and on /rastreo;
-// each place sends its own WhatsApp message.
+// page is the answer to the second. It is on /rastreo. (The home page has the article search of
+// Carinova's own page, "Carinova Bot": components/landing/ArticleCheck.astro.)
 import { Icon } from 'astro-icon/components';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import { SIGNIN_DIALOG_ID } from '~/data/account';
 import { i18n } from '~/i18n';
 
 export interface Props {
-  /** Where it is: each place sends its own WhatsApp message. */
-  place?: 'home' | 'page';
   /** The titles of its two parts: h3 inside a section that has its own h2, h2 right under a page title. */
   headingTag?: 'h2' | 'h3';
 }
 
-const { place = 'home', headingTag: Heading = 'h3' } = Astro.props;
+const { headingTag: Heading = 'h3' } = Astro.props;
 const { href, data, ui } = i18n(Astro);
 const { CTA, RESTRICTED_EXAMPLES, RESTRICTED_ITEMS, WA_MESSAGES } = data;
 const t = ui.tracker;
 
-const messages =
-  place === 'home'
-    ? { item: WA_MESSAGES.itemCheck, empty: WA_MESSAGES.itemCheckEmpty }
-    : { item: WA_MESSAGES.trackItemCheck, empty: WA_MESSAGES.trackItemCheckEmpty };
+const messages = { item: WA_MESSAGES.trackItemCheck, empty: WA_MESSAGES.trackItemCheckEmpty };
 
 const config = {
   // From the strictest list to the mildest: an item that is on two of them gets the strictest answer.

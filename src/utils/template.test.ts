@@ -18,14 +18,19 @@ test('a WhatsApp message handed to a script as a template reads like the message
     const messages = content(locale).WA_MESSAGES;
     const quote = { shipment: '1 celular', total: 'US$30' };
     assert.equal(fill(messages.quote('{shipment}', '{total}'), quote), messages.quote('1 celular', 'US$30'));
-    assert.equal(fill(messages.homeQuote('{shipment}', '{total}'), quote), messages.homeQuote('1 celular', 'US$30'));
     assert.equal(fill(messages.customer('{code}'), { code: 'CNV-00007' }), messages.customer('CNV-00007'));
 
-    // The home page: the product's link, the store, the article that was searched for.
+    // The stores and the tracker: the product's link, the store, the article that was searched for.
     const link = 'https://www.amazon.com/dp/B000000000';
-    assert.equal(fill(messages.shopper('{link}'), { link }), messages.shopper(link));
-    assert.equal(fill(messages.storeAssist('{store}'), { store: 'Best Buy' }), messages.storeAssist('Best Buy'));
-    assert.equal(fill(messages.itemCheck('{item}'), { item: 'un perfume' }), messages.itemCheck('un perfume'));
+    assert.equal(fill(messages.storesShopper('{link}'), { link }), messages.storesShopper(link));
+    assert.equal(
+      fill(messages.storePageAssist('{store}'), { store: 'Best Buy' }),
+      messages.storePageAssist('Best Buy')
+    );
+    assert.equal(
+      fill(messages.trackItemCheck('{item}'), { item: 'un perfume' }),
+      messages.trackItemCheck('un perfume')
+    );
 
     // "Mi cuenta": the customer's Carinova ID with the package or the invoice it is about.
     const account = { code: 'CNV-00007', reference: 'PKG-000012', number: 'INV-000003' };

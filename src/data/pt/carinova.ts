@@ -368,20 +368,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   footer: hello('Venho do site de vocês e quero informações.'),
   channels: hello('Encontrei vocês pelo site e quero conversar.'),
 
-  homeQuote: (shipment: string, total: string) =>
-    hello(`Fiz uma cotação na página inicial de vocês para ${shipment}: ${total}. Podem me ajudar a confirmar?`),
-  homeQuoteEmpty: hello('Estou na calculadora da página inicial de vocês e não sei que dados colocar.'),
-  shopper: (link: string) =>
-    hello(
-      `Quero solicitar uma compra assistida. Produto: ${link} Podem me confirmar a disponibilidade, se ele pode entrar e o custo total?`
-    ),
-  storeAssist: (store: string) => hello(`Quero uma compra assistida na loja ${store}. Este é o link do produto: `),
-  homeFamily: hello('Quero enviar uma encomenda familiar para a Nicarágua. Do que eu preciso?'),
-  itemCheck: (item: string) => hello(`Antes de comprar, quero saber se vocês podem trazer: ${item}`),
-  itemCheckEmpty: hello('Quero perguntar se um item pode entrar na Nicarágua: '),
-  homeBranch: (city: string) => hello(`Quero saber a localização e o horário da filial de ${city}.`),
-  homeDelivery: hello('Quero perguntar sobre a entrega em domicílio. Meu endereço é: '),
-  homeFaq: hello('Li as perguntas frequentes de vocês e tenho outra dúvida.'),
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('Li as condições do serviço na página inicial de vocês e tenho uma dúvida.'),
 

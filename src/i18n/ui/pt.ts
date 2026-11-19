@@ -95,16 +95,6 @@ export const ui: UI = {
     branch: (city: string) => `(filial de ${city})`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'Carinova Business · Cargas para empresas',
-    title: ['Seu negócio não para.', 'Nós também não.'],
-    intro:
-      'Traga insumos, produtos ou mercadorias para crescer com uma solução pensada para a sua operação. Avaliamos cada necessidade de forma personalizada.',
-    button: 'Conhecer as soluções Business',
-    tiles: { name: ['Carinova', 'Business'], route: ['EUA', 'NIC'], pace: 'No seu ritmo' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: 'Fale sobre a sua empresa',
@@ -144,31 +134,6 @@ export const ui: UI = {
       oneError: 'Há um campo para corrigir.',
       manyErrors: 'Há {count} campos para corrigir.',
     },
-  },
-
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: 'O próximo passo é seu',
-    title: ['Simples', 'assim.'],
-    text: 'Crie sua conta, receba seu Carinova ID e comece a preparar seu próximo envio.',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: 'Perguntas sobre envios para a Nicarágua',
-    title: ['Perguntas', 'frequentes.'],
-    intro: 'As respostas que importam, antes do seu primeiro envio.',
-    help: 'Tem outra pergunta? Escreva para nós',
-    all: 'Ver todas as perguntas',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: 'Como comprar nos Estados Unidos a partir da Nicarágua',
-    title: ['Três passos,', 'de lá para cá.'],
-    intro: 'Três passos para começar a receber suas compras e encomendas dos Estados Unidos.',
-    closing: 'Sem complicações. Com um plano claro do começo ao fim.',
-    more: 'Ver cada passo com exemplos',
   },
 
   // components/carinova/QuoteCalculator.astro
@@ -552,14 +517,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: 'Envios dos Estados Unidos para a Nicarágua',
     title: `Envios dos Estados Unidos para a Nicarágua | Endereço nos EUA em ${warehouse.city} | Carinova`,
     description: `Envios dos Estados Unidos para a Nicarágua com seu próprio endereço nos EUA em ${warehouse.city}: aéreo em ${air.transit} a ${formatUSD(air.pricePerLb)} por libra e marítimo em ${sea.transit} a partir de ${formatUSD(sea.pricePerLb)}. Retire em ${cityNames.join(' ou ')}.`,
-    reviews: { tagline: 'Avaliações', title: 'O que nossos clientes dizem', source: 'Avaliação no Google' },
-    calculator: {
-      eyebrow: 'Calculadora de envios para a Nicarágua',
-      title: ['Calcule', 'seu envio.'],
-      intro: 'Uma estimativa clara para você decidir melhor. Sem cadastro.',
-    },
   },
 
   // pages/ingresar.astro
@@ -738,98 +698,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: 'Envios dos Estados Unidos para a Nicarágua',
-    lead: 'Compre, envie e receba dos Estados Unidos até a Nicarágua. Mais fácil do que você imagina, com a modalidade que combina com você.',
-    facts: [`Aéreo em ${air.transit}`, `Marítimo em ${sea.transit}`, `Retirada em ${cityNames.join(' e ')}`],
-    emblemAlt: 'Emblema da Carinova: três pessoas erguem juntas uma tocha acesa',
-    origin: 'Origem',
-    originPlace: `${warehouse.city}, EUA`,
-    destination: 'Destino',
-    destinationPlace: 'Nicarágua',
-    bridgeTitle: 'Uma ponte entre dois países.',
-    bridgeText: 'Um jeito mais simples de estar perto.',
-    route: [warehouse.city, 'Nicarágua'],
-    explore: 'Conheça a Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'O essencial da Carinova',
-    items: [
-      { title: 'Duas formas de enviar', text: 'Escolha velocidade ou economia' },
-      { title: `De ${warehouse.city} para a Nicarágua`, text: 'Uma rota, muitas possibilidades' },
-      { title: 'Do seu jeito', text: 'Pessoal, familiar ou empresarial' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: 'Soluções de envio para a Nicarágua',
-    title: ['Uma solução para', 'cada necessidade.'],
-    aside: 'Escolha o caminho que combina mais com você. Nós mostramos o próximo passo.',
-    cards: {
-      shopping: {
-        label: 'Compras on-line',
-        title: 'Compre nas suas lojas favoritas dos Estados Unidos e receba na Nicarágua',
-        text: `Escolha o que quiser e pague usando seu endereço nos EUA em ${warehouse.city}. Nós trazemos para a Nicarágua.`,
-        action: 'Começar a comprar',
-        imageAlt: '',
-      },
-      assisted: {
-        label: 'Compra assistida',
-        title: 'Compartilhe o link. Ajudamos você a comprar.',
-        text: 'Encontrou algo on-line? Envie o link e orientamos você.',
-        action: 'Pedir assistência',
-        imageAlt: 'Uma pessoa compartilha pelo celular o link de um produto',
-      },
-      family: {
-        label: 'Encomendas',
-        title: 'Envie suas encomendas familiares',
-        text: 'Porque há pacotes que levam mais do que coisas: levam carinho.',
-        action: 'Perguntar sobre uma encomenda',
-        imageAlt: 'Uma família abre uma encomenda que chegou dos Estados Unidos',
-      },
-      business: {
-        label: 'Para empresas',
-        title: 'Carinova Business: soluções pensadas no ritmo do seu negócio.',
-        text: 'Sua operação, em movimento.',
-        action: 'Vamos falar do seu negócio',
-        imageAlt: 'Caixas de mercadorias prontas para um negócio',
-      },
-    },
-    stores: {
-      label: 'Lojas dos Estados Unidos onde você pode comprar',
-      previous: 'Loja anterior',
-      next: 'Próxima loja',
-      pause: 'Pausar o carrossel de lojas',
-      play: 'Retomar o carrossel de lojas',
-      disclosure:
-        'As lojas aparecem como exemplos, sem convênio nem endosso implícito. Preços e disponibilidade são consultados no site de cada loja.',
-      all: 'Ver todas as lojas',
-    },
-    storeNotice:
-      'Visite a loja, escolha seu produto e compartilhe o link conosco. A compra, a admissibilidade e a tarifa são verificadas antes de realizarmos a operação.',
-    visit: 'Ir ao site da loja',
-    assist: 'Pedir que a gente compre para você',
-    restricted: 'Antes de comprar, veja se o item pode entrar',
-    close: 'Fechar',
-    assistTitle: 'Envie o link. Nós acompanhamos você.',
-    assistIntro:
-      'Cole o link do produto e prepare sua solicitação. O custo da compra, os impostos e o frete são confirmados antes de realizarmos a operação.',
-    script: {
-      status: '{name}, loja {index} de {total}.',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: 'Rastreamento de pacotes',
-    title: ['Saiba em que etapa', 'está seu envio.'],
-    intro:
-      'Cada pacote avança por etapas claras, desde que o recebemos nos Estados Unidos até chegar às suas mãos. Você o acompanha pela sua conta, com a referência e o histórico.',
-    stagesLabel: 'As etapas de um pacote',
     switchLabel: 'O que você quer consultar?',
     tabs: { track: 'Rastrear pacote', check: 'Pode entrar?' },
     track: {
@@ -863,21 +733,6 @@ export const ui: UI = {
           'Isso não significa que possa entrar: há itens que precisam de licenças ou de uma análise. Pergunte para nós antes de comprar.',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `Filiais em ${cityNames.join(' e ')}`,
-    title: ['Mais perto', 'de você.'],
-    intro: 'Retire seus envios nas nossas filiais ou pergunte sobre entregas em outros pontos da Nicarágua.',
-    country: 'Nicarágua',
-    regions: { managua: 'Capital · Pacífico', bluefields: 'Costa do Caribe Sul' },
-    see: (city: string) => `Ver a filial de ${city}`,
-    ask: 'Perguntar a localização',
-    mapLabel: `Mapa ilustrativo da Nicarágua com pontos de atendimento em ${cities.join(' e ')}`,
-    mapCaption: 'Mapa ilustrativo: não mostra endereços físicos nem rotas operacionais.',
-    fine: 'Os endereços, a cobertura específica e as taxas de entrega em domicílio são confirmados ao combinar a entrega.',
-    delivery: 'Perguntar sobre entrega em domicílio',
   },
 
   // components/widgets/Footer.astro

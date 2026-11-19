@@ -1,6 +1,7 @@
 ---
-// The quote calculator, in the format of Carinova's prototype. It is on the home page ("Sacá
-// cuentas. Sin complicarte.") and on /cotizador, which owns the rates.
+// The quote calculator, in the format of Carinova's prototype. It is on /cotizador, which owns the
+// rates. (The home page has the calculator of Carinova's own page, on the same rates and the same
+// arithmetic: components/landing/Calculator.astro.)
 //
 // - One basis at a time: by weight (air or sea), by volume (sea) or per unit (some electronics, by
 //   air). The visitor chooses how the package travels and then the "Tipo de tarifa"; only the fields
@@ -26,13 +27,11 @@ import { describeWeight, formatNumber, formatUSD, quoteByWeight } from '~/utils/
 import { fill } from '~/utils/template';
 
 export interface Props {
-  /** Where it is: each place sends its own WhatsApp message. */
-  place?: 'page' | 'home';
   /** Its title: h2 right under a page title, h3 inside a section that has its own h2. */
   headingTag?: 'h2' | 'h3';
 }
 
-const { place = 'page', headingTag: Heading = 'h2' } = Astro.props;
+const { headingTag: Heading = 'h2' } = Astro.props;
 const { locale, data, ui } = i18n(Astro);
 const { RATES, WA_MESSAGES } = data;
 
@@ -43,10 +42,7 @@ const t = ui.quoteCalculator;
 // Before the script runs: 5 lb by air, one package (the prototype's starting point).
 const pounds = 5;
 const initial = quoteByWeight(pounds, air.pricePerLb, 1, RATES.minimumLb);
-const messages =
-  place === 'home'
-    ? { quote: WA_MESSAGES.homeQuote, empty: WA_MESSAGES.homeQuoteEmpty }
-    : { quote: WA_MESSAGES.quote, empty: WA_MESSAGES.quoteEmpty };
+const messages = { quote: WA_MESSAGES.quote, empty: WA_MESSAGES.quoteEmpty };
 const modeWord = (name: string) => name.toLowerCase();
 const initialMessage = messages.quote(
   fill(t.script.weightShipment, { mode: modeWord(air.name), weight: formatNumber(pounds) }),

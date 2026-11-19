@@ -674,26 +674,6 @@ export const WA_MESSAGES = {
   channels: hello('Los encontré en su sitio web y quiero escribirles.'),
 
   // Home page
-  /** The calculator of the home page. */
-  homeQuote: (shipment: string, total: string) =>
-    hello(`Coticé en su página de inicio ${shipment}: ${total}. ¿Me ayudan a confirmarlo?`),
-  homeQuoteEmpty: hello('Estoy en la calculadora de su página de inicio y no sé qué datos poner.'),
-  /** "Compra asistida": the link the visitor pasted goes at the end. */
-  shopper: (link: string) =>
-    hello(
-      `Quiero solicitar una compra asistida. Producto: ${link} ¿Me confirman disponibilidad, si puede ingresar y el costo total?`
-    ),
-  /** A store's card. */
-  storeAssist: (store: string) => hello(`Quiero una compra asistida en ${store}. Este es el enlace del producto: `),
-  /** "Encomiendas", among the solutions. */
-  homeFamily: hello('Quiero enviar una encomienda familiar a Nicaragua. ¿Qué necesito?'),
-  /** "¿Puede ingresar?" in the tracker of the home page: the article the visitor searched for. */
-  itemCheck: (item: string) => hello(`Antes de comprar, quiero saber si pueden traer: ${item}`),
-  itemCheckEmpty: hello('Quiero consultar si un artículo puede ingresar a Nicaragua: '),
-  /** A branch's card on the home page. */
-  homeBranch: (city: string) => hello(`Quiero conocer la ubicación y el horario de la sucursal de ${city}.`),
-  homeDelivery: hello('Quiero consultar la entrega a domicilio. Mi dirección es: '),
-  homeFaq: hello('Leí sus preguntas frecuentes y tengo otra duda.'),
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('Leí las condiciones del servicio en su página de inicio y tengo una consulta.'),
 

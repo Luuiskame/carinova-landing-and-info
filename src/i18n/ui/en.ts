@@ -113,16 +113,6 @@ export const ui: UI = {
     branch: (city: string) => `(${city} branch)`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'Carinova Business · Cargo for companies',
-    title: ['Your business does not stop.', 'Neither do we.'],
-    intro:
-      'Bring supplies, products or merchandise to grow with a solution designed for your operation. We evaluate each need individually.',
-    button: 'Explore Business solutions',
-    tiles: { name: ['Carinova', 'Business'], route: ['USA', 'NIC'], pace: 'At your pace' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: 'Tell us about your company',
@@ -155,31 +145,6 @@ export const ui: UI = {
       oneError: 'There is one field to correct.',
       manyErrors: 'There are {count} fields to correct.',
     },
-  },
-
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: 'The next step is yours',
-    title: ['As simple', 'as that.'],
-    text: 'Create your account, get your Carinova ID and start preparing your next shipment.',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: 'Questions about shipping to Nicaragua',
-    title: ['Frequently asked', 'questions.'],
-    intro: 'The answers that matter, before your first shipment.',
-    help: 'Have another question? Write to us',
-    all: 'See all the questions',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: 'How to shop in the United States from Nicaragua',
-    title: ['Three steps,', 'from there to here.'],
-    intro: 'Three steps to start receiving your purchases and packages from the United States.',
-    closing: 'No complications. A clear plan from start to finish.',
-    more: 'See each step with examples',
   },
 
   // components/carinova/QuoteCalculator.astro
@@ -561,14 +526,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: 'Shipping from the United States to Nicaragua',
     title: `Shipping from the United States to Nicaragua | US address in ${warehouse.city} | Carinova`,
     description: `Shipping from the United States to Nicaragua with your own US address in ${warehouse.city}: by air in ${air.transit} at ${formatUSD(air.pricePerLb)} per pound and by sea in ${sea.transit} from ${formatUSD(sea.pricePerLb)}. Pick up in ${cityNames.join(' or ')}.`,
-    reviews: { tagline: 'Reviews', title: 'What our customers say', source: 'Google review' },
-    calculator: {
-      eyebrow: 'Shipping calculator for Nicaragua',
-      title: ['Calculate', 'your shipment.'],
-      intro: 'A clear estimate so you can decide better. No sign-up.',
-    },
   },
 
   // pages/ingresar.astro
@@ -747,98 +707,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: 'Shipping from the United States to Nicaragua',
-    lead: 'Buy, ship and receive from the United States to Nicaragua. Easier than you imagine, with the mode that suits you.',
-    facts: [`By air in ${air.transit}`, `By sea in ${sea.transit}`, `Pickup in ${cityNames.join(' and ')}`],
-    emblemAlt: 'Carinova’s emblem: three people raise a burning torch together',
-    origin: 'Origin',
-    originPlace: `${warehouse.city}, USA`,
-    destination: 'Destination',
-    destinationPlace: 'Nicaragua',
-    bridgeTitle: 'A bridge between two countries.',
-    bridgeText: 'A simpler way to be close.',
-    route: [warehouse.city, 'Nicaragua'],
-    explore: 'Explore Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'Carinova in short',
-    items: [
-      { title: 'Two ways to ship', text: 'Choose speed or savings' },
-      { title: `From ${warehouse.city} to Nicaragua`, text: 'One route, many possibilities' },
-      { title: 'Your way', text: 'Personal, family or business' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: 'Shipping solutions to Nicaragua',
-    title: ['A solution for', 'every need.'],
-    aside: 'Choose the path that suits you best. We show you the next step.',
-    cards: {
-      shopping: {
-        label: 'Online shopping',
-        title: 'Buy at your favourite stores in the United States and receive in Nicaragua',
-        text: `Choose what you like and check out with your US address in ${warehouse.city}. We bring it to Nicaragua.`,
-        action: 'Start shopping',
-        imageAlt: '',
-      },
-      assisted: {
-        label: 'Assisted purchase',
-        title: 'Share the link. We help you buy.',
-        text: 'Found something online? Send us the link and we guide you.',
-        action: 'Request assistance',
-        imageAlt: 'A person shares the link to a product from their phone',
-      },
-      family: {
-        label: 'Family packages',
-        title: 'Send your family packages',
-        text: 'Because some packages carry more than things: they carry affection.',
-        action: 'Ask about a package',
-        imageAlt: 'A family opens a package that arrived from the United States',
-      },
-      business: {
-        label: 'For business',
-        title: 'Carinova Business: solutions designed at the pace of your business.',
-        text: 'Your operation, on the move.',
-        action: 'Let’s talk about your business',
-        imageAlt: 'Boxes of merchandise ready for a business',
-      },
-    },
-    stores: {
-      label: 'Stores in the United States where you can buy',
-      previous: 'Previous store',
-      next: 'Next store',
-      pause: 'Pause the stores carousel',
-      play: 'Resume the stores carousel',
-      disclosure:
-        'The stores are shown as examples, with no agreement or endorsement implied. Prices and availability are checked on each store’s site.',
-      all: 'See all the stores',
-    },
-    storeNotice:
-      'Visit the store, choose your product and share the link with us. The purchase, its admissibility and the rate are verified before we handle the operation.',
-    visit: 'Go to the store’s site',
-    assist: 'Ask us to buy for you',
-    restricted: 'Before you buy, check whether the item can enter',
-    close: 'Close',
-    assistTitle: 'Send the link. We go with you.',
-    assistIntro:
-      'Paste the link to the product and prepare your request. The cost of the purchase, the taxes and the freight are confirmed before we handle the operation.',
-    script: {
-      status: '{name}, store {index} of {total}.',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: 'Package tracking',
-    title: ['Know which stage', 'your shipment is at.'],
-    intro:
-      'Every package moves through clear stages, from the moment we receive it in the United States until it is in your hands. You follow it from your account, with its reference and its history.',
-    stagesLabel: 'The stages of a package',
     switchLabel: 'What do you want to look up?',
     tabs: { track: 'Track a package', check: 'Can it enter?' },
     track: {
@@ -871,21 +741,6 @@ export const ui: UI = {
         unknownText: 'That does not mean it can enter: some items need permits or a review. Ask us before you buy it.',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `Branches in ${cityNames.join(' and ')}`,
-    title: ['We are', 'closer.'],
-    intro: 'Pick up your shipments at our branches or ask about delivery to other parts of Nicaragua.',
-    country: 'Nicaragua',
-    regions: { managua: 'Pacific · Capital', bluefields: 'South Caribbean Coast' },
-    see: (city: string) => `See the ${city} branch`,
-    ask: 'Ask for the location',
-    mapLabel: `Illustrative map of Nicaragua with service points in ${cities.join(' and ')}`,
-    mapCaption: 'Illustrative map: it does not show physical addresses or operating routes.',
-    fine: 'Addresses, specific coverage and home delivery charges are confirmed when the delivery is arranged.',
-    delivery: 'Ask about home delivery',
   },
 
   // components/widgets/Footer.astro

@@ -314,17 +314,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   footer: hello('我从你们的网站过来，想了解一些信息。'),
   channels: hello('我在你们的网站上找到了你们，想和你们联系。'),
 
-  homeQuote: (shipment: string, total: string) =>
-    hello(`我在你们首页估算了运费，${shipment}：${total}。能帮我确认一下吗？`),
-  homeQuoteEmpty: hello('我在你们首页的计算器上，不知道该填什么。'),
-  shopper: (link: string) => hello(`我想申请代购。商品：${link} 能帮我确认一下库存、能否寄送和总费用吗？`),
-  storeAssist: (store: string) => hello(`我想在 ${store} 代购。这是商品链接：`),
-  homeFamily: hello('我想寄一个亲友包裹到尼加拉瓜。需要准备什么？'),
-  itemCheck: (item: string) => hello(`购买之前，我想知道你们能不能运送：${item}`),
-  itemCheckEmpty: hello('我想咨询某件物品能否寄到尼加拉瓜：'),
-  homeBranch: (city: string) => hello(`我想了解 ${city} 网点的位置和营业时间。`),
-  homeDelivery: hello('我想咨询送货上门服务。我的地址是：'),
-  homeFaq: hello('我看了你们的常见问题，还有其他疑问。'),
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('我在你们的首页看了服务条款，有一个问题想咨询。'),
 

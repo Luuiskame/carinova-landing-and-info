@@ -317,21 +317,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   footer: hello('I am coming from your website and would like some information.'),
   channels: hello('I found you on your website and would like to write to you.'),
 
-  homeQuote: (shipment: string, total: string) =>
-    hello(`I got a quote on your home page for ${shipment}: ${total}. Can you help me confirm it?`),
-  homeQuoteEmpty: hello('I am on the calculator of your home page and do not know what to enter.'),
-  shopper: (link: string) =>
-    hello(
-      `I would like to request an assisted purchase. Product: ${link} Can you confirm availability, whether it can enter, and the total cost?`
-    ),
-  storeAssist: (store: string) =>
-    hello(`I would like an assisted purchase at ${store}. This is the link to the product: `),
-  homeFamily: hello('I would like to send a family package to Nicaragua. What do I need?'),
-  itemCheck: (item: string) => hello(`Before I buy, I would like to know if you can bring: ${item}`),
-  itemCheckEmpty: hello('I would like to ask whether an item can enter Nicaragua: '),
-  homeBranch: (city: string) => hello(`I would like to know the location and the hours of the ${city} branch.`),
-  homeDelivery: hello('I would like to ask about home delivery. My address is: '),
-  homeFaq: hello('I read your frequently asked questions and have another one.'),
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('I read the conditions of the service on your home page and I have a question.'),
 

@@ -1,6 +1,5 @@
 // Generates the brand assets from the Carinova logo:
 //   src/assets/images/carinova-logo.jpeg   (copy of the source logo, optimized by Astro at build time)
-//   src/assets/images/carinova-emblem.jpg  (the figures and the ring, without the wordmark: the home page's hero)
 //   src/assets/images/og-default.jpg       (1200×630 social share image: logo centred on the logo's navy)
 //   src/assets/favicons/favicon.svg        (orange globe on navy, drawn by hand)
 //   src/assets/favicons/favicon.ico        (16/32/48 px, PNG-in-ICO)
@@ -40,23 +39,11 @@ const out = (p) => path.join(root, p);
 // 1. Logo copy
 await copyFile(logoPath, out('src/assets/images/carinova-logo.jpeg'));
 
-// 2. The emblem: the square above the wordmark. Measured on the 1254 px logo (left 208, top 8,
-//    846 px a side) and kept as shares of its width, so a logo of another size is cut the same way.
-//    A logo drawn differently needs new numbers: look at the file this writes.
-const logo = sharp(logoPath);
-const { width: lw = 0 } = await logo.metadata();
-const EMBLEM = { left: 208 / 1254, top: 8 / 1254, size: 846 / 1254 };
-await sharp(logoPath)
-  .extract({
-    left: Math.round(EMBLEM.left * lw),
-    top: Math.round(EMBLEM.top * lw),
-    width: Math.round(EMBLEM.size * lw),
-    height: Math.round(EMBLEM.size * lw),
-  })
-  .jpeg({ quality: 90, mozjpeg: true })
-  .toFile(out('src/assets/images/carinova-emblem.jpg'));
+// (The emblem of the home page is not made here any more: it is the picture of Carinova's own page,
+// src/assets/images/landing/emblem.webp.)
+const { width: lw = 0 } = await sharp(logoPath).metadata();
 
-// 3. Social share image: fill with the logo's own edge colour so the seam is invisible.
+// 2. Social share image: fill with the logo's own edge colour so the seam is invisible.
 // stats() reads the pipeline's input, not the extract, so measure a materialized strip.
 const edgeStrip = await sharp(logoPath).extract({ left: 0, top: 0, width: lw, height: 8 }).png().toBuffer();
 const edge = await sharp(edgeStrip).stats();
@@ -67,7 +54,7 @@ await sharp({ create: { width: 1200, height: 630, channels: 3, background: { r, 
   .jpeg({ quality: 85, mozjpeg: true })
   .toFile(out('src/assets/images/og-default.jpg'));
 
-// 4. Favicons
+// 3. Favicons
 await writeFile(out('src/assets/favicons/favicon.svg'), faviconSvg);
 await sharp(Buffer.from(squareSvg), { density: 300 })
   .resize(180, 180)

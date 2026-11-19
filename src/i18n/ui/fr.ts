@@ -96,16 +96,6 @@ export const ui: UI = {
     branch: (city: string) => `(agence de ${city})`,
   },
 
-  // components/carinova/BusinessBand.astro
-  businessBand: {
-    eyebrow: 'Carinova Business · Fret pour les entreprises',
-    title: ['Votre entreprise ne s’arrête pas.', 'Nous non plus.'],
-    intro:
-      'Faites venir fournitures, produits ou marchandises pour grandir avec une solution pensée pour votre activité. Nous évaluons chaque besoin de façon personnalisée.',
-    button: 'Découvrir les solutions Business',
-    tiles: { name: ['Carinova', 'Business'], route: ['USA', 'NIC'], pace: 'À votre rythme' },
-  },
-
   // components/carinova/BusinessForm.astro
   businessForm: {
     title: 'Parlez-nous de votre entreprise',
@@ -146,31 +136,6 @@ export const ui: UI = {
       oneError: 'Il y a un champ à corriger.',
       manyErrors: 'Nombre de champs à corriger : {count}.',
     },
-  },
-
-  // components/carinova/HomeClosing.astro
-  homeClosing: {
-    eyebrow: 'La prochaine étape vous appartient',
-    title: ['Aussi simple', 'que ça.'],
-    text: 'Créez votre compte, obtenez votre Carinova ID et commencez à préparer votre prochain envoi.',
-  },
-
-  // components/carinova/HomeFaq.astro
-  homeFaq: {
-    eyebrow: 'Questions sur les envois vers le Nicaragua',
-    title: ['Questions', 'fréquentes.'],
-    intro: 'Les réponses essentielles, avant votre premier envoi.',
-    help: 'Une autre question ? Écrivez-nous',
-    all: 'Voir toutes les questions',
-  },
-
-  // components/carinova/HowItWorks.astro
-  howItWorks: {
-    eyebrow: 'Comment acheter aux États-Unis depuis le Nicaragua',
-    title: ['Trois étapes,', 'de là-bas jusqu’ici.'],
-    intro: 'Trois étapes pour commencer à recevoir vos achats et vos colis depuis les États-Unis.',
-    closing: 'Sans complications. Avec un plan clair du début à la fin.',
-    more: 'Voir chaque étape avec des exemples',
   },
 
   // components/carinova/QuoteCalculator.astro
@@ -561,14 +526,9 @@ export const ui: UI = {
 
   // pages/index.astro
   homePage: {
+    service: 'Envois des États-Unis vers le Nicaragua',
     title: `Envois des États-Unis vers le Nicaragua | Adresse aux États-Unis à ${warehouse.city} | Carinova`,
     description: `Envois des États-Unis vers le Nicaragua avec votre propre adresse aux États-Unis à ${warehouse.city} : par avion en ${air.transit} à ${formatUSD(air.pricePerLb)} la livre et par bateau en ${sea.transit} à partir de ${formatUSD(sea.pricePerLb)}. Retrait à ${cityNames.join(' ou ')}.`,
-    reviews: { tagline: 'Avis', title: 'Ce que disent nos clients', source: 'Avis Google' },
-    calculator: {
-      eyebrow: 'Calculateur d’envois vers le Nicaragua',
-      title: ['Calculez', 'votre envoi.'],
-      intro: 'Une estimation claire pour mieux décider. Sans inscription.',
-    },
   },
 
   // pages/ingresar.astro
@@ -752,98 +712,8 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/HomeHero.astro
-  homeHero: {
-    eyebrow: 'Envois des États-Unis vers le Nicaragua',
-    lead: 'Achetez, envoyez et recevez des États-Unis jusqu’au Nicaragua. Plus facile que vous ne l’imaginez, avec le mode qui vous convient.',
-    facts: [`Par avion en ${air.transit}`, `Par bateau en ${sea.transit}`, `Retrait à ${cityNames.join(' et ')}`],
-    emblemAlt: 'Emblème de Carinova : trois personnes lèvent ensemble une torche allumée',
-    origin: 'Origine',
-    originPlace: `${warehouse.city}, États-Unis`,
-    destination: 'Destination',
-    destinationPlace: 'Nicaragua',
-    bridgeTitle: 'Un pont entre deux pays.',
-    bridgeText: 'Une façon plus simple d’être proches.',
-    route: [warehouse.city, 'Nicaragua'],
-    explore: 'Découvrir Carinova',
-  },
-
-  // components/carinova/ProofStrip.astro
-  proofStrip: {
-    label: 'L’essentiel de Carinova',
-    items: [
-      { title: 'Deux façons d’envoyer', text: 'Choisissez la rapidité ou l’économie' },
-      { title: `De ${warehouse.city} au Nicaragua`, text: 'Une route, de multiples possibilités' },
-      { title: 'À votre façon', text: 'Personnel, familial ou professionnel' },
-    ],
-  },
-
-  // components/carinova/Solutions.astro
-  solutions: {
-    eyebrow: 'Solutions d’envoi vers le Nicaragua',
-    title: ['Une solution pour', 'chaque besoin.'],
-    aside: 'Choisissez le chemin qui vous convient le mieux. Nous vous montrons l’étape suivante.',
-    cards: {
-      shopping: {
-        label: 'Achats en ligne',
-        title: 'Achetez dans vos magasins préférés aux États-Unis et recevez au Nicaragua',
-        text: `Choisissez ce qui vous plaît et payez avec votre adresse aux États-Unis à ${warehouse.city}. Nous l’acheminons au Nicaragua.`,
-        action: 'Commencer mes achats',
-        imageAlt: '',
-      },
-      assisted: {
-        label: 'Achat assisté',
-        title: 'Partagez le lien. Nous vous aidons à acheter.',
-        text: 'Vous avez trouvé quelque chose en ligne ? Envoyez-nous le lien et nous vous guidons.',
-        action: 'Demander de l’aide',
-        imageAlt: 'Une personne partage depuis son téléphone le lien d’un produit',
-      },
-      family: {
-        label: 'Colis familiaux',
-        title: 'Envoyez vos colis familiaux',
-        text: 'Parce que certains colis transportent plus que des objets : ils transportent de l’affection.',
-        action: 'Se renseigner sur un colis',
-        imageAlt: 'Une famille ouvre un colis arrivé des États-Unis',
-      },
-      business: {
-        label: 'Pour les entreprises',
-        title: 'Carinova Business : des solutions conçues au rythme de votre entreprise.',
-        text: 'Votre activité, en mouvement.',
-        action: 'Parlons de votre entreprise',
-        imageAlt: 'Des cartons de marchandises prêts pour une entreprise',
-      },
-    },
-    stores: {
-      label: 'Magasins aux États-Unis où vous pouvez acheter',
-      previous: 'Magasin précédent',
-      next: 'Magasin suivant',
-      pause: 'Mettre en pause le carrousel des magasins',
-      play: 'Relancer le carrousel des magasins',
-      disclosure:
-        'Les magasins sont présentés à titre d’exemple, sans accord ni recommandation implicite. Les prix et la disponibilité se vérifient sur le site de chaque magasin.',
-      all: 'Voir tous les magasins',
-    },
-    storeNotice:
-      'Visitez le magasin, choisissez votre produit et envoyez-nous le lien. L’achat, l’admissibilité et le tarif sont vérifiés avant que nous lancions l’opération.',
-    visit: 'Aller sur le site du magasin',
-    assist: 'Nous demander d’acheter pour vous',
-    restricted: 'Avant d’acheter, vérifiez si l’article peut entrer',
-    close: 'Fermer',
-    assistTitle: 'Envoyez le lien. Nous vous accompagnons.',
-    assistIntro:
-      'Collez le lien du produit et préparez votre demande. Le coût d’achat, les taxes et le fret sont confirmés avant que nous lancions l’opération.',
-    script: {
-      status: '{name}, magasin {index} sur {total}.',
-    },
-  },
-
   // components/carinova/Tracker.astro and TrackingSection.astro
   tracker: {
-    eyebrow: 'Suivi de colis',
-    title: ['Sachez à quelle étape', 'se trouve votre envoi.'],
-    intro:
-      'Chaque colis avance par étapes claires, depuis sa réception aux États-Unis jusqu’à ce qu’il soit entre vos mains. Vous le suivez depuis votre compte, avec sa référence et son historique.',
-    stagesLabel: 'Les étapes d’un colis',
     switchLabel: 'Que voulez-vous vérifier ?',
     tabs: { track: 'Suivre un colis', check: 'Peut-il entrer ?' },
     track: {
@@ -877,22 +747,6 @@ export const ui: UI = {
           'Cela ne veut pas dire qu’il peut entrer : certains articles nécessitent des autorisations ou une vérification. Demandez-nous avant de l’acheter.',
       },
     },
-  },
-
-  // components/carinova/Locations.astro
-  locations: {
-    eyebrow: `Agences à ${cityNames.join(' et ')}`,
-    title: ['Nous sommes', 'plus proches.'],
-    intro:
-      'Retirez vos envois dans nos agences ou renseignez-vous sur la livraison dans d’autres localités du Nicaragua.',
-    country: 'Nicaragua',
-    regions: { managua: 'Pacifique · Capitale', bluefields: 'Côte caraïbe sud' },
-    see: (city: string) => `Voir l’agence de ${city}`,
-    ask: 'Demander l’adresse',
-    mapLabel: `Carte illustrative du Nicaragua avec des points de service à ${cities.join(' et ')}`,
-    mapCaption: 'Carte illustrative : elle ne montre ni adresses physiques ni itinéraires opérationnels.',
-    fine: 'Les adresses, la couverture précise et les frais de livraison à domicile sont confirmés lors de l’organisation de la livraison.',
-    delivery: 'Se renseigner sur la livraison à domicile',
   },
 
   // components/widgets/Footer.astro

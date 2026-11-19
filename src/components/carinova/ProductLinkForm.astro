@@ -3,29 +3,27 @@
 // ready to send on WhatsApp. Nothing is stored and nothing is bought: the request is a message, and
 // Carinova confirms availability, whether the item can enter and the total cost before buying.
 //
-// It is in the dialog of the home page's "Compra asistida" and on /tiendas; each place sends its own
-// message. Without JavaScript the form is a plain one that takes the link to WhatsApp as the whole
-// message. Only an https link to a real host is sent.
+// It is on /tiendas. Without JavaScript the form is a plain one that takes the link to WhatsApp as
+// the whole message. Only an https link to a real host is sent. (The home page has the request of
+// Carinova's own page, for several links: components/landing, "Personal Shopper".)
 import { Icon } from 'astro-icon/components';
 import { CONTACT } from '~/data/carinova';
 import { i18n } from '~/i18n';
 
 export interface Props {
-  /** Where it is: each place sends its own WhatsApp message. */
-  place: 'home' | 'stores';
   /** Give the field the focus when it comes into view (inside a dialog). */
   autofocus?: boolean;
 }
 
-const { place, autofocus = false } = Astro.props;
+const { autofocus = false } = Astro.props;
 const { data, ui } = i18n(Astro);
 const { WA_MESSAGES } = data;
 const t = ui.productLink;
 
 const config = {
   invalid: t.invalid,
-  // The WhatsApp message of this place, with the link still to fill in.
-  message: (place === 'home' ? WA_MESSAGES.shopper : WA_MESSAGES.storesShopper)('{link}'),
+  // The WhatsApp message, with the link still to fill in.
+  message: WA_MESSAGES.storesShopper('{link}'),
 };
 ---
 
