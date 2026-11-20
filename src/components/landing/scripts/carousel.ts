@@ -1,10 +1,11 @@
-// The reviews of the home page, one card at a time: they advance by themselves with a horizontal
+// The cards of "Lo que dicen nuestros clientes", one at a time (the reviews, or the three places
+// kept for them while there are none): they advance by themselves with a horizontal
 // glide (the current one leaves on the side the text starts from, the next one comes in from the
 // other). The time each stays grows with its text. They stop under the pointer, with the focus,
 // while a finger is on them, off screen and in a hidden tab; a swipe or the arrow keys move them.
-// Where movement is reduced, or with a single review, all are shown one under the other.
+// Where movement is reduced, or with a single card, all are shown one under the other.
 //
-// Fetched only when the page has reviews (Testimonials.astro is rendered only then).
+// Fetched when the page is idle (boot.ts): the first card is in view from the start.
 import { fill } from '~/utils/template';
 
 import { $, $$, need, pageData, reducedMotion } from './dom';

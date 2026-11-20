@@ -340,8 +340,112 @@ export const landing = {
     'La consulta de artículos no sustituye los permisos, documentación ni la revisión aduanera aplicable. Consultá con el equipo antes de comprar mercancía que requiera validación.',
   uiContactTeam: 'Contactar al equipo',
 
+  // The account, in the dialog of Carinova's page (scripts/account.ts). Signing in is by a one-time code: the sentences of that step are the site's (ui.signinForm)
+  uiAccountEyebrow: 'MI CARINOVA',
+  uiRegisterTitle: 'Todo tu envío, en un solo lugar.',
+  uiRegisterIntro: 'Creá tu cuenta para gestionar tus envíos, direcciones, prealertas y solicitudes.',
+  uiLoginTitle: 'Volvé a tus planes.',
+  uiLoginIntro: 'Ingresá a tu cuenta para continuar con tus envíos.',
+  uiCreateAccount: 'Crear cuenta',
+  uiMyAccount: 'Mi cuenta',
+  uiAccountType: 'Tipo de cuenta',
+  uiAccountPersonal: 'Personal',
+  uiAccountPersonalText: 'Para tus compras y envíos',
+  uiAccountBusiness: 'Empresarial',
+  uiAccountBusinessText: 'Para tu negocio o empresa',
+  uiCompanyName: 'Nombre de la empresa',
+  uiRucOptional: 'RUC (opcional)',
+  uiInvalidCompany: 'Ingresá el nombre de la empresa.',
+  uiConsent: 'Acepto las condiciones del servicio y el tratamiento de mis datos para gestionar mi cuenta y mis envíos.',
+  uiSubmitRegistration: 'Crear mi cuenta',
+  uiSubmitLogin: 'Ingresar a mi cuenta',
+  uiSending: 'Procesando…',
+  uiServiceUnavailable:
+    'No pudimos completar esta operación en este momento. Volvé a intentarlo o contactá al equipo de Carinova.',
+  uiServiceFallback: 'Podés continuar ahora mismo por WhatsApp con el equipo de Carinova.',
+  uiVerifyEmailTitle: 'Confirmá tu correo.',
+  uiVerifyEmailText: 'Enviamos las instrucciones de activación a {email}. Revisá tu bandeja de entrada para continuar.',
+  uiWelcome: 'Hola, {name}.',
+  uiAccountIntro: 'Gestioná cada paso de tu envío desde tu cuenta.',
+  uiCarinovaId: 'Tu Carinova ID',
+  uiPending: 'Pendiente',
+  uiMyShipments: 'Mis envíos',
+  uiMyRequests: 'Mis solicitudes',
+  uiMyAddresses: 'Mis direcciones de recepción',
+  uiLogout: 'Cerrar sesión',
+  uiLogoutDone: 'Sesión cerrada.',
+  uiNoShipments: 'Tus envíos aparecerán aquí cuando registres tu primera prealerta.',
+  uiNoRequests: 'Todavía no tenés solicitudes registradas.',
+  uiNewShipment: 'Crear prealerta',
+
+  // Tracking a package
+  uiTrackEyebrow: 'SEGUÍ CADA PASO',
+  uiTrackTitle: 'Tu envío, más cerca.',
+  uiTrackIntro: 'Ingresá tu código de rastreo de Carinova.',
+  uiTrackingCode: 'Código de rastreo',
+  uiTrackingPlaceholder: 'Tu código de Carinova',
+  uiTrackButton: 'Rastrear paquete',
+  uiTrackRequired: 'Ingresá el código de rastreo para continuar.',
+  uiTrackingNotFound: 'No encontramos un envío con ese código. Revisalo o consultá con nuestro equipo.',
+  uiTrackingUnavailable:
+    'No pudimos obtener el seguimiento en este momento. Intentá más tarde o consultá por WhatsApp.',
+  uiReceived: 'Recibido en Estados Unidos',
+  uiPrepared: 'Preparado para salir',
+  uiInTransit: 'En tránsito',
+  uiReadyPickup: 'Listo para retiro',
+  uiDelivered: 'Entregado',
+
+  // Privacy, and the restrictions as the conditions of the service word them
+  uiPrivacyEyebrow: 'PRIVACIDAD',
+  uiPrivacyTitle: 'Tus datos y tu atención.',
+  uiPrivacyText:
+    'Los datos que compartís en una solicitud se usan para atender tu consulta y gestionar el servicio solicitado. Al continuar por WhatsApp, el mensaje se comparte con el canal de ventas de Carinova. No incluyás contraseñas ni datos bancarios en tus mensajes.',
+  uiRestrictionsHeading: 'Restricciones de transporte',
+  uiArticleProhibitedText:
+    'No recibimos ni transportamos armas, municiones y accesorios; tabaco y derivados, incluidos vapes; bebidas alcohólicas; accesorios para aviones; transmisores de radio; ni drones.',
+  uiArticleSeaText:
+    'Perfumes, aerosoles, body spray, inflamables y baterías de litio sueltas no ingresan por vía aérea: viajan automáticamente por vía marítima.',
+
+  // More lines of the messages: tracking, an account, a new shipment, an estimate
+  uiMsgTracking: 'Quiero consultar el estado del envío {code}.',
+  uiMsgRegister: 'Quiero crear mi cuenta de Carinova.',
+  uiMsgPrealert: 'Quiero registrar una prealerta de envío.',
+  uiMsgReference: 'Código de rastreo: {reference}',
+  uiMsgAccountType: 'Tipo de cuenta: {type}',
+  uiMsgRuc: 'RUC: {ruc}',
+  uiMsgRoute: 'Ruta: {route}',
+  uiMsgMode: 'Modalidad: {mode}',
+  uiMsgQuantity: 'Cantidad: {quantity}',
+  uiMsgWeight: 'Peso por paquete: {weight}',
+  uiMsgDimensions: 'Dimensiones por paquete: {dimensions}',
+  uiMsgEstimate: 'Transporte estimado: US${total} ({formula})',
+
+  // What the calculator lists, named as Carinova's page names it: where a shipment starts, and the devices with a price per unit
+  origins: { miami: 'Miami, Florida', 'los-angeles': 'Los Ángeles, California' },
+  devices: { celular: 'Celular', tablet: 'Tablet', laptop: 'Laptop', xbox: 'Xbox', playstation: 'PlayStation' },
+  uiRestrictedArticle: 'Restringido por vía aérea',
+  // The two lists of the page, in the words of Carinova's page (their icons: RESTRICTED_ICONS in src/data/landing.ts)
+  prohibitedList: [
+    'Armas, municiones y accesorios',
+    'Tabaco, cigarros y derivados',
+    'Cigarros electrónicos o vapes',
+    'Bebidas alcohólicas',
+    'Accesorios para aviones',
+    'Transmisores de radio',
+    'Drones',
+  ],
+  noAirList: ['Productos inflamables', 'Baterías de litio sueltas', 'Body spray', 'Perfumes', 'Aerosoles'],
+  // The two autonomous regions of the Caribbean coast, among the departments
+  uiNorthCaribbean: 'Costa Caribe Norte',
+  uiSouthCaribbean: 'Costa Caribe Sur',
+  // The cards of "Lo que dicen nuestros clientes" while there are no reviews: Carinova's page says a review will go there
+  testimonialSlotQuote: 'Aquí irá, en sus propias palabras, la experiencia real de un cliente de Carinova.',
+  testimonialSlotName: 'Nombre del cliente',
+  testimonialSlotPlace: 'Ciudad',
+
   // What the bot calls each kind of article, and the directory its categories
   cat: {
+    general: 'Mercancía general',
     drugs: 'Sustancias ilegales',
     explosives: 'Explosivos y pirotecnia',
     weapons: 'Armas, municiones y accesorios',

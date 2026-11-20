@@ -20,9 +20,45 @@ export const LANDING_LIMITS = {
 };
 
 /**
+ * Where in Nicaragua a shipment goes, as Carinova's page lists it: the fifteen departments and the
+ * two autonomous regions, each with the two letters Carinova gives it ("Managua (MG)"), in the
+ * page's order. `state` is what the sign-up of the site calls the same place (src/data/signup.ts),
+ * for the forms that are sent to the Worker. The two regions are named by the dictionary
+ * (`uiNorthCaribbean`, `uiSouthCaribbean`); the departments keep their names in every language.
+ */
+export const DEPARTMENTS: ReadonlyArray<{ name: string; code: string; state: string; region?: 'north' | 'south' }> = [
+  { name: 'Boaco', code: 'BO', state: 'Boaco' },
+  { name: 'Carazo', code: 'CZ', state: 'Carazo' },
+  { name: 'Chinandega', code: 'CH', state: 'Chinandega' },
+  { name: 'Chontales', code: 'CT', state: 'Chontales' },
+  { name: 'Estelí', code: 'ES', state: 'Estelí' },
+  { name: 'Granada', code: 'GR', state: 'Granada' },
+  { name: 'Jinotega', code: 'JI', state: 'Jinotega' },
+  { name: 'León', code: 'LE', state: 'León' },
+  { name: 'Madriz', code: 'MZ', state: 'Madriz' },
+  { name: 'Managua', code: 'MG', state: 'Managua' },
+  { name: 'Masaya', code: 'MS', state: 'Masaya' },
+  { name: 'Matagalpa', code: 'MT', state: 'Matagalpa' },
+  { name: 'Nueva Segovia', code: 'NS', state: 'Nueva Segovia' },
+  { name: 'Río San Juan', code: 'RS', state: 'Río San Juan' },
+  { name: 'Rivas', code: 'RI', state: 'Rivas' },
+  { name: 'Costa Caribe Norte', code: 'CN', state: 'Costa Caribe Norte (RACCN)', region: 'north' },
+  { name: 'Costa Caribe Sur', code: 'CS', state: 'Costa Caribe Sur (RACCS)', region: 'south' },
+];
+/** The department a form starts on. */
+export const DEFAULT_DEPARTMENT = 'Managua';
+
+/**
+ * The languages in the order of the language menu of Carinova's page; the two the site adds come
+ * after them.
+ */
+export const LANGUAGE_ORDER: ReadonlyArray<string> = ['es', 'en', 'pt', 'fr', 'zh', 'ru', 'ar'];
+
+/**
  * The icon of each item of the two lists of the home page ("No se reciben ni transportan" and "No
- * ingresan por vía aérea"), in the order of RESTRICTED_ITEMS.prohibited and .seaOnly: the lists are
- * the ones of /articulos-prohibidos, and a new item there needs its icon here (landing.test.ts).
+ * ingresan por vía aérea"), in the order of `prohibitedList` and `noAirList` in the dictionaries,
+ * which is the order of RESTRICTED_ITEMS.prohibited and .seaOnly: a new item needs its icon here
+ * (landing.test.ts).
  */
 export const RESTRICTED_ICONS = {
   prohibited: ['weapon', 'cigarette', 'vape', 'alcohol', 'propeller', 'radio', 'drone'],

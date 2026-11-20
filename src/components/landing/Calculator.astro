@@ -9,26 +9,31 @@
 //   (scripts/boot.ts → scripts/calculator.ts).
 // - The rates, the devices and the limits are the ones of src/data: the script gets them, and its
 //   sentences, with the page (ScriptData).
-// - "Empezar mi envío" leads to /registro: the account is where a shipment starts (its address in
-//   the United States is there). A customer who is signed in goes to their account.
+// - "Empezar mi envío" opens a new shipment for a customer and, for a visitor, the account first
+//   (scripts/account.ts); it waits while there is nothing to quote. Without the script it leads to
+//   /registro.
 // - On a phone, a bar with the price stays in sight while the form is on screen and the ticket is
 //   not (`quote-dock`).
-import { LANDING_LIMITS } from '~/data/landing';
-import { i18n } from '~/i18n';
+import { DEFAULT_DEPARTMENT, LANDING_LIMITS } from '~/data/landing';
+import { LOCALE_INFO, i18n } from '~/i18n';
 import { calculateQuote, type QuoteInput, type QuoteRates } from '~/utils/quote';
 import { formatUSD } from '~/utils/rates';
 import { fill } from '~/utils/template';
 
-import { daysRange } from './helpers';
+import { daysRange, departmentOptions } from './helpers';
 import Icon from './Icon.astro';
 import ScriptData from './ScriptData.astro';
-import { amount, formulaText } from './scripts/quote-view';
+import { estimateLine, quoteWriter } from './scripts/quote-view';
 
 const { locale, href, data, ui } = i18n(Astro);
-const { CTA, RATES, RECEPTION_POINTS, SIGNUP_COUNTRIES } = data;
+const { CTA, RATES, RECEPTION_POINTS } = data;
 const { air, sea, electronics, express, minimumLb } = RATES;
 const t = ui.landing;
-const soon = ui.serviceBadge.soon;
+/** Numbers as the page's language writes them. */
+const numbers = LOCALE_INFO[locale].intl;
+const { amount, formulaText } = quoteWriter(numbers);
+const origins: Record<string, string> = t.origins;
+const devices: Record<string, string> = t.devices;
 
 const rates: QuoteRates = {
   air: air.pricePerLb,
@@ -40,25 +45,24 @@ const rates: QuoteRates = {
   maxQuantity: LANDING_LIMITS.quantity,
 };
 const days = {
-  air: daysRange(locale, air.transitDays, t.uiDays),
-  sea: daysRange(locale, sea.transitDays, t.uiDays),
+  air: daysRange(air.transitDays, t.uiDays),
+  sea: daysRange(sea.transitDays, t.uiDays),
 };
 /** The days of the express service, once Carinova publishes them. */
 const expressDays = {
-  air: express.air ? daysRange(locale, express.air.transitDays, t.uiDays) : '',
-  sea: express.sea ? daysRange(locale, express.sea.transitDays, t.uiDays) : '',
+  air: express.air ? daysRange(express.air.transitDays, t.uiDays) : '',
+  sea: express.sea ? daysRange(express.sea.transitDays, t.uiDays) : '',
 };
 
-/** The departments of Nicaragua a shipment goes to: the ones of the sign-up form. */
-const departments = SIGNUP_COUNTRIES.find((country) => country.code === 'NI')?.states ?? [];
-const defaultDepartment = departments.includes('Managua') ? 'Managua' : departments[0];
+/** Where in Nicaragua a shipment goes: Carinova's list, each place with its two letters. */
+const departments = departmentOptions({ north: t.uiNorthCaribbean, south: t.uiSouthCaribbean });
 
 const categories: Array<[string, string]> = [
   ['general', t.general],
   ['restricted', t.categoryRestricted],
   ...electronics.items.map((item): [string, string] => [
     item.id,
-    fill(t.categoryDevice, { name: item.name, price: formatUSD(item.price) }),
+    fill(t.categoryDevice, { name: devices[item.id] ?? item.name, price: formatUSD(item.price) }),
   ]),
   ['volume', t.categoryVolume],
 ];
@@ -91,6 +95,7 @@ const saving = (byAir.total ?? 0) - (bySea.total ?? 0);
 /** What the script of the calculator needs (scripts/calculator.ts). */
 const config = {
   rates,
+  numbers,
   days,
   expressDays,
   text: {
@@ -121,7 +126,18 @@ const config = {
     uiErrorWeight: t.uiErrorWeight,
     uiErrorWeightUnit: t.uiErrorWeightUnit,
     uiErrorWeightOrDimensions: t.uiErrorWeightOrDimensions,
+    // The lines of the message a new shipment ends in
+    msgRoute: t.uiMsgRoute,
+    msgMode: t.uiMsgMode,
+    msgMerchandise: t.uiMsgMerchandise,
+    msgQuantity: t.uiMsgQuantity,
+    msgWeight: t.uiMsgWeight,
+    msgDimensions: t.uiMsgDimensions,
+    msgEstimate: t.uiMsgEstimate,
   },
+  /** What a message calls each kind of cargo, and each place a shipment starts from (its city). */
+  categories: { general: t.uiGeneral, restricted: t.uiRestrictedArticle, volume: t.uiVolumeArticle, ...devices },
+  origins: Object.fromEntries(RECEPTION_POINTS.map((point) => [point.id, point.city])),
 };
 
 const sides = [
@@ -145,9 +161,7 @@ const sides = [
             <select class="input" name="origin" id="origin">
               {
                 RECEPTION_POINTS.map((point) => (
-                  <option value={point.id} disabled={!point.available}>
-                    {[`${point.city}, ${point.state}`, !point.available && soon].filter(Boolean).join(' · ')}
-                  </option>
+                  <option value={point.id}>{origins[point.id] ?? `${point.city}, ${point.state}`}</option>
                 ))
               }
             </select>
@@ -156,9 +170,9 @@ const sides = [
             <span>{t.department}</span>
             <select class="input" name="department" id="department">
               {
-                departments.map((name) => (
-                  <option value={name} selected={name === defaultDepartment}>
-                    {name}
+                departments.map(({ value, label }) => (
+                  <option value={value} selected={value === DEFAULT_DEPARTMENT}>
+                    {label}
                   </option>
                 ))
               }
@@ -304,16 +318,17 @@ const sides = [
         </fieldset>
         <p class="quote-error" id="quote-error" role="alert" hidden><Icon name="alert" /><span></span></p>
         <div class="ticket-actions">
-          <a class="btn btn-primary btn-block" id="start-shipment" href={href(CTA.signup.path)} data-auth="out"
+          <a class="btn btn-primary btn-block" id="start-shipment" href={href(CTA.signup.path)} data-dialog="prealert"
             >{t.startShipment}</a
           >
-          <a class="btn btn-primary btn-block" href={href(CTA.account.path)} data-auth="in">{t.startShipment}</a>
           <p class="ticket-note">
-            <span>{t.estimateNote}</span>
+            <span>{t.estimateNote}</span>{' '}
             <a class="link link-light" href={href('/terminos')} data-dialog="conditions">{t.viewConditions}</a>
           </p>
         </div>
-        <p class="sr-only" id="quote-live" aria-live="polite"></p>
+        <p class="sr-only" id="quote-live" aria-live="polite">
+          {estimateLine(t.estimate, 'US$' + amount(byAir.total ?? 0), t.air, t.uiServiceStandard, days.air)}
+        </p>
       </aside>
     </div>
     <div class="quote-dock" id="quote-dock" aria-hidden="true" hidden>

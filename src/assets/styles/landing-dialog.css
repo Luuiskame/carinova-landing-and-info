@@ -374,12 +374,8 @@
 }
 .modal::backdrop {
   background: rgba(0, 17, 39, 0.64);
-}
-@media (hover: hover) and (pointer: fine) {
-  .modal::backdrop {
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-  }
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 @keyframes modal-in {
   from {
@@ -636,4 +632,311 @@
 }
 .conditions li + li {
   margin-top: 2px;
+}
+
+/* ───────── The account: creating one, signing in, "Mi cuenta", tracking ───────── */
+.account-type {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.account-type legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 720;
+  color: var(--ink);
+}
+.account-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.account-type-option {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+.account-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.account-type-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: #fff;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+.account-type-option:hover .account-type-card {
+  border-color: rgba(255, 121, 0, 0.55);
+}
+.account-type-option input:checked + .account-type-card {
+  border-color: var(--orange);
+  background: #fff8f1;
+  box-shadow: 0 0 0 3px rgba(255, 121, 0, 0.16);
+}
+.account-type-option input:focus-visible + .account-type-card {
+  outline: 3px solid var(--focus, #b45300);
+  outline-offset: 2px;
+}
+.account-type-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--mist, #f1f4f8);
+  color: var(--ink);
+}
+.account-type-option input:checked + .account-type-card .account-type-icon {
+  background: var(--orange);
+  color: #fff;
+}
+.account-type-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.account-type-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.account-type-text strong {
+  font-size: 0.9688rem;
+  font-weight: 760;
+  color: var(--ink);
+}
+.account-type-text small {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+@media (max-width: 479px) {
+  .account-type-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.fallback {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--ok-line);
+  border-radius: var(--r-md);
+  background: var(--ok-bg);
+}
+.fallback p {
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--mist);
+}
+.tabs button {
+  height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 680;
+  color: var(--muted);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+.tabs button[aria-selected='true'] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px rgba(0, 17, 39, 0.08),
+    0 4px 12px -6px rgba(0, 17, 39, 0.2);
+}
+.id-card {
+  margin: 22px 0 4px;
+  padding: 18px 20px;
+  border-radius: var(--r-md);
+  background: var(--navy-950);
+  color: #fff;
+}
+.id-card small {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--on-navy-2);
+}
+.id-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.5rem;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.dash-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.dash-card strong {
+  display: block;
+  color: var(--ink);
+}
+.dash-card p {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+}
+.empty {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+.track-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.track-head strong {
+  font-size: 1.0625rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.track-head span {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--orange-50);
+  color: var(--orange-700);
+  font-size: 0.8125rem;
+  font-weight: 740;
+  white-space: nowrap;
+}
+.timeline {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline li {
+  position: relative;
+  padding: 0 0 20px;
+  padding-inline-start: 30px;
+  font-weight: 650;
+  color: var(--ink);
+}
+.timeline li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--orange);
+  border-radius: 50%;
+  background: #fff;
+}
+.timeline li::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 6px;
+  top: 20px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--line);
+}
+.timeline li:last-child {
+  padding-bottom: 0;
+}
+.timeline li:last-child::after {
+  display: none;
+}
+.timeline li:last-child::before {
+  background: var(--orange);
+  box-shadow: 0 0 0 4px var(--orange-50);
+}
+.timeline small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+@media (max-width: 639px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* What the site's account adds to Carinova's drawing: a package of "Mi cuenta" opens its tracking,
+   the way to the whole account under them, and the room above a view's only button. */
+.dash-package {
+  width: 100%;
+  background: #fff;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.dash-package:hover {
+  border-color: rgba(255, 121, 0, 0.55);
+}
+.dash-more,
+.modal-more {
+  margin-top: 14px;
+}
+.modal-action {
+  margin-top: 24px;
+}
+
+/* ───────── A short notice that goes away by itself ("Sesión cerrada.") ───────── */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 120;
+  max-width: calc(100% - 40px);
+  padding: 13px 20px;
+  border-radius: var(--r-sm);
+  background: var(--navy-950);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-2);
+  transform: translateX(-50%);
+  animation: toast-in 0.3s var(--ease);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
 }

@@ -13,8 +13,18 @@ import { ui as uiPt } from '../i18n/ui/pt.ts';
 import { ui as uiRu } from '../i18n/ui/ru.ts';
 import { ui as uiZh } from '../i18n/ui/zh.ts';
 import { ARTICLE_RULES } from './articles.ts';
-import { RATES, RESTRICTED_ITEMS } from './carinova.ts';
-import { FEATURED_STORES, LANDING_LIMITS, LOGO_SCALE, RESTRICTED_ICONS, STORE_DIRECTORY } from './landing.ts';
+import { RATES, RECEPTION_POINTS, RESTRICTED_ITEMS } from './carinova.ts';
+import { content } from './content.ts';
+import {
+  DEFAULT_DEPARTMENT,
+  DEPARTMENTS,
+  FEATURED_STORES,
+  LANDING_LIMITS,
+  LANGUAGE_ORDER,
+  LOGO_SCALE,
+  RESTRICTED_ICONS,
+  STORE_DIRECTORY,
+} from './landing.ts';
 import { NOTICES } from './notices.ts';
 
 const UI = { es: uiEs, en: uiEn, fr: uiFr, pt: uiPt, zh: uiZh, ru: uiRu, ar: uiAr } satisfies Record<Locale, unknown>;
@@ -38,6 +48,49 @@ test('each item of the two lists of the home page has its icon', () => {
       `RESTRICTED_ICONS.${list} (src/data/landing.ts) needs one icon per item of RESTRICTED_ITEMS.${list}, in its order`
     );
     for (const icon of RESTRICTED_ICONS[list]) assert.ok(isIcon(icon), `"${icon}" is not an icon of the home page`);
+  }
+});
+
+test('the two lists of the home page name, in every language, the items of the site’s lists', () => {
+  // The page writes them as Carinova's page does (`landing.prohibitedList`, `landing.noAirList`):
+  // one name per item of RESTRICTED_ITEMS, in its order, so each keeps its icon.
+  for (const locale of LOCALES) {
+    const { prohibitedList, noAirList } = UI[locale].landing;
+    assert.equal(prohibitedList.length, RESTRICTED_ITEMS.prohibited.items.length, `${locale}: prohibitedList`);
+    assert.equal(noAirList.length, RESTRICTED_ITEMS.seaOnly.items.length, `${locale}: noAirList`);
+    for (const name of [...prohibitedList, ...noAirList]) assert.ok(name.trim().length > 1, `${locale}: an empty name`);
+  }
+});
+
+test('the forms list the departments the sign-up knows, each once, each with its two letters', () => {
+  const states = (locale: Locale) =>
+    content(locale).SIGNUP_COUNTRIES.find((country) => country.code === 'NI')?.states ?? [];
+  assert.deepEqual(sorted(DEPARTMENTS.map((department) => department.state)), sorted(states('es')));
+  assert.equal(new Set(DEPARTMENTS.map((department) => department.name)).size, DEPARTMENTS.length);
+  assert.equal(new Set(DEPARTMENTS.map((department) => department.code)).size, DEPARTMENTS.length);
+  for (const { name, code } of DEPARTMENTS) assert.match(code, /^[A-Z]{2}$/, name);
+  assert.ok(DEPARTMENTS.some((department) => department.name === DEFAULT_DEPARTMENT));
+  assert.deepEqual(
+    DEPARTMENTS.filter((department) => department.region).map((department) => department.region),
+    ['north', 'south']
+  );
+  // A department is sent to the Worker by the name its language gives it, found by its place in
+  // the Spanish list (Account.astro): every language lists the same seventeen, in the same order.
+  for (const locale of LOCALES) assert.equal(states(locale).length, states('es').length, locale);
+});
+
+test('the language menu has a place for every language', () => {
+  assert.deepEqual(sorted(LANGUAGE_ORDER), sorted(LOCALES));
+  // Carinova's page lists its five first, in its order.
+  assert.deepEqual(LANGUAGE_ORDER.slice(0, 5), ['es', 'en', 'pt', 'fr', 'zh']);
+});
+
+test('every language names the devices with a price and the places a shipment starts from', () => {
+  const devices = sorted(RATES.electronics.items.map((item) => item.id));
+  const points = sorted(RECEPTION_POINTS.map((point) => point.id));
+  for (const locale of LOCALES) {
+    assert.deepEqual(sorted(Object.keys(UI[locale].landing.devices)), devices, `${locale}: landing.devices`);
+    assert.deepEqual(sorted(Object.keys(UI[locale].landing.origins)), points, `${locale}: landing.origins`);
   }
 });
 
@@ -121,7 +174,8 @@ test('the notices: each has its title and its text, and their ids are not repeat
 });
 
 test('the names of `landing.cat` are the kinds of article of the search and the categories of the directory', () => {
-  const named = new Set([...namedKinds, ...STORE_DIRECTORY.map((category) => category.id)]);
+  // "general" is what the search calls an article of no special kind.
+  const named = new Set(['general', ...namedKinds, ...STORE_DIRECTORY.map((category) => category.id)]);
   assert.deepEqual(sorted(Object.keys(uiEs.landing.cat)), sorted(named));
 });
 

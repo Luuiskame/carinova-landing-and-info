@@ -3,6 +3,9 @@ import { LOCALE_INFO, type Locale } from '~/i18n';
 
 import type { IconId } from './icons';
 
+// How a delivery time, the opening hours and the departments are written: utils/landing.ts (tested).
+export { daysNumbers, daysRange, departmentOptions, hoursRange } from '~/utils/landing';
+
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
 /** Text as it is written inside HTML. */
@@ -11,10 +14,6 @@ export const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (ch
 /** A sentence with its amounts set in bold: "desde <strong>US$6.50</strong>". The result is HTML. */
 export const emphasize = (text: string): string =>
   escapeHtml(text).replace(/US\$\s?[\d.,]*\d/g, (amount) => `<strong>${amount}</strong>`);
-
-/** "2–4 días": a delivery time as the page writes it, the word after the days in the language's own way. */
-export const daysRange = (locale: Locale, [min, max]: [number, number], word: string): string =>
-  `${min}–${max}${LOCALE_INFO[locale].wordGap}${word}`;
 
 /**
  * A unit as it follows a price: "/lb" sits against it ("US$6.50/lb"); a word, as Arabic writes it

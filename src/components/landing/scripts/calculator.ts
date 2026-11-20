@@ -9,12 +9,14 @@ import { calculateQuote, type Quote, type QuoteError, type QuoteInput, type Quot
 import { fill } from '~/utils/template';
 
 import { $$, need, pageData, reducedMotion, smooth } from './dom';
-import { amount, formulaText, type FormulaText } from './quote-view';
+import { estimateLine, quoteWriter, type FormulaText } from './quote-view';
 
 type Mode = 'air' | 'sea';
 
 interface Config {
   rates: QuoteRates;
+  /** How the page's language writes a number: "es-NI", "fr-FR"… */
+  numbers: string;
   /** "2–4 días": the delivery time of each way, and of the express service once it has one. */
   days: Record<Mode, string>;
   expressDays: Record<Mode, string>;
@@ -34,12 +36,23 @@ interface Config {
       | 'dimensionsNoApply'
       | 'dimensionsSea'
       | 'unitIn'
-      | 'unitCm',
+      | 'unitCm'
+      | 'msgRoute'
+      | 'msgMode'
+      | 'msgMerchandise'
+      | 'msgQuantity'
+      | 'msgWeight'
+      | 'msgDimensions'
+      | 'msgEstimate',
       string
     >;
+  /** What a message calls each kind of cargo and each place a shipment starts from. */
+  categories: Record<string, string>;
+  origins: Record<string, string>;
 }
 
-const { rates, days, expressDays, text } = pageData<Config>('calculator');
+const { rates, numbers, days, expressDays, text, categories, origins } = pageData<Config>('calculator');
+const { amount, number, formulaText } = quoteWriter(numbers);
 
 const form = need<HTMLFormElement>('#quote-form');
 const ticket = need('#ticket');
@@ -51,6 +64,7 @@ const dimensionUnit = need<HTMLSelectElement>('#dimension-unit');
 const sides = ['length', 'width', 'height'].map((id) => need<HTMLInputElement>(`#${id}`));
 const errorBox = need('#quote-error');
 const dock = need('#quote-dock');
+const start = need('#start-shipment');
 
 const modeInput = (mode: Mode) => need<HTMLInputElement>(`#alts input[name="mode"][value="${mode}"]`);
 const serviceInput = (service: string) => need<HTMLInputElement>(`#service input[name="service"][value="${service}"]`);
@@ -177,6 +191,9 @@ const update = (animate = true) => {
   const price = quote.pending ? text.toQuote : `US$${amount(quote.total ?? 0)}`;
   errorBox.hidden = quote.valid;
   need('span', errorBox).textContent = quote.error ? text[quote.error] : '';
+  // "Empezar mi envío" waits for something to quote, as the button of Carinova's page does.
+  start.toggleAttribute('disabled', !quote.valid);
+  start.setAttribute('aria-disabled', String(!quote.valid));
   need('#dock-total').textContent = quote.valid ? (quote.pending ? text.toQuote : amount(quote.total ?? 0)) : '—';
   dock.classList.toggle('is-pending', quote.pending);
   need('#dock-days').textContent = [serviceName(data.service ?? ''), daysOf(mode, data.service ?? '')]
@@ -192,18 +209,53 @@ const update = (animate = true) => {
   clearTimeout(liveTimer);
   liveTimer = window.setTimeout(() => {
     need('#quote-live').textContent = quote.valid
-      ? [
-          `${text.estimate}: ${price}`,
+      ? estimateLine(
+          text.estimate,
+          price,
           modeName(mode),
           serviceName(data.service ?? ''),
-          daysOf(mode, data.service ?? ''),
-        ]
-          .filter(Boolean)
-          .join(' · ')
+          daysOf(mode, data.service ?? '')
+        )
       : quote.error
         ? text[quote.error]
         : '';
   }, 700);
+};
+
+/** The estimate as it stands: a new shipment starts from it (account.ts). */
+export const estimate = (): Quote => quote;
+
+const positive = (value: unknown): boolean => Number(value) > 0;
+
+/**
+ * The estimate in the lines of a message: the route, the way of shipping, the cargo and what it
+ * comes to. They follow "Quiero registrar una prealerta de envío." in the message of a new shipment.
+ */
+export const quoteLines = (): Array<string> => {
+  const data = input();
+  const place = (select: string): string =>
+    need<HTMLSelectElement>(select).selectedOptions[0]?.textContent?.trim() ?? '';
+  const origin = need<HTMLSelectElement>('#origin').value;
+  const lines = [
+    fill(text.msgRoute, { route: `${origins[origin] ?? place('#origin')} → ${place('#department')}` }),
+    fill(text.msgMode, { mode: `${modeName(currentMode())} · ${serviceName(data.service ?? '')}` }),
+    fill(text.msgMerchandise, { merchandise: categories[data.category ?? ''] ?? data.category ?? '' }),
+    fill(text.msgQuantity, { quantity: data.quantity ?? '' }),
+  ];
+  if ((data.category === 'general' || data.category === 'restricted') && positive(data.weight)) {
+    lines.push(fill(text.msgWeight, { weight: `${number(Number(data.weight))} ${data.weightUnit}` }));
+  }
+  const dimensions = [data.length, data.width, data.height];
+  if (!isDevice(data.category ?? '') && dimensions.every(positive)) {
+    const unit = data.dimensionUnit === 'cm' ? text.unitCm : text.unitIn;
+    lines.push(
+      fill(text.msgDimensions, { dimensions: `${dimensions.map((side) => number(Number(side))).join(' × ')} ${unit}` })
+    );
+  }
+  if (quote.valid && !quote.pending) {
+    lines.push(fill(text.msgEstimate, { total: amount(quote.total ?? 0), formula: formulaText(data, quote, text) }));
+  }
+  return lines;
 };
 
 /** The ticket blinks once: something outside the form changed it. */

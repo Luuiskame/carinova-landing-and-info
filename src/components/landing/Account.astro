@@ -1,0 +1,178 @@
+---
+// What the account's views of the dialog say and need (scripts/account.ts): creating an account,
+// signing in, "Mi cuenta", a new shipment, tracking a package and the note on privacy, as Carinova's
+// page draws them.
+//
+// Carinova's file had these views working on an account simulated in the browser. Here they work on
+// the site's API (worker/api.ts), and where that API is not the one the file imagined, the view
+// follows the API:
+//
+// - Signing in is by a one-time code sent by e-mail, never a password: the sentences of that step
+//   are the ones of the site's sign-in form (ui.signinForm).
+// - An account needs an address in Nicaragua (the API asks for it): the form has "Ciudad" and
+//   "Dirección" where the file had the password and its confirmation. What the API has no place for
+//   is not asked: a pick-up branch, a newsletter, a company's own kind of ID (docs/PROJECT-LOG.md).
+// - A company's account starts with a request to Carinova (POST /api/business), as on /empresas.
+// - A package is looked for among the customer's own (GET /api/account/activity): nobody's packages
+//   are found by a number alone.
+// - A new shipment ("prealerta") has no endpoint: it ends in a WhatsApp message, the way the file
+//   itself goes on when its service does not answer.
+//
+// It sits at the end of the page: nothing of it is needed until somebody opens one of these views.
+import { LOGIN_CODE_DIGITS, LOGIN_RESEND_SECONDS } from '~/data/account';
+import { CONTACT } from '~/data/carinova';
+import { DEPARTMENTS } from '~/data/landing';
+import { SIGNUP_COUNTRIES as SPANISH_COUNTRIES } from '~/data/signup';
+import { LOCALE_INFO, i18n } from '~/i18n';
+
+import ScriptData from './ScriptData.astro';
+
+const { locale, href, data, ui } = i18n(Astro);
+const { CTA, MIAMI_ADDRESS, RECEPTION_POINTS, SIGNUP_COUNTRIES, WA_MESSAGES } = data;
+const t = ui.landing;
+const signin = ui.signinForm;
+
+/** Nicaragua, where every account of the dialog is: its departments as the API knows them in this language. */
+const COUNTRY = 'NI';
+const spanish = SPANISH_COUNTRIES.find((country) => country.code === COUNTRY)?.states ?? [];
+const local = SIGNUP_COUNTRIES.find((country) => country.code === COUNTRY)?.states ?? [];
+const states = Object.fromEntries(DEPARTMENTS.map(({ name, state }) => [name, local[spanish.indexOf(state)] ?? state]));
+
+const [miami, ...others] = RECEPTION_POINTS;
+/** The address a customer gives a store, on one line; {first} and {last} are the customer's names. */
+const miamiAddress = [
+  `${MIAMI_ADDRESS.firstName('{first}')} ${MIAMI_ADDRESS.lastName('{last}')}`,
+  [MIAMI_ADDRESS.line1, MIAMI_ADDRESS.line2].filter(Boolean).join(', '),
+  `${MIAMI_ADDRESS.city}, ${MIAMI_ADDRESS.state} ${MIAMI_ADDRESS.postalCode}`,
+  MIAMI_ADDRESS.phone,
+].join(' · ');
+
+const config = {
+  locale,
+  whatsapp: CONTACT.whatsapp,
+  country: COUNTRY,
+  states,
+  /** How the page's language writes a date. */
+  dates: LOCALE_INFO[locale].intl,
+  codeDigits: LOGIN_CODE_DIGITS,
+  resendSeconds: LOGIN_RESEND_SECONDS,
+  accountPage: href(CTA.account.path),
+  privacyPage: href('/privacidad'),
+  /** Where packages are received: the address of the one that has one, and what the others say meanwhile. */
+  addresses: [
+    { city: miami.city, address: miamiAddress },
+    ...others.map((point) => ({ city: point.city, pending: ui.usAddressCard.soonText(point.city, point.state) })),
+  ],
+  /** The stages of a package, by the status the API gives it: the file's names, and the site's for the two it did not have. */
+  statuses: {
+    ...Object.fromEntries(Object.entries(ui.statuses.package).map(([id, words]) => [id, words.name])),
+    received: t.uiReceived,
+    processing: t.uiPrepared,
+    in_transit: t.uiInTransit,
+    ready: t.uiReadyPickup,
+    delivered: t.uiDelivered,
+  },
+  text: {
+    // The account
+    eyebrow: t.uiAccountEyebrow,
+    registerTitle: t.uiRegisterTitle,
+    registerIntro: t.uiRegisterIntro,
+    loginTitle: t.uiLoginTitle,
+    loginIntro: t.uiLoginIntro,
+    createAccount: t.uiCreateAccount,
+    signIn: t.uiSignIn,
+    accountType: t.uiAccountType,
+    personal: t.uiAccountPersonal,
+    personalText: t.uiAccountPersonalText,
+    business: t.uiAccountBusiness,
+    businessText: t.uiAccountBusinessText,
+    companyName: t.uiCompanyName,
+    companyPlaceholder: t.uiCompanyPlaceholder,
+    rucOptional: t.uiRucOptional,
+    invalidCompany: t.uiInvalidCompany,
+    city: ui.signupForm.city,
+    address: ui.signupForm.address1,
+    consent: t.uiConsent,
+    consentRequired: t.uiConsentRequired,
+    requiredFields: t.uiRequiredFields,
+    invalidEmail: t.uiInvalidEmail,
+    invalidDepartment: t.uiInvalidDepartment,
+    submitRegistration: t.uiSubmitRegistration,
+    submitLogin: t.uiSubmitLogin,
+    sending: t.uiSending,
+    unavailable: t.uiServiceUnavailable,
+    fallback: t.uiServiceFallback,
+    continueWhatsapp: t.uiContinueWhatsApp,
+    contactTeam: t.uiContactTeam,
+    verifyTitle: t.uiVerifyEmailTitle,
+    verifyText: t.uiVerifyEmailText,
+    requestTitle: ui.businessForm.sentTitle,
+    requestText: ui.businessForm.sentText,
+    // Signing in with a code
+    email: t.uiEmail,
+    emailPlaceholder: t.uiEmailPlaceholder,
+    codeIntro: signin.intro,
+    sendCode: signin.send,
+    codeSentBefore: signin.codeSent[0],
+    codeSentAfter: signin.codeSent[1],
+    code: signin.code,
+    codeNote: signin.notes[1],
+    resend: signin.resend,
+    resendIn: signin.messages.resendIn,
+    resent: signin.messages.resent,
+    changeEmail: signin.change,
+    codeMissing: signin.messages.codeMissing,
+    codeInvalid: signin.messages.codeInvalid,
+    busy: signin.messages.busy,
+    // "Mi cuenta"
+    myAccount: t.uiMyAccount,
+    welcome: t.uiWelcome,
+    accountIntro: t.uiAccountIntro,
+    carinovaId: t.uiCarinovaId,
+    myAddresses: t.uiMyAddresses,
+    myShipments: t.uiMyShipments,
+    noShipments: t.uiNoShipments,
+    myRequests: t.uiMyRequests,
+    noRequests: t.uiNoRequests,
+    allActivity: ui.tracker.track.all,
+    newShipment: t.uiNewShipment,
+    logout: t.uiLogout,
+    logoutDone: t.uiLogoutDone,
+    pending: t.uiPending,
+    // A new shipment
+    merchandise: t.uiMerchandise,
+    department: t.uiDepartment,
+    // Tracking
+    trackEyebrow: t.uiTrackEyebrow,
+    trackTitle: t.uiTrackTitle,
+    trackIntro: t.uiTrackIntro,
+    trackingCode: t.uiTrackingCode,
+    trackingPlaceholder: t.uiTrackingPlaceholder,
+    trackButton: t.uiTrackButton,
+    trackRequired: t.uiTrackRequired,
+    trackNotFound: t.uiTrackingNotFound,
+    trackUnavailable: t.uiTrackingUnavailable,
+    trackSignIn: ui.tracker.track.visitor,
+    // Privacy
+    privacyEyebrow: t.uiPrivacyEyebrow,
+    privacyTitle: t.uiPrivacyTitle,
+    privacyText: t.uiPrivacyText,
+    privacyPolicy: ui.signupForm.accept[3],
+    // The lines of the messages
+    msgHello: t.uiMsgHello,
+    msgRegister: t.uiMsgRegister,
+    msgAccountType: t.uiMsgAccountType,
+    msgCompany: t.uiMsgCompany,
+    msgRuc: t.uiMsgRuc,
+    msgPrealert: t.uiMsgPrealert,
+    msgMerchandise: t.uiMsgMerchandise,
+    msgReference: t.uiMsgReference,
+    msgDepartment: t.uiMsgDepartment,
+    msgTracking: t.uiMsgTracking,
+    msgAddress: `${ui.signupForm.address1}: {address}`,
+    waHelp: WA_MESSAGES.footer,
+  },
+};
+---
+
+<ScriptData name="account" value={config} />

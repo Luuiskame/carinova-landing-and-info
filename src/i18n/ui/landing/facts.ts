@@ -14,6 +14,9 @@ import { FORMULA_EXAMPLE } from '../../../data/services.ts';
 import { formatNumber, formatUSD, quoteByVolume } from '../../../utils/rates.ts';
 import { LOCALE_INFO, type Locale } from '../../locales.ts';
 
+/** The two cities where packages are received, as Carinova's Chinese page names them in a sentence. */
+const CITIES_ZH: Record<string, string> = { miami: '迈阿密', 'los-angeles': '洛杉矶' };
+
 /** "US$20.00": with its cents even when there are none, where the page sets two prices side by side. */
 const withCents = (amount: number): string =>
   `US$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -28,9 +31,32 @@ export const landingFacts = (
   /** "a, b y c" or "a, b o c", the way the language joins a list. */
   const list = (items: Array<string>, type: 'conjunction' | 'disjunction'): string =>
     new Intl.ListFormat(LOCALE_INFO[locale].intl, { style: 'long', type }).format(items);
+  /**
+   * A list as Carinova's page writes it: in English without the comma before "and" or "or" ("BAC,
+   * Banpro and LAFISE"); in Chinese with a space between "和" or "或" and a name in Latin letters
+   * ("BAC、Banpro 和 LAFISE").
+   */
+  const written = (items: Array<string>, type: 'conjunction' | 'disjunction'): string => {
+    const text = list(items, type);
+    if (locale === 'en') return text.replace(/, (and|or) /, ' $1 ');
+    if (locale === 'zh') return text.replace(/([A-Za-z0-9])([和或])(?=[A-Za-z0-9])/g, '$1 $2 ');
+    return text;
+  };
+  const either = (items: Array<string>): string => written(items, 'disjunction');
+  /**
+   * "US$1,600", "US$1.600", "US$1 600": an amount with its thousands set apart the way the language
+   * does it, as Carinova's page writes the price of its example (a plain space where the language
+   * uses one).
+   */
+  const grouped = (amount: number): string =>
+    `US$${new Intl.NumberFormat(LOCALE_INFO[locale].intl, { maximumFractionDigits: 2 }).format(amount).replace(/[\u00a0\u202f]/g, ' ')}`;
 
-  // Where packages are received today: Los Ángeles joins the sentences when it opens.
-  const open = RECEPTION_POINTS.filter((point) => point.available).map((point) => point.city);
+  // Where packages are received, as Carinova's page says it: Miami and Los Ángeles. (The inner
+  // pages still mark Los Ángeles "Próximamente", from `available`: docs/PROJECT-LOG.md → D-114.)
+  // Inside a sentence, Carinova's Chinese page writes the two cities in Chinese.
+  const openInChoice = RECEPTION_POINTS.map((point) =>
+    locale === 'zh' ? (CITIES_ZH[point.id] ?? point.city) : point.city
+  );
   // The cubic-foot example of Carinova's brief: a 48 × 40 × 72 in pallet.
   const { length, width, height } = FORMULA_EXAMPLE.dims;
   const pallet = quoteByVolume(FORMULA_EXAMPLE.dims, sea.pricePerCubicFoot, { unit: FORMULA_EXAMPLE.unit });
@@ -50,11 +76,13 @@ export const landingFacts = (
     deviceDays: days(electronics.transitDays),
     minimumLb: formatNumber(minimumLb),
     palletDims: `${length} × ${width} × ${height}`,
-    palletTotal: formatUSD(pallet.total),
-    banksAnd: list(PAYMENTS.banks, 'conjunction'),
-    banksOr: list(PAYMENTS.banks, 'disjunction'),
-    receptionOr: list(open, 'disjunction'),
-    receptionAnd: list(open, 'conjunction'),
+    palletTotal: grouped(pallet.total),
+    banksAnd: written(PAYMENTS.banks, 'conjunction'),
+    banksOr: either(PAYMENTS.banks),
+    receptionOr: either(openInChoice),
+    /** The same choice with the preposition before each city, as French wants it: "de Miami ou de Los Angeles". */
+    receptionOrWith: (preposition: string): string => either(openInChoice.map((city) => `${preposition} ${city}`)),
+    receptionAnd: written(openInChoice, 'conjunction'),
     maxLinks: String(LANDING_LIMITS.links),
     maxQuantity: String(LANDING_LIMITS.quantity),
     phoneMin: String(LANDING_LIMITS.phoneDigits[0]),
