@@ -632,8 +632,121 @@ export const STORES: Array<Store> = [
   },
 ];
 
-/** Customer reviews (Google). The reviews section is hidden while this list is empty. Only real reviews. */
-export const REVIEWS: Array<{ name: string; text: string; rating: number; source?: string }> = [];
+/**
+ * Where Carinova's reviews are published, each with the address of the page that shows all of them.
+ * A source is named on the home page once REVIEWS has a review from it and it has an address.
+ */
+export const REVIEW_SOURCES = {
+  /** The "Opiniones" (reviews) tab of the Facebook page of SOCIAL_LINKS. TODO: click it once to check it. */
+  facebook: { name: 'Facebook', url: 'https://www.facebook.com/profile.php?id=61591437427298&sk=reviews' },
+  /**
+   * TODO: the reviews of Carinova's Google Business Profile, once it has some (its link from
+   * "Compartir" in Google Maps, or https://search.google.com/local/reviews?placeid=<its Place ID>).
+   */
+  google: { name: 'Google', url: '' },
+};
+
+export type ReviewSource = keyof typeof REVIEW_SOURCES;
+
+/**
+ * A review as its source publishes it. A Facebook review is a recommendation ("recomienda
+ * Carinova"), so it has no stars; a Google review has its stars, `rating`, from 1 to 5.
+ */
+export type Review = {
+  /** The person's name as the review shows it, accents and all. */
+  name: string;
+  /** Their words exactly as written: line breaks (\n), punctuation and emoji included. Never translated or corrected. */
+  text: string;
+  /** The language the words are written in ('es', 'en'): screen readers read them in it. */
+  lang: string;
+  /** The day it was published, as YYYY-MM-DD. The card shows its month and its year. */
+  date: string;
+  /** The address of this review, when it has one; without it, the card links to all the reviews of its source. */
+  url?: string;
+  /** The person's photo: the name of its file in REVIEW_PHOTOS_URL, or a full address. Without one, the card shows initials. */
+  photo?: string;
+} & ({ source: 'facebook' } | { source: 'google'; rating: 1 | 2 | 3 | 4 | 5 });
+
+/**
+ * The public address of the R2 bucket that holds the photos of the people who wrote the reviews,
+ * without the final slash (for example 'https://media.carinovanic.com/resenas'). Each review names
+ * its file in `photo`. While this is empty, the cards show each person's initials.
+ *
+ * The page shows a photo 48 px wide and loads the file as it is in the bucket: upload them square,
+ * about 160 × 160 px, in WebP or JPEG, under 20 KB each. Serve the bucket from a domain of the
+ * site's Cloudflare account: its r2.dev address is rate-limited and not cached. TODO: the address.
+ */
+export const REVIEW_PHOTOS_URL = '';
+
+/**
+ * What customers wrote about Carinova, newest first (the home page orders them by date anyway).
+ * Only real reviews, each as it is published: the name and the words are copied exactly, never
+ * translated or corrected. A Facebook review goes here only if it recommends Carinova. While the
+ * list is empty, the home page shows the three places Carinova's page keeps for reviews.
+ *
+ * The seven of Carinova's Facebook page on 2026-11-20 ("100% recommend (7 reviews)", from the
+ * developer's screenshots). The three of November were "1 h" and "17 h" old on them, so their day
+ * may be one off; the page shows only the month. Elgen Tinoco and James Trace Lewis shared theirs
+ * with their friends only: Facebook does not show those two to a visitor who follows the link.
+ * James Trace Lewis has no photo on Facebook.
+ */
+export const REVIEWS: ReadonlyArray<Review> = [
+  {
+    source: 'facebook',
+    name: 'Kenard López Masis',
+    text: 'Excelente servicio! Super recomendados! Rápido, seguro y fácil',
+    lang: 'es',
+    date: '2026-11-20',
+    photo: 'kenard-lopez-masis.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Elgen Tinoco',
+    text: 'Fácil, rápido y seguro.\nExcelente servicio',
+    lang: 'es',
+    date: '2026-11-19',
+    photo: 'elgen-tinoco.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Emiya Shirou',
+    text: 'Excelente servicio, amables, rápidos muy recomendable ⭐⭐⭐⭐⭐',
+    lang: 'es',
+    date: '2026-11-19',
+    photo: 'emiya-shirou.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Yudeisa Gonzalez',
+    text: 'Excelente servicio, recibí mis paquetes la semana pasada, seguros y en el tiempo!✨',
+    lang: 'es',
+    date: '2026-08-03',
+    photo: 'yudeisa-gonzalez.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'James Trace Lewis',
+    text: 'My package arrived in a timely manner, thanks🙏',
+    lang: 'en',
+    date: '2026-08-02',
+  },
+  {
+    source: 'facebook',
+    name: 'Brian Jimenez',
+    text: 'Los mejores, recibí mi paquete sin daños y a tiempo, los recomiendo 10/10',
+    lang: 'es',
+    date: '2026-07-31',
+    photo: 'brian-jimenez.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Emily N Gutierrez',
+    text: 'Muy útil ⭐⭐⭐⭐⭐\n\nBuena comunicación.',
+    lang: 'es',
+    date: '2026-07-04',
+    photo: 'emily-n-gutierrez.jpg',
+  },
+];
 
 const hello = (text: string) => `Hola Carinova 👋 ${text}`;
 

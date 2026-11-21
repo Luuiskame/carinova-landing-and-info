@@ -28,6 +28,22 @@ let index = 0;
 let timer = 0;
 let startX: number | null = null;
 
+/**
+ * The photos of the cards that wait their turn: the browser would fetch each one only as its card
+ * slides in. They are asked for once the section is in view, while the first card is being read.
+ */
+const loadPhotos = () => {
+  for (const photo of $$<HTMLImageElement>('img[loading="lazy"]', track)) photo.loading = 'eager';
+};
+/**
+ * A photo that cannot be had (a file not uploaded yet, a wrong name) is taken away: the initials
+ * under it show, instead of the browser's broken picture.
+ */
+const dropIfBroken = (photo: HTMLImageElement) => {
+  if (photo.complete && !photo.naturalWidth) photo.remove();
+  else photo.addEventListener('error', () => photo.remove(), { once: true });
+};
+
 const stacked = () => reducedMotion.matches || cards.length < 2;
 const paused = () => state.hovered || state.focused || state.pressed || !state.visible || document.hidden;
 /** Long enough to read it: between five and a half and eleven seconds. */
@@ -77,6 +93,7 @@ function show(next: number, { announce = false, direction = 1 } = {}): void {
 const step = (direction: number) => show(index + direction, { announce: true, direction });
 
 if (cards.length) {
+  $$<HTMLImageElement>('.t-avatar img', track).forEach(dropIfBroken);
   viewport.setAttribute('aria-roledescription', text.carousel);
   cards.forEach((card, position) => {
     card.setAttribute('aria-roledescription', text.slide);
@@ -138,11 +155,15 @@ if (cards.length) {
     new IntersectionObserver(
       ([entry]) => {
         state.visible = entry.isIntersecting;
+        if (state.visible) loadPhotos();
         sync();
       },
       { threshold: 0.35 }
     ).observe($('#t-viewport') ?? viewport);
-  } else state.visible = true;
+  } else {
+    state.visible = true;
+    loadPhotos();
+  }
 
   show(0);
 }

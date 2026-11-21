@@ -290,6 +290,11 @@ export const landing: Landing = {
   uiCarousel: 'عرض متحرك',
   uiSlide: 'رأي عميل',
   uiSlideLabel: '{number} من {total}',
+  // A review's card (the reviews are REVIEWS, in src/data/carinova.ts) and the link to all the reviews of a source
+  reviewRecommends: 'يوصي بـ Carinova',
+  reviewRating: 'التقييم {rating} من 5',
+  reviewSeeOn: 'عرض على {source}',
+  reviewsAllOn: 'كل المراجعات على {source}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'الأسئلة الشائعة',

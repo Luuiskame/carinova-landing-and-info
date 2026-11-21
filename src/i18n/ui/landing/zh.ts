@@ -288,6 +288,11 @@ export const landing: Landing = {
   uiCarousel: '轮播',
   uiSlide: '客户评价',
   uiSlideLabel: '第 {number} 条，共 {total} 条',
+  // A review's card (the reviews are REVIEWS, in src/data/carinova.ts) and the link to all the reviews of a source
+  reviewRecommends: '推荐 Carinova',
+  reviewRating: '{rating} 星（满分 5 星）',
+  reviewSeeOn: '在 {source} 上查看',
+  reviewsAllOn: '{source} 上的全部评价',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: '常见问题',
