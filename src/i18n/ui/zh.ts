@@ -6,6 +6,7 @@
  * - City names (Managua, Bluefields, Miami) stay in Latin letters, as on maps and addresses.
  */
 import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, SESSION_DAYS } from '../../data/account.ts';
+import { CONTACT } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/zh/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -16,6 +17,8 @@ import { landing } from './landing/zh.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -549,25 +552,42 @@ export const ui: UI = {
   // pages/nosotros.astro
   aboutPage: {
     tagline: '关于我们',
-    description: `Carinova 是一家尼加拉瓜公司，提供从美国到尼加拉瓜的寄送服务，在 ${cityNames.join(' 和 ')} 设有网点。`,
-    title: '我们是 Carinova',
-    subtitle: `一家尼加拉瓜公司，让美国的商店离 ${cityNames.join(' 和 ')} 更近。`,
-    logoAlt: 'Carinova 标志：三个人在地球仪前共同高举一支燃烧的火炬。',
-    storyTitle: '我们的故事',
-    story: [
-      'Carinova 诞生于尼加拉瓜，源于一个简单的想法：让每个人都能轻松、安全、价格透明地在美国购物。',
-      `在 ${cityNames.join(' 和 ')} 的网点，我们通过 WhatsApp 和面对面的方式，为每位客户提供贴心服务，确保每一件网购商品和每一个包裹都安全抵达目的地。`,
-    ],
+    metaTitle: '关于我们：我们是谁，来自哪里',
+    description: `Carinova 是一家尼加拉瓜公司，提供从美国到尼加拉瓜的寄送服务，诞生于 ${bluefields}。了解我们的根、我们做什么，以及在 ${cityNames.join(' 和 ')} 哪里可以找到我们。`,
+    title: `我们是 Carinova，诞生于 ${bluefields} 的快递公司`,
+    subtitle: `一家尼加拉瓜公司，把您的网购商品、家人的包裹和企业货物从美国运来，在 ${cityNames.join(' 和 ')} 设有网点。`,
+    roots: {
+      title: '我们的根',
+      text: 'Carinova 诞生于尼加拉瓜南加勒比海岸的 Bluefields。多元文化故乡的热情、责任与力量融入我们的基因；我们每天努力缩短距离，以值得信赖的用心为你送达每一件包裹。',
+      emblemAlt: 'Carinova 品牌徽章：三个人物在圆环内共同托起火焰',
+    },
+    whatTagline: '我们做什么',
+    whatTitle: '让美国的商店离尼加拉瓜更近',
+    what: `注册账户后，您会获得 Carinova ID 和一个位于 ${warehouse.city} 的地址，可在任何商店购物。我们在那里接收您的包裹，通过空运或海运运来，您在 ${cityNames.join(' 或 ')} 取件。`,
+    servicesLink: '查看各项服务详情',
+    factsTagline: '简单来说',
+    factsTitle: 'Carinova 概况',
+    facts: {
+      origin: '我们诞生于',
+      originValue: `尼加拉瓜南加勒比海岸的 ${bluefields}`,
+      route: '我们的线路',
+      routeValue: '从美国到尼加拉瓜',
+      reception: '我们接收包裹的地点',
+      branches: '尼加拉瓜的网点',
+      transport: '包裹的运输方式',
+      contact: 'WhatsApp 客服',
+      networks: '关注我们',
+    },
     valuesTagline: '我们的价值观',
     valuesTitle: '我们的动力',
     values: [
       {
         title: '团队合作',
-        description: '就像我们的标志：三个人共同高举同一支火炬。从 Miami 到您的网点，每一次寄送都是团队合作的成果。',
+        description: '就像我们的徽章：三个人物共同托起同一团火焰。从 Miami 到您的网点，每一次寄送都是团队合作的成果。',
       },
       {
         title: '跨越国界',
-        description: '我们品牌中的地球，是我们每天往返于美国和尼加拉瓜之间的桥梁。',
+        description: '环绕他们的圆环，是我们每天往返于美国和尼加拉瓜之间的桥梁。',
       },
       {
         title: '责任承诺',
@@ -575,6 +595,36 @@ export const ui: UI = {
       },
     ],
     where: '我们在哪里',
+    reviewsTagline: '客户评价',
+    reviewsTitle: '客户怎么说',
+    faqTitle: '关于 Carinova 的常见问题',
+    faq: [
+      {
+        title: 'Carinova 是什么？',
+        description:
+          'Carinova 是一家尼加拉瓜的寄送公司。我们通过空运或海运，把个人网购商品、家人包裹和企业货物从美国运到尼加拉瓜。',
+      },
+      {
+        title: 'Carinova 来自哪里？',
+        description: `Carinova 诞生于尼加拉瓜南加勒比海岸的 ${bluefields}，如今在 ${cityNames.join(' 和 ')} 设有网点。`,
+      },
+      {
+        title: 'Carinova 的网点在哪里？营业时间是什么？',
+        description: `网点位于 ${cityNames.join(' 和 ')}。营业时间：${describeHours(hours)}。`,
+      },
+      {
+        title: 'Carinova 从哪里把包裹运来？',
+        description: `我们在位于 ${warehouse.state} ${warehouse.city} 的仓库接收包裹，再运往尼加拉瓜：空运${air.transit}，海运${sea.transit}，自包裹到达仓库之时起计算。`,
+      },
+      {
+        title: '怎样联系 Carinova？',
+        description: `通过 WhatsApp 联系我们，号码是 <span dir="ltr">${CONTACT.whatsappDisplay}</span>，也可以到任一网点咨询。`,
+      },
+      {
+        title: '在哪里可以看到 Carinova 客户的评价？',
+        description: '本网站的评价页面汇集了客户发布的评价，原文照录，并附有每条评价的发布链接。',
+      },
+    ],
     careers: {
       title: '加入我们的团队。',
       text: '我们正在寻找致力于优质服务和卓越运营的人才。',
@@ -584,6 +634,62 @@ export const ui: UI = {
       title: '让我们完成您的第一次寄件',
       subtitle: '在线注册账户，或在购物前估算运费。',
       lead: '想更了解我们？',
+    },
+  },
+
+  // What a review's card says (the reviews themselves are never translated)
+  reviews: {
+    recommends: '推荐 Carinova',
+    rating: '{rating} 星（满分 5 星）',
+    seeOn: '在 {source} 上查看',
+    allOn: '{source} 上的全部评价',
+    readAll: '阅读全文',
+    seeAll: '查看全部评价',
+    moreTitle: '还有更多评价',
+    moreText: '看看客户们怎样讲述他们的寄件体验。',
+    previous: '上一组评价',
+    next: '下一组评价',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: '客户评价',
+    metaTitle: '客户评价与口碑',
+    description: 'Carinova 客户对从美国寄往尼加拉瓜的包裹的真实评价，原文照录自 {sources}。首次寄件前不妨先看看。',
+    title: 'Carinova 的客户怎么说',
+    subtitle: '已经通过我们把在美国购买的商品带到尼加拉瓜的客户写下的真实评价，原文照录自 {sources}。',
+    listTitle: '来自客户的评价',
+    filterLabel: '显示以下来源的评价',
+    all: '全部',
+    howTitle: '我们如何展示评价',
+    how: [
+      {
+        title: '由作者本人发布',
+        text: '每条评价都由作者本人以自己的名字发布在 {sources} 上。',
+      },
+      {
+        title: '一字不改',
+        text: '我们按原文、原语言照录，不修改，也不翻译。',
+      },
+      {
+        title: '附有来源链接',
+        text: '每条评价都链接到它在 Carinova 主页上发布的位置，那里有全部评价，包括最新的。',
+      },
+    ],
+    writeTitle: '已经收到包裹了？告诉我们您的体验',
+    writeText: '您的评价能帮助其他人做决定，也帮助我们改进。',
+    writeOn: '在 {source} 上评价',
+    nextTitle: '首次寄件之前',
+    next: {
+      how: '了解运作方式，一步一步来',
+      quote: '计算您的运费',
+      branches: '查看在哪里取件',
+      about: '了解我们是谁',
+    },
+    closing: {
+      title: '通过 Carinova 寄出您的第一件包裹',
+      subtitle: '在线创建账户，获取您的 Carinova ID 和美国地址。',
+      lead: '想先问我们一些问题吗？',
     },
   },
 
@@ -716,6 +822,7 @@ export const ui: UI = {
     tracking: '包裹追踪',
     faq: '常见问题',
     about: '关于我们',
+    reviews: '客户评价',
     terms: '服务条款',
     privacy: '隐私政策',
     and: ' 和 ',

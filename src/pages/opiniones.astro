@@ -1,0 +1,238 @@
+---
+// "Opiniones" (/opiniones): every review customers wrote about Carinova, in one place, newest
+// first. It is the page for the people who look for "Carinova opiniones" before trusting it with a
+// package, and the page the home page's cards lead to (a card there shows the newest ones).
+//
+// - The reviews are REVIEWS (src/data/carinova.ts): the name and every word as Facebook or Google
+//   publish them, never translated; a card says where and when it was published and links to it
+//   there (ReviewCard.astro). Each has its anchor: /opiniones#opinion-kenard-lopez-masis.
+// - With reviews from more than one source, a row of buttons shows one source at a time; without
+//   the script every review is in view.
+// - The page says how the reviews are shown and asks customers for theirs, on the source's own page.
+// - Its structured data names the page and the company, and no review, rating or count (D-129).
+// - Without reviews it would be an empty page: it is kept out of search engines then.
+import { Icon } from 'astro-icon/components';
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import ReviewCard from '~/components/carinova/ReviewCard.astro';
+import StructuredData from '~/components/common/StructuredData.astro';
+
+import { REVIEWS, REVIEW_SOURCES, type ReviewSource } from '~/data/carinova';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { getCanonical } from '~/utils/permalinks';
+import { newestFirst, reviewCards, sourceNames, sourcesOf } from '~/utils/reviews';
+import { reviewsSchema } from '~/utils/schema';
+import { fill } from '~/utils/template';
+
+const page = i18n(Astro);
+const { locale, href, data, ui } = page;
+const { WA_MESSAGES } = data;
+const t = ui.reviewsPage;
+const { intl } = LOCALE_INFO[locale];
+
+const reviews = reviewCards(newestFirst(REVIEWS), intl);
+
+const SOURCE_ICONS: Record<ReviewSource, string> = {
+  facebook: 'tabler:brand-facebook',
+  google: 'tabler:brand-google',
+};
+/** Where each source shows all its reviews and takes a new one: only the sources that have an address. */
+const writable = (Object.keys(REVIEW_SOURCES) as Array<ReviewSource>)
+  .filter((source) => REVIEW_SOURCES[source].url)
+  .map((source) => ({ source, ...REVIEW_SOURCES[source], icon: SOURCE_ICONS[source] }));
+/** The sources the reviews of the page come from, for its filter. */
+const listed = sourcesOf(REVIEWS).map((source) => ({ source, ...REVIEW_SOURCES[source], icon: SOURCE_ICONS[source] }));
+
+// "Facebook", or "Facebook y Google" once both have reviews: what the sentences of the page name.
+const named =
+  sourceNames(intl, REVIEWS) ||
+  new Intl.ListFormat(intl, { style: 'long', type: 'conjunction' }).format(writable.map(({ name }) => name));
+const description = fill(t.description, { sources: named });
+
+const metadata = {
+  title: t.metaTitle,
+  description,
+  ...(reviews.length > 0 ? {} : { robots: { index: false, follow: true } }),
+};
+const schema = reviewsSchema(page, {
+  url: String(getCanonical(Astro.url.pathname)),
+  name: t.title,
+  description,
+});
+
+const how = [
+  { ...t.how[0], icon: 'tabler:user-check' },
+  { ...t.how[1], icon: 'tabler:quote' },
+  { ...t.how[2], icon: 'tabler:link' },
+];
+const next = [
+  { text: t.next.how, path: '/como-comprar' },
+  { text: t.next.quote, path: '/cotizador' },
+  { text: t.next.branches, path: '/sucursales' },
+  { text: t.next.about, path: '/nosotros' },
+];
+
+const sectionClass = 'mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14';
+const titleClass = 'font-heading text-3xl font-extrabold tracking-[-0.03em] text-heading md:text-4xl';
+const linkClass = 'inline-flex min-h-11 items-center gap-1.5 font-semibold text-link underline underline-offset-4';
+const chipClass =
+  'inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-heading transition hover:border-primary hover:text-primary aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white';
+---
+
+<Layout metadata={metadata} breadcrumb={t.tagline}>
+  <StructuredData slot="head" schema={schema} />
+  <HeroText tagline={t.tagline} title={t.title} subtitle={fill(t.subtitle, { sources: named })} />
+
+  {
+    reviews.length > 0 && (
+      <section class="bg-slate-50" aria-labelledby="opiniones-titulo">
+        <div class={sectionClass}>
+          <h2 class={titleClass} id="opiniones-titulo">
+            {t.listTitle}
+          </h2>
+
+          {
+            /* One source at a time, once there are two. The buttons do nothing without the script, so it is the script that shows them. */
+            listed.length > 1 && (
+              <div
+                class="mt-6 flex flex-wrap items-center gap-2"
+                role="group"
+                aria-label={t.filterLabel}
+                data-review-filter
+                hidden
+              >
+                <button type="button" class={chipClass} data-review-source="" aria-pressed="true">
+                  {t.all}
+                </button>
+                {listed.map(({ source, name, icon }) => (
+                  <button type="button" class={chipClass} data-review-source={source} aria-pressed="false">
+                    <Icon name={icon} class="h-5 w-5" />
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )
+          }
+
+          <div class="mt-8 gap-6 md:columns-2 xl:columns-3" data-review-list>
+            {reviews.map((review) => (
+              <ReviewCard review={review} class="mb-6 break-inside-avoid" />
+            ))}
+          </div>
+
+          {listed.length > 0 && (
+            <ul class="mt-2 flex flex-col gap-x-8 sm:flex-row sm:flex-wrap">
+              {listed.map(({ name, url, icon }) => (
+                <li>
+                  <a class={linkClass} href={url} target="_blank" rel="noopener">
+                    <Icon name={icon} class="h-5 w-5 shrink-0" />
+                    {fill(ui.reviews.allOn, { source: name })}
+                    <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <section aria-labelledby="como-titulo">
+    <div class={sectionClass}>
+      <h2 class={titleClass} id="como-titulo">{t.howTitle}</h2>
+      <ul class="mt-7 grid gap-4 md:grid-cols-3">
+        {
+          how.map(({ title, text, icon }) => (
+            <li class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+              <Icon name={icon} class="h-8 w-8 text-primary" />
+              <h3 class="mt-4 font-heading text-xl font-bold text-heading">{title}</h3>
+              <p class="mt-2 text-muted">{fill(text, { sources: named })}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {
+    writable.length > 0 && (
+      <section id="opinar" class="scroll-mt-24 border-y border-[#cfdae6] bg-[#eef3fa]" aria-labelledby="opinar-titulo">
+        <div class="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-9 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cta/15 text-secondary">
+              <Icon name="tabler:message-star" class="h-7 w-7" />
+            </span>
+            <div>
+              <h2 class="font-heading text-xl font-extrabold text-heading sm:text-2xl" id="opinar-titulo">
+                {t.writeTitle}
+              </h2>
+              <p class="mt-1 text-muted">{t.writeText}</p>
+            </div>
+          </div>
+          <ul class="flex shrink-0 flex-col gap-x-6 sm:flex-row sm:flex-wrap">
+            {writable.map(({ name, url, icon }) => (
+              <li>
+                <a class={linkClass} href={url} target="_blank" rel="noopener">
+                  <Icon name={icon} class="h-5 w-5 shrink-0" />
+                  {fill(t.writeOn, { source: name })}
+                  <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section aria-labelledby="antes-titulo">
+    <div class={sectionClass}>
+      <h2 class={titleClass} id="antes-titulo">{t.nextTitle}</h2>
+      <ul class="mt-5 grid gap-x-8 sm:grid-cols-2">
+        {
+          next.map(({ text, path }) => (
+            <li>
+              <a class={linkClass} href={href(path)}>
+                {text}
+                <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <ClosingCta
+    title={t.closing.title}
+    subtitle={t.closing.subtitle}
+    whatsapp={WA_MESSAGES.reviewsClosing}
+    whatsappLead={t.closing.lead}
+  />
+</Layout>
+
+<script>
+  // The filter of the page of reviews: one source at a time. It exists only when the reviews come
+  // from two sources; the page shows every review without it.
+  const setUp = () => {
+    const filter = document.querySelector<HTMLElement>('[data-review-filter]');
+    const list = document.querySelector<HTMLElement>('[data-review-list]');
+    if (!filter || !list || filter.dataset.ready) return;
+    filter.dataset.ready = 'true';
+    filter.hidden = false;
+    const buttons = [...filter.querySelectorAll<HTMLButtonElement>('[data-review-source]')];
+    filter.addEventListener('click', (event) => {
+      const button = (event.target as Element).closest<HTMLButtonElement>('[data-review-source]');
+      if (!button) return;
+      const source = button.dataset.reviewSource ?? '';
+      for (const item of buttons) item.setAttribute('aria-pressed', String(item === button));
+      for (const card of list.querySelectorAll<HTMLElement>('[data-source]')) {
+        card.hidden = source !== '' && card.dataset.source !== source;
+      }
+    });
+  };
+  // On a normal load and after a page change without a reload (ClientRouter).
+  document.addEventListener('astro:page-load', setUp);
+</script>

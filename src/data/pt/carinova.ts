@@ -138,7 +138,20 @@ const RESTRICTED_TEXT: Record<
     items: [
       {
         name: 'Carros',
-        match: ['carro', 'carros', 'automovel', 'automoveis', 'veiculo', 'veiculos', 'caminhonete', 'picape'],
+        match: [
+          'carro',
+          'carros',
+          'automovel',
+          'automoveis',
+          'veiculo',
+          'veiculos',
+          'caminhonete',
+          'picape',
+          'caminhao',
+          'caminhoes',
+          'onibus',
+          'quadriciclo',
+        ],
       },
       { name: 'Motos', match: ['moto', 'motos', 'motocicleta', 'motocicletas', 'scooter', 'motoneta'] },
       {
@@ -151,6 +164,9 @@ const RESTRICTED_TEXT: Record<
           'retroescavadeira',
           'trator',
           'empilhadeira',
+          'tratores',
+          'guindaste',
+          'guindastes',
         ],
       },
     ],
@@ -189,6 +205,9 @@ const RESTRICTED_TEXT: Record<
         match: [
           'bebida alcoolica',
           'bebidas alcoolicas',
+          'alcool',
+          'gim',
+          'champanhe',
           'licor',
           'rum',
           'uisque',
@@ -205,7 +224,16 @@ const RESTRICTED_TEXT: Record<
       },
       {
         name: 'Acessórios para aeronaves',
-        match: ['aeronave', 'aeronaves', 'aviao', 'avioes', 'pecas de aviao', 'pecas de aeronave'],
+        match: [
+          'aeronave',
+          'aeronaves',
+          'aviao',
+          'avioes',
+          'pecas de aviao',
+          'pecas de aeronave',
+          'helicoptero',
+          'helicopteros',
+        ],
       },
       {
         name: 'Transmissores de rádio',
@@ -227,7 +255,23 @@ const RESTRICTED_TEXT: Record<
     items: [
       {
         name: 'Produtos inflamáveis',
-        match: ['inflamavel', 'inflamaveis', 'combustivel', 'gasolina', 'tinta', 'solvente', 'alcool', 'querosene'],
+        match: [
+          'inflamavel',
+          'inflamaveis',
+          'combustivel',
+          'gasolina',
+          'tinta',
+          'solvente',
+          'querosene',
+          'alcool em gel',
+          'alcool gel',
+          'alcool isopropilico',
+          'alcool etilico',
+          'alcool 70',
+          'acetona',
+          'isqueiro',
+          'isqueiros',
+        ],
       },
       {
         name: 'Baterias de lítio soltas',
@@ -361,6 +405,7 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
     '/preguntas-frecuentes': hello('Tenho uma pergunta que não encontrei no site de vocês.'),
     '/articulos-prohibidos': hello('Tenho uma dúvida sobre os itens que vocês não podem trazer.'),
     '/nosotros': hello('Quero conhecer mais sobre a Carinova.'),
+    '/opiniones': hello('Li as avaliações dos seus clientes e tenho uma dúvida.'),
     '/terminos': hello('Tenho uma pergunta sobre os termos e condições de vocês.'),
     '/privacidad': hello('Tenho uma pergunta sobre meus dados pessoais.'),
   },
@@ -438,6 +483,8 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   faqClosing: hello('Não encontrei minha resposta nas perguntas frequentes de vocês.'),
   restricted: hello('Antes de comprar, quero saber se vocês podem trazer este produto: '),
   aboutClosing: hello('Conheci a Carinova pelo site e quero começar a enviar com vocês.'),
+  /** The closing band of the page of reviews. */
+  reviewsClosing: hello('Li as avaliações de outros clientes e quero fazer meu primeiro envio com vocês.'),
   careers: hello('Quero fazer parte da equipe da Carinova. Tenho interesse na área de: '),
   notFound: hello('Cheguei a uma página do site de vocês que não existe.'),
 };

@@ -1,53 +1,282 @@
 ---
-// Nosotros: who Carinova is. The story and the values are drafts until Carinova sends its own.
+// "Sobre nosotros" (/nosotros): who Carinova is. The page a customer reads before trusting it with
+// a package, and the one search engines read to know the company: where it comes from, what it
+// does, where it is, how to reach it and what its customers say.
+//
+// - "Nuestras raíces" is Carinova's own text and emblem, from the page it wrote on 2026-11-18. It
+//   was the second section of the home page until 2026-11-21, when the developer moved it here
+//   (D-131). It is the company's story: the page adds no founding date, founder or milestone,
+//   because Carinova has given none.
+// - Everything else is a summary of a page that owns it, from the same data: the services
+//   (/servicios), the branches (/sucursales), the rates and the days (/cotizador), the reviews
+//   (/opiniones). The facts of "Carinova en datos" are those of src/data, never typed here.
+// - The values are still a draft, drawn from the emblem: Carinova has to confirm them.
+// - Structured data: the page (AboutPage), the company with where it was born and where its
+//   branches are (src/utils/schema.ts), the trail and the questions.
+import { Picture } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
 import HeroText from '~/components/widgets/HeroText.astro';
-import Content from '~/components/widgets/Content.astro';
+import FAQs from '~/components/widgets/FAQs.astro';
 import Features2 from '~/components/widgets/Features2.astro';
 import Branches from '~/components/carinova/Branches.astro';
 import ClosingCta from '~/components/carinova/ClosingCta.astro';
+import ReviewCard from '~/components/carinova/ReviewCard.astro';
+import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
-import { Icon } from 'astro-icon/components';
+import StructuredData from '~/components/common/StructuredData.astro';
 
-import { i18n } from '~/i18n';
+import emblem from '~/assets/images/landing/emblem.webp';
+import { CONTACT, REVIEWS, SOCIAL_LINKS } from '~/data/carinova';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { getCanonical } from '~/utils/permalinks';
+import { formatUSD } from '~/utils/rates';
+import { newestFirst, reviewCards } from '~/utils/reviews';
+import { aboutSchema } from '~/utils/schema';
 
-const { data, ui } = i18n(Astro);
-const { WA_MESSAGES } = data;
+const page = i18n(Astro);
+const { locale, href, data, ui } = page;
+const { BRANCHES, RATES, RECEPTION_POINTS, SERVICES, VALUE_PROPOSITION, WA_MESSAGES } = data;
 
 const t = ui.aboutPage;
+const modes = ui.shippingModes;
 
-const metadata = { title: t.tagline, description: t.description };
+const metadata = { title: t.metaTitle, description: t.description };
+const schema = aboutSchema(page, {
+  url: String(getCanonical(Astro.url.pathname)),
+  name: t.title,
+  description: t.description,
+});
+
 const valueIcons = ['tabler:users-group', 'tabler:world', 'tabler:flame'];
+const transport = [
+  { rate: RATES.air, label: modes.air.overline },
+  { rate: RATES.sea, label: modes.sea.overline },
+];
+/** The three newest reviews: the page of reviews has them all. */
+const reviews = reviewCards(newestFirst(REVIEWS).slice(0, 3), LOCALE_INFO[locale].intl, REVIEWS);
+
+const sectionClass = 'mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14';
+const eyebrowClass = 'text-base font-bold tracking-wide text-secondary uppercase';
+const titleClass = 'font-heading text-3xl font-extrabold tracking-[-0.03em] text-heading md:text-4xl';
+const linkClass = 'inline-flex min-h-11 items-center gap-1.5 font-semibold text-link underline underline-offset-4';
+const factClass = 'border-t border-slate-200 py-4 sm:grid sm:grid-cols-[minmax(0,15rem)_1fr] sm:gap-6';
+const factNameClass = 'text-sm font-bold tracking-wide text-muted uppercase';
+const factValueClass = 'mt-1 text-lg font-semibold text-heading sm:mt-0';
 ---
 
 <Layout metadata={metadata} breadcrumb={t.tagline}>
+  <StructuredData slot="head" schema={schema} />
   <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
-  <!-- TODO: replace with Carinova's real story (founding year, founders, milestones). -->
-  <Content
-    image={{ src: '~/assets/images/carinova-logo.jpeg', alt: t.logoAlt }}
-    classes={{ container: 'pt-4 md:pt-6 lg:pt-8' }}
-  >
-    <Fragment slot="content">
-      <h2 class="mb-4 font-heading text-3xl font-bold tracking-tight text-heading">{t.storyTitle}</h2>
-      <p class="mb-4">{t.story[0]}</p>
-      <p>{t.story[1]}</p>
-    </Fragment>
-  </Content>
+  {/* Nuestras raíces: the emblem on its own navy, and Carinova's words under it. */}
+  <section id="raices" class="roots dark mt-8 scroll-mt-24 md:mt-10" aria-labelledby="raices-titulo">
+    <div class="mx-auto flex max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 md:py-16">
+      <figure class="roots-emblem">
+        <Picture
+          src={emblem}
+          alt={t.roots.emblemAlt}
+          width={912}
+          height={878}
+          widths={[320, 440, 640, 880]}
+          sizes="(max-width: 500px) 72vw, 360px"
+          formats={['avif', 'webp']}
+          fallbackFormat="jpg"
+          loading="eager"
+          decoding="async"
+        />
+      </figure>
+      <h2
+        class="mt-8 font-heading text-3xl font-extrabold tracking-[-0.03em] text-white md:text-4xl"
+        id="raices-titulo"
+      >
+        {t.roots.title}
+      </h2>
+      <p class="mt-5 text-lg leading-relaxed font-medium text-pretty text-[#f1f5f8] md:text-xl">{t.roots.text}</p>
+    </div>
+  </section>
 
-  <!-- TODO: confirm the values with Carinova (drafted from the symbols in the logo). -->
+  <section id="que-hacemos" class="scroll-mt-24" aria-labelledby="hacemos-titulo">
+    <div class={sectionClass}>
+      <p class={eyebrowClass}>{t.whatTagline}</p>
+      <h2 class:list={[titleClass, 'mt-1 max-w-3xl']} id="hacemos-titulo">{t.whatTitle}</h2>
+      <div class="mt-5 max-w-3xl space-y-4 text-lg leading-relaxed text-muted">
+        <p>{VALUE_PROPOSITION}</p>
+        <p>{t.what}</p>
+      </div>
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          SERVICES.map((service) => (
+            <li class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200">
+              <Icon name={service.icon} class="h-8 w-8 text-primary" />
+              <h3 class="mt-4 font-heading text-lg font-bold text-heading">
+                <a class="hover:underline" href={href(`/servicios#${service.id}`)}>
+                  {service.name}
+                </a>
+                {service.badge && <ServiceBadge kind={service.badge} />}
+              </h3>
+              <p class="mt-1 text-muted">{service.summary}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <a class:list={[linkClass, 'mt-4']} href={href('/servicios')}>
+        {t.servicesLink}
+        <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+      </a>
+    </div>
+  </section>
+
+  <section id="datos" class="scroll-mt-24 bg-slate-50" aria-labelledby="datos-titulo">
+    <div class={sectionClass}>
+      <p class={eyebrowClass}>{t.factsTagline}</p>
+      <h2 class:list={[titleClass, 'mt-1']} id="datos-titulo">{t.factsTitle}</h2>
+      <dl class="mt-7 border-b border-slate-200">
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.origin}</dt>
+          <dd class={factValueClass}>{t.facts.originValue}</dd>
+        </div>
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.route}</dt>
+          <dd class={factValueClass}>{t.facts.routeValue}</dd>
+        </div>
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.reception}</dt>
+          <dd class={factValueClass}>
+            <ul class="space-y-1">
+              {
+                RECEPTION_POINTS.map((point) => (
+                  <li>
+                    {point.city}, {point.state}
+                    {!point.available && <ServiceBadge kind="soon" />}
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.branches}</dt>
+          <dd class={factValueClass}>
+            <ul class="flex flex-wrap gap-x-6 gap-y-1">
+              {
+                BRANCHES.map((branch) => (
+                  <li>
+                    <a class="text-link underline underline-offset-4" href={href(`/sucursales#${branch.id}`)}>
+                      {branch.city}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.transport}</dt>
+          <dd class={factValueClass}>
+            <ul class="space-y-1">
+              {
+                transport.map(({ rate, label }) => (
+                  <li>
+                    {label}
+                    <span class="font-normal text-muted">
+                      {' · '}
+                      {rate.transit}
+                      {' · '}
+                      <span dir="ltr">
+                        {formatUSD(rate.pricePerLb)}
+                        {modes.perPound}
+                      </span>
+                    </span>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+        <div class={factClass}>
+          <dt class={factNameClass}>{t.facts.contact}</dt>
+          <dd class={factValueClass}><span dir="ltr">{CONTACT.whatsappDisplay}</span></dd>
+        </div>
+        {
+          SOCIAL_LINKS.length > 0 && (
+            <div class={factClass}>
+              <dt class={factNameClass}>{t.facts.networks}</dt>
+              <dd class={factValueClass}>
+                <ul class="flex flex-wrap gap-x-6 gap-y-1">
+                  {SOCIAL_LINKS.map((link) => (
+                    <li>
+                      <a
+                        class="inline-flex items-center gap-1.5 text-link underline underline-offset-4"
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        <Icon name={link.icon} class="h-5 w-5 shrink-0" />
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+      <a class:list={[linkClass, 'mt-4']} href={href('/cotizador')}>
+        {ui.reviewsPage.next.quote}
+        <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+      </a>
+    </div>
+  </section>
+
+  <!-- TODO: confirm the values with Carinova (drafted from the emblem). -->
   <Features2
     tagline={t.valuesTagline}
     title={t.valuesTitle}
     columns={3}
     items={t.values.map((value, index) => ({ ...value, icon: valueIcons[index] }))}
+  />
+
+  <Branches compact title={t.where} />
+
+  {
+    reviews.length > 0 && (
+      <section id="opiniones" class="scroll-mt-24" aria-labelledby="opiniones-titulo">
+        <div class={sectionClass}>
+          <p class={eyebrowClass}>{t.reviewsTagline}</p>
+          <h2 class:list={[titleClass, 'mt-1']} id="opiniones-titulo">
+            {t.reviewsTitle}
+          </h2>
+          <div class="mt-7 grid items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {reviews.map((review) => (
+              <ReviewCard review={review} anchor={false} />
+            ))}
+          </div>
+          <a class:list={[linkClass, 'mt-4']} href={href('/opiniones')}>
+            {ui.reviews.seeAll}
+            <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+          </a>
+        </div>
+      </section>
+    )
+  }
+
+  <FAQs
+    id="preguntas"
+    title={t.faqTitle}
+    items={t.faq}
+    defaultOpen={-1}
+    schema
+    classes={{
+      container: 'py-10 md:py-14 lg:py-14',
+      headline: { container: 'max-w-3xl mb-4 md:mb-6', title: 'text-3xl md:text-4xl' },
+    }}
   >
     <Fragment slot="bg">
       <div class="absolute inset-0 bg-slate-50"></div>
     </Fragment>
-  </Features2>
-
-  <Branches compact title={t.where} soft={false} />
+  </FAQs>
 
   <!-- People who want to work at Carinova write on WhatsApp, with a message of its own. -->
   <section id="equipo" class="scroll-mt-24 border-y border-[#cfdae6] bg-[#eef3fa]">
@@ -72,3 +301,28 @@ const valueIcons = ['tabler:users-group', 'tabler:world', 'tabler:flame'];
     whatsappLead={t.closing.lead}
   />
 </Layout>
+
+<style>
+  /* The emblem is drawn on its own navy, a shade deeper than the site's: the band takes that navy,
+     and the edges of the picture fade into it, as they did on the home page. */
+  .roots {
+    background: #001127;
+  }
+  .roots-emblem {
+    width: min(360px, 72vw);
+    margin: 0;
+  }
+  .roots-emblem :global(img) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 912 / 878;
+    -webkit-mask-image:
+      linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent),
+      linear-gradient(180deg, transparent, #000 4%, #000 96%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent),
+      linear-gradient(180deg, transparent, #000 4%, #000 96%, transparent);
+    mask-composite: intersect;
+  }
+</style>

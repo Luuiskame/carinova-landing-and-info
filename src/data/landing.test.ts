@@ -174,8 +174,7 @@ test('the notices: each has its title and its text, and their ids are not repeat
 });
 
 test('the names of `landing.cat` are the kinds of article of the search and the categories of the directory', () => {
-  // "general" is what the search calls an article of no special kind.
-  const named = new Set(['general', ...namedKinds, ...STORE_DIRECTORY.map((category) => category.id)]);
+  const named = new Set([...namedKinds, ...STORE_DIRECTORY.map((category) => category.id)]);
   assert.deepEqual(sorted(Object.keys(uiEs.landing.cat)), sorted(named));
 });
 

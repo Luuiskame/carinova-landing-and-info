@@ -228,6 +228,13 @@ export const PAYMENTS = { cash: true, banks: ['BAC', 'Banpro', 'LAFISE'] };
 export const COMPANY = { legalName: '', ruc: '' };
 
 /**
+ * Where Carinova comes from, in its own words on the page it wrote on 2026-11-18 ("Carinova nació
+ * en Bluefields, en la Costa Caribe Sur de Nicaragua"): what the company's structured data says on
+ * the page about it (src/utils/schema.ts). The sentences of that page are in the dictionaries.
+ */
+export const ORIGIN = { city: 'Bluefields', region: 'Costa Caribe Sur', country: 'Nicaragua', countryCode: 'NI' };
+
+/**
  * Delivery to the customer's door (última milla). From Carinova's prototype: it is coordinated case
  * by case, anywhere in the country, and has an additional charge that depends on the destination.
  * There is no published price: it is confirmed when the delivery is arranged.
@@ -404,12 +411,55 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
     items: [
       {
         name: 'Carros',
-        match: ['carro', 'carros', 'auto', 'autos', 'automovil', 'vehiculo', 'vehiculos', 'camioneta'],
+        match: [
+          'carro',
+          'carros',
+          'auto',
+          'autos',
+          'automovil',
+          'vehiculo',
+          'vehiculos',
+          'camioneta',
+          'automoviles',
+          'camionetas',
+          'camion',
+          'camiones',
+          'pick up',
+          'pickup',
+          'bus',
+          'buses',
+          'autobus',
+          'microbus',
+          'furgon',
+          'rastra',
+          'cuadraciclo',
+          'cuatrimoto',
+        ],
       },
-      { name: 'Motos', match: ['moto', 'motos', 'motocicleta', 'motocicletas'] },
+      {
+        name: 'Motos',
+        match: ['moto', 'motos', 'motocicleta', 'motocicletas', 'motoneta', 'pasola', 'mototaxi', 'caponera'],
+      },
       {
         name: 'Maquinaria pesada',
-        match: ['maquinaria', 'maquinaria pesada', 'excavadora', 'retroexcavadora', 'tractor', 'montacargas'],
+        match: [
+          'maquinaria',
+          'maquinaria pesada',
+          'excavadora',
+          'retroexcavadora',
+          'tractor',
+          'montacargas',
+          'excavadoras',
+          'tractores',
+          'grua',
+          'gruas',
+          'bulldozer',
+          'cargador frontal',
+          'minicargador',
+          'motoniveladora',
+          'compactadora',
+          'cosechadora',
+        ],
       },
     ],
   },
@@ -437,11 +487,21 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
         ],
       },
       {
-        // Since Carinova's home page of 2026-11-18. "Alcohol" by itself stays among the flammables.
+        // Since Carinova's home page of 2026-11-18. "Alcohol" by itself is the drink (D-128); the
+        // alcohol that travels by sea is named whole among the flammables ("alcohol en gel").
         name: 'Bebidas alcohólicas',
         match: [
           'bebida alcoholica',
           'bebidas alcoholicas',
+          'alcohol',
+          'trago',
+          'tragos',
+          'guaro',
+          'whiskey',
+          'ginebra',
+          'aguardiente',
+          'champan',
+          'sidra',
           'licor',
           'licores',
           'ron',
@@ -454,7 +514,10 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
           'vinos',
         ],
       },
-      { name: 'Accesorios para aeronaves', match: ['aeronave', 'aeronaves', 'avion', 'aviones', 'avioneta'] },
+      {
+        name: 'Accesorios para aeronaves',
+        match: ['aeronave', 'aeronaves', 'avion', 'aviones', 'avioneta', 'helicoptero', 'helicopteros'],
+      },
       {
         name: 'Transmisores de radio',
         match: ['transmisor', 'transmisores', 'transmisor de radio', 'radio transmisor', 'walkie talkie'],
@@ -468,7 +531,25 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
     items: [
       {
         name: 'Productos inflamables',
-        match: ['inflamable', 'inflamables', 'combustible', 'gasolina', 'pintura', 'solvente', 'alcohol'],
+        match: [
+          'inflamable',
+          'inflamables',
+          'combustible',
+          'gasolina',
+          'pintura',
+          'solvente',
+          'alcohol en gel',
+          'alcohol gel',
+          'gel antibacterial',
+          'alcohol isopropilico',
+          'alcohol etilico',
+          'alcohol antiseptico',
+          'alcohol desinfectante',
+          'acetona',
+          'thinner',
+          'encendedor',
+          'encendedores',
+        ],
       },
       {
         name: 'Baterías de litio sueltas',
@@ -684,13 +765,21 @@ export const REVIEW_PHOTOS_URL = '';
  * translated or corrected. A Facebook review goes here only if it recommends Carinova. While the
  * list is empty, the home page shows the three places Carinova's page keeps for reviews.
  *
- * The seven of Carinova's Facebook page on 2026-11-20 ("100% recommend (7 reviews)", from the
- * developer's screenshots). The three of November were "1 h" and "17 h" old on them, so their day
- * may be one off; the page shows only the month. Elgen Tinoco and James Trace Lewis shared theirs
- * with their friends only: Facebook does not show those two to a visitor who follows the link.
- * James Trace Lewis has no photo on Facebook.
+ * The eight of Carinova's Facebook page on 2026-11-21 ("100% recommend (8 reviews)", from the
+ * developer's screenshots of 2026-11-20 and 2026-11-21). The four of November were minutes or hours
+ * old on them ("8 m", "1 h", "17 h"), so their day may be one off; the pages show only the month.
+ * Elgen Tinoco and James Trace Lewis shared theirs with their friends only: Facebook does not show
+ * those two to a visitor who follows the link. James Trace Lewis has no photo on Facebook.
  */
 export const REVIEWS: ReadonlyArray<Review> = [
+  {
+    source: 'facebook',
+    name: 'Otoniel Marin',
+    text: 'Muy buena experiencia con Carinova. Mi compra llegó sin ningún inconveniente y todo salió excelente. Me gustó mucho el servicio y la responsabilidad con la que trabajan. Es una excelente opción para quienes queremos traer productos de Estados Unidos a Nicaragua de forma fácil y segura.\n\n¡Totalmente recomendados! Sin duda volvería a comprar con ellos. 🇺🇸🇳🇮',
+    lang: 'es',
+    date: '2026-11-20',
+    photo: 'otoniel-marin.jpg',
+  },
   {
     source: 'facebook',
     name: 'Kenard López Masis',
@@ -778,6 +867,7 @@ export const WA_MESSAGES = {
     '/preguntas-frecuentes': hello('Tengo una pregunta que no encontré en su página.'),
     '/articulos-prohibidos': hello('Tengo una duda sobre los artículos que no pueden traer.'),
     '/nosotros': hello('Quiero conocer más sobre Carinova.'),
+    '/opiniones': hello('Leí las opiniones de sus clientes y tengo una consulta.'),
     '/terminos': hello('Tengo una consulta sobre sus términos y condiciones.'),
     '/privacidad': hello('Tengo una consulta sobre mis datos personales.'),
   } as Record<string, string>,
@@ -872,6 +962,8 @@ export const WA_MESSAGES = {
   faqClosing: hello('No encontré mi respuesta en sus preguntas frecuentes.'),
   restricted: hello('Antes de comprar, quiero saber si pueden traer este producto: '),
   aboutClosing: hello('Conocí Carinova en su página y quiero empezar a enviar con ustedes.'),
+  /** The closing band of the page of reviews. */
+  reviewsClosing: hello('Leí las opiniones de otros clientes y quiero hacer mi primer envío con ustedes.'),
   /** "Formá parte de nuestro equipo", on the page about Carinova. */
   careers: hello('Quiero formar parte del equipo de Carinova. Me interesa el área de: '),
   notFound: hello('Llegué a una página de su sitio que no existe.'),

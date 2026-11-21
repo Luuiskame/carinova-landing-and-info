@@ -2,8 +2,9 @@
 // time someone searches. It says how the article travels and offers to quote it or to ask the team.
 //
 // How a search is answered is utils/articles.ts (it has unit tests): the catalogue, then the lists
-// of what cannot be brought in the language of the page, then general merchandise. The sentences,
-// the names of the kinds of article and those lists come with the page (ScriptData "articles").
+// of what cannot be brought in the language of the page; what neither knows is for the team to look
+// at, never "allowed". The sentences, the names of the kinds of article and those lists come with
+// the page (ScriptData "articles").
 // "Consultar con un asesor" opens the message ready to send, in the dialog.
 import {
   ACCESSORY_WORDS,
@@ -91,16 +92,17 @@ export const search = (value: string): void => {
 
   const answer = classifyArticle(article, catalogue, groups);
   const device = answer.electronic ? devices[answer.electronic] : undefined;
-  const list = answer.item ? groups.find((group) => group.items.some((item) => item.name === answer.item)) : undefined;
+  // Not authorised yet (a car, a motorcycle, heavy machinery): the answer is what Carinova's own
+  // list says of them, whether the catalogue or the list recognised the article.
+  const notYet = groups.find((group) => group.id === 'notYet');
 
   const views: Record<typeof answer.status, View> = {
     prohibited: { tone: 'prohibited', mark: 'ban', verdict: text.prohibitedTitle, note: text.prohibitedNote },
-    // Not authorised yet: what Carinova's own list says about it.
     notYet: {
       tone: 'prohibited',
       mark: 'ban',
-      verdict: list?.title ?? text.prohibitedTitle,
-      note: list?.summary ?? text.prohibitedNote,
+      verdict: notYet?.title ?? text.prohibitedTitle,
+      note: notYet?.summary ?? text.prohibitedNote,
     },
     sea: {
       tone: 'sea',

@@ -61,12 +61,6 @@ export const landing: Landing = {
   heroPerUnit: '/шт.',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Эмблема Carinova: три фигуры держат пламя внутри круга',
-  aboutTitle: 'НАШИ КОРНИ',
-  aboutHeroText:
-    'Carinova родилась в Блуфилдсе, на Южном Карибском побережье Никарагуа. Теплота, преданность делу и сила нашей многокультурной родной земли — в нашей ДНК, и каждый день мы работаем, чтобы сокращать расстояния и доставлять ваши посылки с той надёжностью и заботой, которые нас отличают.',
-
   // The four steps
   howTitle: 'Ваша следующая отправка. Всего в четырёх шагах.',
   step1: 'Зарегистрируйтесь',
@@ -294,13 +288,6 @@ export const landing: Landing = {
   testimonialsTitle: 'Что говорят наши клиенты',
   uiCarouselKeys: 'Используйте стрелки влево и вправо на клавиатуре, чтобы увидеть другие отзывы.',
   uiCarousel: 'карусель',
-  uiSlide: 'отзыв',
-  uiSlideLabel: '{number} из {total}',
-  // A review's card (the reviews are REVIEWS, in src/data/carinova.ts) and the link to all the reviews of a source
-  reviewRecommends: 'Рекомендует Carinova',
-  reviewRating: 'Оценка {rating} из 5',
-  reviewSeeOn: 'Открыть в {source}',
-  reviewsAllOn: 'Все отзывы в {source}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'Частые вопросы',
@@ -438,7 +425,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'Обычные товары',
     drugs: 'Запрещённые вещества',
     explosives: 'Взрывчатые вещества и пиротехника',
     weapons: 'Оружие, боеприпасы и аксессуары к ним',
@@ -447,6 +433,9 @@ export const landing: Landing = {
     aircraft: 'Комплектующие для летательных аппаратов',
     radio: 'Радиопередатчики',
     drones: 'Дроны',
+    vehicles: 'Автомобили и другой транспорт',
+    motorcycles: 'Мотоциклы',
+    machinery: 'Тяжёлая техника',
     lithium: 'Отдельные литиевые батареи',
     emobility: 'Электровелосипеды, электросамокаты и электроскейты',
     flammables: 'Легковоспламеняющиеся товары',
@@ -458,6 +447,7 @@ export const landing: Landing = {
     vehiclebattery: 'Автомобильные аккумуляторы',
     battery: 'Батареи (тип уточняется)',
     regulated: 'Регулируемые товары',
+    animals: 'Живые животные',
     freshfood: 'Свежие продукты, растения или семена',
     valuables: 'Деньги и ценные вещи',
     furniture: 'Мебель',
@@ -466,6 +456,7 @@ export const landing: Landing = {
     alkaline: 'Щелочные батарейки',
     games: 'Видеоигры и аксессуары',
     electronics: 'Электроника',
+    healthcare: 'Здоровье и личная гигиена',
     techaccessories: 'Аксессуары для электроники',
     sports: 'Спорт и фитнес',
     clothing: 'Одежда и обувь',

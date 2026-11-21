@@ -4,7 +4,7 @@
  * singular; Western digits, as the prices and times the code writes.
  */
 import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, SESSION_DAYS } from '../../data/account.ts';
-import { sentence } from '../../data/carinova.ts';
+import { CONTACT, sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/ar/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -15,6 +15,8 @@ import { landing } from './landing/ar.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -564,25 +566,42 @@ export const ui: UI = {
   // pages/nosotros.astro
   aboutPage: {
     tagline: 'من نحن',
-    description: `شركة Carinova شركة نيكاراغوية للشحن من الولايات المتحدة إلى نيكاراغوا، ولها فروع في ${cityNames.join(' و')}.`,
-    title: 'نحن Carinova',
-    subtitle: `شركة نيكاراغوية تقرّب متاجر الولايات المتحدة من ${cityNames.join(' و')}.`,
-    logoAlt: 'شعار Carinova: ثلاثة أشخاص يرفعون معًا شعلة متّقدة أمام كرة أرضية.',
-    storyTitle: 'قصتنا',
-    story: [
-      'وُلدت Carinova في نيكاراغوا بفكرة بسيطة: أن يكون الشراء من الولايات المتحدة سهلًا وآمنًا وبأسعار واضحة للجميع.',
-      `من فروعنا في ${cityNames.join(' و')} نخدم كل عميل بشكل شخصي، عبر WhatsApp وحضوريًا، ونحرص على أن تصل كل عملية شراء وكل طرد إلى وجهتهما بأمان.`,
-    ],
+    metaTitle: 'من نحن ومن أين جئنا',
+    description: `شركة Carinova شركة نيكاراغوية للشحن من الولايات المتحدة إلى نيكاراغوا، وُلدت في ${bluefields}. تعرّف على جذورنا وما نقدّمه وأين تجدنا في ${cityNames.join(' و')}.`,
+    title: `نحن Carinova، شركة الشحن التي وُلدت في ${bluefields}`,
+    subtitle: `شركة نيكاراغوية تجلب مشترياتك وطرود عائلتك وبضائع عملك من الولايات المتحدة، ولها فروع في ${cityNames.join(' و')}.`,
+    roots: {
+      title: 'جذورنا',
+      text: 'وُلدت Carinova في بلوفيلدز، على ساحل الكاريبي الجنوبي في نيكاراغوا. نحمل في جيناتنا دفء أرضنا متعددة الثقافات والتزامها وقوتها، ونعمل كل يوم لنقرّب المسافات ونسلّمك طرودك بالثقة والمودّة اللتين تميّزاننا.',
+      emblemAlt: 'شعار Carinova: ثلاثة أشخاص يحملون شعلة داخل دائرة',
+    },
+    whatTagline: 'ماذا نقدّم',
+    whatTitle: 'نقرّب متاجر الولايات المتحدة من نيكاراغوا',
+    what: `مع حسابك تحصل على Carinova ID وعنوان في ${warehouse.city} لتشتري من أي متجر. نستلم طرودك هناك وننقلها جوًا أو بحرًا، وتستلمها أنت في ${cityNames.join(' أو ')}.`,
+    servicesLink: 'عرض الخدمات بالتفصيل',
+    factsTagline: 'باختصار',
+    factsTitle: 'Carinova في سطور',
+    facts: {
+      origin: 'وُلدنا في',
+      originValue: `${bluefields}، ساحل الكاريبي الجنوبي في نيكاراغوا`,
+      route: 'مسارنا',
+      routeValue: 'من الولايات المتحدة إلى نيكاراغوا',
+      reception: 'نستلم مشترياتك في',
+      branches: 'فروعنا في نيكاراغوا',
+      transport: 'كيف تسافر طرودك',
+      contact: 'المساعدة عبر WhatsApp',
+      networks: 'تابعنا على',
+    },
     valuesTagline: 'قيمنا',
     valuesTitle: 'ما يحرّكنا',
     values: [
       {
         title: 'العمل الجماعي',
-        description: 'كما في شعارنا: ثلاثة أشخاص يرفعون معًا الشعلة نفسها. كل شحنة عمل جماعي، من ميامي حتى فرعك.',
+        description: 'كما في شعارنا: ثلاثة أشخاص يحملون معًا الشعلة نفسها. كل شحنة عمل جماعي، من ميامي حتى فرعك.',
       },
       {
         title: 'الانتشار الدولي',
-        description: 'الكرة الأرضية في اسمنا هي الجسر الذي نعبره كل يوم بين الولايات المتحدة ونيكاراغوا.',
+        description: 'الدائرة التي تحيط بهم هي الجسر الذي نعبره كل يوم بين الولايات المتحدة ونيكاراغوا.',
       },
       {
         title: 'الالتزام',
@@ -590,6 +609,37 @@ export const ui: UI = {
       },
     ],
     where: 'أين نحن',
+    reviewsTagline: 'آراء العملاء',
+    reviewsTitle: 'ماذا يقول عملاؤنا',
+    faqTitle: 'أسئلة عن Carinova',
+    faq: [
+      {
+        title: 'ما هي Carinova؟',
+        description:
+          'شركة Carinova شركة شحن نيكاراغوية. ننقل المشتريات الشخصية والطرود العائلية وبضائع الشركات من الولايات المتحدة إلى نيكاراغوا، جوًا أو بحرًا.',
+      },
+      {
+        title: 'من أين Carinova؟',
+        description: `وُلدت Carinova في ${bluefields}، على ساحل الكاريبي الجنوبي في نيكاراغوا، ولها اليوم فروع في ${cityNames.join(' و')}.`,
+      },
+      {
+        title: 'أين تقع فروع Carinova وما مواعيد عملها؟',
+        description: sentence(`في ${cityNames.join(' و')}. نفتح أبوابنا ${describeHours(hours)}`),
+      },
+      {
+        title: 'من أين تجلب Carinova الطرود؟',
+        description: `نستلمها في مستودعنا في ${warehouse.city}، ${warehouse.state}، وننقلها إلى نيكاراغوا جوًا في مدة ${air.transit} أو بحرًا في مدة ${sea.transit}، تُحسب من وصول الطرد إلى المستودع.`,
+      },
+      {
+        title: 'كيف أتواصل مع Carinova؟',
+        description: `عبر WhatsApp على الرقم <span dir="ltr">${CONTACT.whatsappDisplay}</span>، أو في أي فرع من فروعنا.`,
+      },
+      {
+        title: 'أين أقرأ آراء عملاء Carinova؟',
+        description:
+          'في صفحة المراجعات على هذا الموقع تجد ما نشره عملاؤنا كما كتبوه، مع رابط المكان الذي نُشرت فيه كل مراجعة.',
+      },
+    ],
     careers: {
       title: 'انضم إلى فريقنا.',
       text: 'نبحث عن أشخاص ملتزمين بالخدمة والتميّز في العمل.',
@@ -599,6 +649,63 @@ export const ui: UI = {
       title: 'لننجز شحنتك الأولى معًا',
       subtitle: 'أنشئ حسابك عبر الإنترنت أو احسب تكلفة شحنتك قبل أن تشتري.',
       lead: 'تريد أن تتعرّف علينا أكثر؟',
+    },
+  },
+
+  // What a review's card says (the reviews themselves are never translated)
+  reviews: {
+    recommends: 'يوصي بـ Carinova',
+    rating: 'التقييم {rating} من 5',
+    seeOn: 'عرض على {source}',
+    allOn: 'كل المراجعات على {source}',
+    readAll: 'قراءة المراجعة كاملة',
+    seeAll: 'عرض كل المراجعات',
+    moreTitle: 'هناك مراجعات أخرى',
+    moreText: 'اقرأ كل ما يرويه عملاؤنا عن شحناتهم.',
+    previous: 'المراجعات السابقة',
+    next: 'المراجعات التالية',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: 'آراء العملاء',
+    metaTitle: 'آراء ومراجعات العملاء',
+    description:
+      'مراجعات حقيقية من عملاء Carinova عن شحناتهم من الولايات المتحدة إلى نيكاراغوا، كما نشروها على {sources}. اقرأها قبل شحنتك الأولى.',
+    title: 'ماذا يقول عملاء Carinova',
+    subtitle: 'مراجعات حقيقية ممن جلبوا مشترياتهم من الولايات المتحدة إلى نيكاراغوا معنا، كما نشروها على {sources}.',
+    listTitle: 'مراجعات عملائنا',
+    filterLabel: 'عرض المراجعات من',
+    all: 'الكل',
+    howTitle: 'كيف نعرض المراجعات',
+    how: [
+      {
+        title: 'نشرها أصحابها',
+        text: 'كل مراجعة نشرها صاحبها باسمه على {sources}.',
+      },
+      {
+        title: 'دون تغيير أي كلمة',
+        text: 'ننقلها كما كُتبت وبلغتها الأصلية، دون تصحيح أو ترجمة.',
+      },
+      {
+        title: 'مع رابط المصدر',
+        text: 'كل مراجعة تقود إلى صفحة Carinova التي نُشرت فيها. هناك تجد جميع المراجعات، وأحدثها أيضًا.',
+      },
+    ],
+    writeTitle: 'هل استلمت طردك؟ أخبرنا كيف كانت تجربتك',
+    writeText: 'رأيك يساعد الآخرين على اتخاذ قرارهم ويساعدنا على التحسّن.',
+    writeOn: 'اكتب رأيك على {source}',
+    nextTitle: 'قبل شحنتك الأولى',
+    next: {
+      how: 'تعرّف على طريقة العمل خطوة بخطوة',
+      quote: 'احسب تكلفة شحنتك',
+      branches: 'اعرف أين تستلم طردك',
+      about: 'تعرّف على من نكون',
+    },
+    closing: {
+      title: 'أرسل شحنتك الأولى مع Carinova',
+      subtitle: 'أنشئ حسابك عبر الإنترنت واحصل على Carinova ID وعنوانك في الولايات المتحدة.',
+      lead: 'هل تودّ أن تسألنا شيئًا أولًا؟',
     },
   },
 
@@ -733,6 +840,7 @@ export const ui: UI = {
     tracking: 'التتبّع',
     faq: 'الأسئلة الشائعة',
     about: 'من نحن',
+    reviews: 'آراء العملاء',
     terms: 'شروط الخدمة',
     privacy: 'الخصوصية',
     and: ' و',

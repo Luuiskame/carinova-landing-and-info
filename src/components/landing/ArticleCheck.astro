@@ -6,7 +6,8 @@
 //   the dictionary: "Cigarros electrónicos o vapes"); their icons are RESTRICTED_ICONS. They name
 //   the same articles as the lists of /articulos-prohibidos, item for item (landing.test.ts).
 // - The search answers with Carinova's catalogue and, for what it does not know, with the lists of
-//   the site (utils/articles.ts). The catalogue is not in the page: the script fetches it the first time
+//   the site (utils/articles.ts); an article neither of them names gets "Requiere revisión", never
+//   "allowed" (D-128). The catalogue is not in the page: the script fetches it the first time
 //   someone searches (scripts/articles.ts). What the script says travels with the page (ScriptData).
 // - Without the script, the form leads to the page of the lists.
 import { ARTICLE_RULES } from '~/data/articles';
@@ -64,7 +65,7 @@ const config = {
     message: t.uiMsgArticle,
   },
   /** The names of the kinds of article, by the id of their rule. */
-  kinds: Object.fromEntries(['general', ...ARTICLE_RULES.map(({ id }) => id)].map((id) => [id, kinds[id] ?? ''])),
+  kinds: Object.fromEntries(ARTICLE_RULES.map(({ id }) => [id, kinds[id] ?? ''])),
   /** The devices with a price per unit: their name and their price as the answer writes it. */
   devices: Object.fromEntries(
     RATES.electronics.items.map((item) => [item.id, { name: devices[item.id] ?? item.name, rate: amount(item.price) }])

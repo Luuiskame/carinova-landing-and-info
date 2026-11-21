@@ -1,7 +1,7 @@
 // The search of "¿Puede ingresar?": does what a visitor typed name something on Carinova's lists of
 // what it cannot bring (RESTRICTED_ITEMS in src/data/carinova.ts)? Shared by the tracker's script (in
-// the browser) and the unit tests, so both compare words the same way. Nothing imported: the tests
-// run this file on plain Node.
+// the browser), the home page's "Carinova Bot" and the unit tests, so all compare words the same
+// way. Nothing imported: the tests run this file on plain Node.
 //
 // The search only knows those lists. It never says an article is allowed: what is on none of them
 // gets "No aparece en nuestras listas" and the way to ask.
@@ -23,12 +23,22 @@ export const plain = (text: string): string =>
 const UNSPACED = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 
 /**
- * Whether a search (already `plain`) names a word of the lists (already `plain`). Whole words are
- * compared, so "armario" is not "arma"; a word written without spaces is looked for anywhere in
- * the search, because nothing separates it from its neighbours.
+ * Where a search (already `plain`) names a word of the lists (already `plain`): the start and the
+ * end of each place. Whole words are compared, so "armario" is not "arma"; a word written without
+ * spaces is looked for anywhere in the search, because nothing separates it from its neighbours.
  */
-export const mentions = (search: string, word: string): boolean =>
-  word !== '' && (UNSPACED.test(word) ? search.includes(word) : ` ${search} `.includes(` ${word} `));
+const placesOf = (search: string, word: string): Array<[start: number, end: number]> => {
+  const places: Array<[number, number]> = [];
+  if (!word) return places;
+  const unspaced = UNSPACED.test(word);
+  const text = unspaced ? search : ` ${search} `;
+  const needle = unspaced ? word : ` ${word} `;
+  // In the padded text a match starts on the space before the word: the same number in `search`.
+  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) {
+    places.push([at, at + word.length]);
+  }
+  return places;
+};
 
 export interface SearchGroup {
   id: string;
@@ -38,9 +48,14 @@ export interface SearchGroup {
 }
 
 /**
- * The first group (they come from the strictest to the mildest) with an item the search names, and
- * that item: the one whose matching word is the longest, so "cigarrillo electrónico" is the
- * electronic cigarette and not tobacco. Null when the search names nothing on the lists.
+ * The item of the lists a search names, with its group. Null when it names nothing on them.
+ *
+ * - The phrase that says the most decides what the article is: "alcohol en gel" is the gel that
+ *   travels by sea, not the drink that "alcohol" by itself means, and "cigarrillo electrónico" is the
+ *   electronic cigarette, not tobacco. So a word that sits inside a longer phrase that was also
+ *   found does not count.
+ * - Between two different articles ("una moto con su batería de litio") the strictest group
+ *   answers: the groups come from the strictest to the mildest.
  */
 export const findRestricted = (
   query: string,
@@ -48,16 +63,22 @@ export const findRestricted = (
 ): { group: SearchGroup; name: string } | null => {
   const search = plain(query);
   if (!search) return null;
-  for (const group of groups) {
-    let best: { name: string; length: number } | null = null;
+
+  const found: Array<{ group: SearchGroup; name: string; rank: number; start: number; end: number }> = [];
+  groups.forEach((group, rank) => {
     for (const item of group.items) {
       for (const candidate of item.match) {
-        const word = plain(candidate);
-        if (mentions(search, word) && word.length > (best?.length ?? 0))
-          best = { name: item.name, length: word.length };
+        for (const [start, end] of placesOf(search, plain(candidate))) {
+          found.push({ group, name: item.name, rank, start, end });
+        }
       }
     }
-    if (best) return { group, name: best.name };
-  }
-  return null;
+  });
+
+  const inside = (one: (typeof found)[number], other: (typeof found)[number]) =>
+    other.start <= one.start && one.end <= other.end && other.end - other.start > one.end - one.start;
+  const [best] = found
+    .filter((one) => !found.some((other) => inside(one, other)))
+    .sort((a, b) => a.rank - b.rank || b.end - b.start - (a.end - a.start));
+  return best ? { group: best.group, name: best.name } : null;
 };

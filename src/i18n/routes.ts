@@ -42,6 +42,7 @@ export const ROUTES = {
   signin: { es: '/ingresar', en: '/en/sign-in', page: 'ingresar.astro' },
   business: { es: '/empresas', en: '/en/business', page: 'empresas.astro' },
   about: { es: '/nosotros', en: '/en/about', page: 'nosotros.astro' },
+  reviews: { es: '/opiniones', en: '/en/reviews', page: 'opiniones.astro' },
   terms: { es: '/terminos', en: '/en/terms', page: 'terminos.astro' },
   privacy: { es: '/privacidad', en: '/en/privacy', page: 'privacidad.astro' },
 } as const satisfies Record<string, Route>;

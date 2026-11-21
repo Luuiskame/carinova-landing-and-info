@@ -373,7 +373,7 @@ document.addEventListener(
   if (year) year.textContent = String(new Date().getFullYear());
 }
 
-// The cards of "Lo que dicen nuestros clientes": they start to advance when the page is idle.
+// The row of "Lo que dicen nuestros clientes": its arrows and its bar arrive when the page is idle.
 {
   const reviews = $('#clientes');
   if (reviews) whenIdle(() => void loadCarousel().catch(() => {}));

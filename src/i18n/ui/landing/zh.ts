@@ -57,12 +57,6 @@ export const landing: Landing = {
   heroPerUnit: '/件',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Carinova 品牌徽章：三个人物在圆环内共同托起火焰',
-  aboutTitle: '我们的根',
-  aboutHeroText:
-    'Carinova 诞生于尼加拉瓜南加勒比海岸的 Bluefields。多元文化故乡的热情、责任与力量融入我们的基因；我们每天努力缩短距离，以值得信赖的用心为你送达每一件包裹。',
-
   // The four steps
   howTitle: '你的下一次寄送，只需四步。',
   step1: '注册账户',
@@ -286,13 +280,6 @@ export const landing: Landing = {
   testimonialsTitle: '客户怎么说',
   uiCarouselKeys: '使用键盘的左右方向键查看更多评价。',
   uiCarousel: '轮播',
-  uiSlide: '客户评价',
-  uiSlideLabel: '第 {number} 条，共 {total} 条',
-  // A review's card (the reviews are REVIEWS, in src/data/carinova.ts) and the link to all the reviews of a source
-  reviewRecommends: '推荐 Carinova',
-  reviewRating: '{rating} 星（满分 5 星）',
-  reviewSeeOn: '在 {source} 上查看',
-  reviewsAllOn: '{source} 上的全部评价',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: '常见问题',
@@ -426,7 +413,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: '普通货物',
     drugs: '违禁药物',
     explosives: '爆炸物和烟花',
     weapons: '武器、弹药及配件',
@@ -435,6 +421,9 @@ export const landing: Landing = {
     aircraft: '飞机配件',
     radio: '无线电发射器',
     drones: '无人机',
+    vehicles: '汽车及其他车辆',
+    motorcycles: '摩托车',
+    machinery: '重型机械',
     lithium: '散装锂电池',
     emobility: '电动自行车、滑板车和平衡车',
     flammables: '易燃品',
@@ -446,6 +435,7 @@ export const landing: Landing = {
     vehiclebattery: '车用电池',
     battery: '电池（类型待确认）',
     regulated: '受管制物品',
+    animals: '活体动物',
     freshfood: '生鲜食品、植物或种子',
     valuables: '现金和贵重物品',
     furniture: '家具',
@@ -454,6 +444,7 @@ export const landing: Landing = {
     alkaline: '碱性电池',
     games: '电子游戏和配件',
     electronics: '电子产品',
+    healthcare: '健康与个人护理',
     techaccessories: '电子配件',
     sports: '运动和健身',
     clothing: '服装和鞋类',

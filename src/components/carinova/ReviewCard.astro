@@ -1,0 +1,129 @@
+---
+// A review as its source publishes it, on the pages of the site (/opiniones, /nosotros): who wrote
+// it, their words in the language they wrote them in, where and when it was published and the
+// link to it there. The home page draws the same reviews in Carinova's own card
+// (components/landing/Testimonials.astro).
+//
+// - The words are the review's (REVIEWS in src/data/carinova.ts): never translated or corrected;
+//   `lang` tells a screen reader which language to read them in.
+// - The photo is a file of Carinova's R2 bucket, loaded as it is stored (D-127). Under it are the
+//   person's initials, which show while there is no photo or when it cannot be loaded.
+// - A Facebook review is a recommendation; a Google review shows its stars.
+// - Only the month is shown and said (`datetime` has the month, not the day): the day of some
+//   reviews is not certain, and a month does not go stale on a static page.
+// - The card has the review's anchor (`id`), so a link can lead to it: /opiniones#opinion-….
+import { Icon } from 'astro-icon/components';
+
+import { i18n } from '~/i18n';
+import type { ReviewCard } from '~/utils/reviews';
+import { fill } from '~/utils/template';
+
+export interface Props {
+  review: ReviewCard;
+  /** Without the anchor, where the same review is on a page twice or the anchor belongs to another page. */
+  anchor?: boolean;
+  class?: string;
+}
+
+const { review, anchor = true, class: className } = Astro.props;
+const { ui } = i18n(Astro);
+const t = ui.reviews;
+
+/** Each source's logo and its colour. */
+const SOURCES = {
+  facebook: { icon: 'tabler:brand-facebook', colour: 'text-[#0866ff]' },
+  google: { icon: 'tabler:brand-google', colour: 'text-[#4285f4]' },
+} as const;
+const source = SOURCES[review.source];
+const nameId = `${review.id}-name`;
+---
+
+<article
+  id={anchor ? review.id : undefined}
+  data-source={review.source}
+  class:list={[
+    'flex scroll-mt-28 flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 target:ring-2 target:ring-brand',
+    className,
+  ]}
+>
+  <header class="flex items-center gap-3.5">
+    <div
+      class="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#e8eef7] font-heading text-base font-extrabold text-navy"
+      aria-hidden="true"
+    >
+      {review.initials}
+      {
+        review.photoSrc && (
+          <img
+            src={review.photoSrc}
+            alt=""
+            width="48"
+            height="48"
+            loading="lazy"
+            decoding="async"
+            class="absolute inset-0 h-full w-full object-cover"
+            onerror="this.remove()"
+          />
+        )
+      }
+    </div>
+    <div class="min-w-0">
+      <h3 class="font-heading text-lg leading-snug font-bold text-heading" dir="auto" id={anchor ? nameId : undefined}>
+        {review.name}
+      </h3>
+      {
+        review.stars > 0 ? (
+          <p class="mt-0.5 flex gap-0.5" role="img" aria-label={fill(t.rating, { rating: review.stars })}>
+            {Array.from({ length: 5 }, (_, star) => (
+              <Icon
+                name="tabler:star-filled"
+                class:list={['h-4 w-4', star < review.stars ? 'text-[#e07a00]' : 'text-slate-300']}
+              />
+            ))}
+          </p>
+        ) : (
+          <p class="text-sm text-muted">{t.recommends}</p>
+        )
+      }
+    </div>
+  </header>
+
+  <blockquote
+    lang={review.lang}
+    cite={review.link || undefined}
+    class="mt-4 flex-1 space-y-3 text-lg leading-relaxed text-default"
+  >
+    {
+      review.paragraphs.map((paragraph) => (
+        <p dir="auto" class="whitespace-pre-line">
+          {paragraph}
+        </p>
+      ))
+    }
+  </blockquote>
+
+  <footer
+    class="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-slate-200 pt-3 text-sm text-muted"
+  >
+    <p class="flex min-h-11 items-center gap-2">
+      <Icon name={source.icon} class:list={['h-5 w-5 shrink-0', source.colour]} />
+      <span class="font-semibold text-heading">{review.sourceName}</span>
+      <span aria-hidden="true">·</span>
+      <time datetime={review.date.slice(0, 7)}>{review.month}</time>
+    </p>
+    {
+      review.link && (
+        <a
+          class="inline-flex min-h-11 items-center gap-1 font-semibold text-link underline underline-offset-4"
+          href={review.link}
+          target="_blank"
+          rel="noopener"
+          aria-describedby={anchor ? nameId : undefined}
+        >
+          {fill(t.seeOn, { source: review.sourceName })}
+          <Icon name="tabler:arrow-up-right" class="h-4 w-4" />
+        </a>
+      )
+    }
+  </footer>
+</article>

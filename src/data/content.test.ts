@@ -13,6 +13,7 @@ import { RESTRICTED_ORDER, sentence } from './carinova.ts';
 import { content } from './content.ts';
 import { faqGroups as faqEn } from './en/faq.ts';
 import { faqGroups as faqEs, featuredOf } from './faq.ts';
+import { findRestricted } from '../utils/restricted.ts';
 
 const es = content('es');
 const en = content('en');
@@ -233,12 +234,23 @@ test('what cannot be brought: three groups, and a search finds every item by its
   // "armario" is furniture, not a weapon: whole words only.
   assert.equal(found('armario de madera', es.RESTRICTED_ITEMS.prohibited.items[0].match), false);
   assert.equal(found('Pistola de juguete', es.RESTRICTED_ITEMS.prohibited.items[0].match), true);
-  // A drink is not carried; alcohol to clean with is a flammable, which travels by sea.
-  const [drinks] = es.RESTRICTED_ITEMS.prohibited.items.filter((item) => item.name === 'Bebidas alcohólicas');
-  const [flammables] = es.RESTRICTED_ITEMS.seaOnly.items;
-  assert.equal(found('Botella de ron', drinks.match), true);
-  assert.equal(found('alcohol en gel', drinks.match), false);
-  assert.equal(found('alcohol en gel', flammables.match), true);
+  // A drink is not carried, and "alcohol" by itself is the drink (D-128). The alcohol to clean with
+  // is a flammable, named by its whole phrase, and travels by sea: the phrase that says the most
+  // decides, and between two different articles the strictest list answers.
+  const lists = (['prohibited', 'notYet', 'seaOnly'] as const).map((id) => ({ id, ...es.RESTRICTED_ITEMS[id] }));
+  const listed = (query: string) => findRestricted(query, lists)?.name;
+  assert.equal(listed('Botella de ron'), 'Bebidas alcohólicas');
+  assert.equal(listed('alcohol'), 'Bebidas alcohólicas');
+  assert.equal(listed('alcohol en gel'), 'Productos inflamables');
+  assert.equal(listed('alcohol isopropílico'), 'Productos inflamables');
+  assert.equal(listed('alcohol en gel y una botella de ron'), 'Bebidas alcohólicas');
+  assert.equal(listed('una moto con su batería de litio'), 'Motos');
+  assert.equal(listed('cigarrillo electrónico'), 'Cigarrillos electrónicos');
+  // What the developer saw answered as something that travels (2026-11-21).
+  assert.equal(listed('grúa'), 'Maquinaria pesada');
+  assert.equal(listed('camión'), 'Carros');
+  assert.equal(listed('helicóptero'), 'Accesorios para aeronaves');
+  assert.equal(listed('armario de madera'), undefined);
 });
 
 test('the statuses of packages and payments cover what the account shows', () => {

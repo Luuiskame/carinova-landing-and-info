@@ -1,6 +1,8 @@
-// The reviews of the home page ("Lo que dicen nuestros clientes"): their order, each person's photo
-// and initials, where each card links to and how it writes the month. Pure functions, shared by
-// src/components/landing/Testimonials.astro and the unit tests (reviews.test.ts).
+// The reviews customers wrote (REVIEWS in src/data/carinova.ts), as the pages show them: their
+// order, which of them the home page previews, each one's anchor on the page of reviews, the
+// person's photo and initials, where a card links to and how it writes the month. Pure functions,
+// shared by the home page (src/components/landing/Testimonials.astro), the page of reviews
+// (/opiniones), the page about Carinova and the unit tests (reviews.test.ts).
 //
 // Relative imports with the .ts extension: the unit tests run this on plain Node.
 import { REVIEW_PHOTOS_URL, REVIEW_SOURCES, type Review, type ReviewSource } from '../data/carinova.ts';
@@ -8,6 +10,61 @@ import { REVIEW_PHOTOS_URL, REVIEW_SOURCES, type Review, type ReviewSource } fro
 /** Newest first. Two of the same day keep the order they have in the list. */
 export const newestFirst = (reviews: ReadonlyArray<Review>): Array<Review> =>
   [...reviews].sort((a, b) => b.date.localeCompare(a.date));
+
+/**
+ * The reviews a page previews: `count` of them, the newest. When they come from more than one
+ * source the sources take turns (the newest of each, then the second of each…), starting with the
+ * source of the newest review, so that Facebook and Google both show even when one of them has
+ * all the recent ones. With one source it is simply the newest `count`.
+ */
+export const previewOf = (reviews: ReadonlyArray<Review>, count: number): Array<Review> => {
+  const bySource = new Map<ReviewSource, Array<Review>>();
+  for (const review of newestFirst(reviews)) {
+    bySource.set(review.source, [...(bySource.get(review.source) ?? []), review]);
+  }
+  const lists = [...bySource.values()];
+  const longest = Math.max(0, ...lists.map((list) => list.length));
+  const picked: Array<Review> = [];
+  for (let turn = 0; turn < longest; turn++) {
+    for (const list of lists) if (turn < list.length) picked.push(list[turn]);
+  }
+  return picked.slice(0, Math.max(0, count));
+};
+
+/** "kenard-lopez-masis": a name as it can be written in an address. Empty without Latin letters or digits. */
+const slug = (name: string): string =>
+  name
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+/**
+ * The anchor of each review on the page of reviews: /opiniones#opinion-kenard-lopez-masis. It is
+ * made of the author's name, so it can be read and shared; a second review under the same name
+ * gets a number, and so does one whose name has no Latin letter. The oldest review keeps the plain
+ * anchor: a link that was shared goes on leading to the same review when new ones arrive.
+ */
+export const reviewIds = (reviews: ReadonlyArray<Review>): Map<Review, string> => {
+  const ids = new Map<Review, string>();
+  const taken = new Map<string, number>();
+  for (const review of newestFirst(reviews).reverse()) {
+    const name = slug(review.name);
+    const base = name ? `opinion-${name}` : 'opinion';
+    const count = (taken.get(base) ?? 0) + 1;
+    taken.set(base, count);
+    ids.set(review, count === 1 ? base : `${base}-${count}`);
+  }
+  return ids;
+};
+
+/**
+ * A review too long for a card of the home page, which shows the beginning of it and leads to the
+ * whole on the page of reviews. Counted in characters, at the narrowest card (about 23 to a line,
+ * seven lines), and in lines the person broke by hand.
+ */
+export const isLongReview = (text: string): boolean => text.length > 140 || text.split('\n').length > 5;
 
 /**
  * The address of a person's photo: a full address stays as it is; a file name is looked for in the
@@ -32,10 +89,18 @@ export const initials = (name: string, lang = 'es'): string => {
 /** Where a card links to: the review itself, or else every review of its source. Empty: nowhere yet. */
 export const reviewUrl = (review: Review): string => review.url || REVIEW_SOURCES[review.source].url;
 
-/** The sources named under the cards: those that have a review in the list and an address. */
+/** The sources named on a page: those that have a review in the list and an address. */
 export const sourcesOf = (reviews: ReadonlyArray<Review>): Array<ReviewSource> =>
   (Object.keys(REVIEW_SOURCES) as Array<ReviewSource>).filter(
     (source) => REVIEW_SOURCES[source].url && reviews.some((review) => review.source === source)
+  );
+
+/** "Facebook y Google": the names of the sources of a list of reviews, joined as the language joins a list. */
+export const sourceNames = (intl: string, reviews: ReadonlyArray<Review>): string =>
+  new Intl.ListFormat(intl, { style: 'long', type: 'conjunction' }).format(
+    (Object.keys(REVIEW_SOURCES) as Array<ReviewSource>)
+      .filter((source) => reviews.some((review) => review.source === source))
+      .map((source) => REVIEW_SOURCES[source].name)
   );
 
 /** "noviembre de 2026": the month and the year of a day (YYYY-MM-DD), as the language writes them. */
@@ -50,3 +115,45 @@ export const paragraphsOf = (text: string): Array<string> =>
     .split(/\n[^\S\n]*\n\s*/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+
+/** A review with what a card needs to show it, worked out once. */
+export type ReviewCard = Review & {
+  /** Its anchor on the page of reviews. */
+  id: string;
+  paragraphs: Array<string>;
+  initials: string;
+  /** The address of the photo, or '' for the initials. */
+  photoSrc: string;
+  /** Where "Ver en Facebook" leads, or '' while its source has no address. */
+  link: string;
+  month: string;
+  sourceName: string;
+  /** The stars of a Google review; 0 for a recommendation on Facebook. */
+  stars: number;
+  long: boolean;
+};
+
+/**
+ * The cards of some reviews (`shown`, in their order), as a language writes them. The anchors are
+ * those the reviews have among `all` of them, so a card of the home page and its card on the page
+ * of reviews agree.
+ */
+export const reviewCards = (
+  shown: ReadonlyArray<Review>,
+  intl: string,
+  all: ReadonlyArray<Review> = shown
+): Array<ReviewCard> => {
+  const ids = reviewIds(all);
+  return shown.map((review) => ({
+    ...review,
+    id: ids.get(review) ?? '',
+    paragraphs: paragraphsOf(review.text),
+    initials: initials(review.name, review.lang),
+    photoSrc: photoUrl(review.photo),
+    link: reviewUrl(review),
+    month: reviewMonth(intl, review.date),
+    sourceName: REVIEW_SOURCES[review.source].name,
+    stars: review.source === 'google' ? review.rating : 0,
+    long: isLongReview(review.text),
+  }));
+};

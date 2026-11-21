@@ -57,12 +57,6 @@ export const landing: Landing = {
   heroPerUnit: '/unit',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Carinova emblem: three figures hold a flame inside a circle',
-  aboutTitle: 'OUR ROOTS',
-  aboutHeroText:
-    'Carinova was born in Bluefields, on Nicaragua’s South Caribbean Coast. The warmth, commitment and strength of our multicultural homeland are in our DNA, and every day we work to shorten distances and deliver your packages with the trust and care that define us.',
-
   // The four steps
   howTitle: 'Your next shipment. Just four steps away.',
   step1: 'Sign up',
@@ -288,13 +282,6 @@ export const landing: Landing = {
   testimonialsTitle: 'What our customers say',
   uiCarouselKeys: 'Use the left and right arrow keys to see more testimonials.',
   uiCarousel: 'carousel',
-  uiSlide: 'testimonial',
-  uiSlideLabel: '{number} of {total}',
-  // A review's card (the reviews are REVIEWS, in src/data/carinova.ts) and the link to all the reviews of a source
-  reviewRecommends: 'Recommends Carinova',
-  reviewRating: '{rating} out of 5 stars',
-  reviewSeeOn: 'View on {source}',
-  reviewsAllOn: 'All reviews on {source}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'Frequently Asked Questions',
@@ -431,7 +418,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'General merchandise',
     drugs: 'Illegal substances',
     explosives: 'Explosives and fireworks',
     weapons: 'Weapons, ammunition and accessories',
@@ -440,6 +426,9 @@ export const landing: Landing = {
     aircraft: 'Aircraft accessories',
     radio: 'Radio transmitters',
     drones: 'Drones',
+    vehicles: 'Cars and other vehicles',
+    motorcycles: 'Motorcycles',
+    machinery: 'Heavy machinery',
     lithium: 'Loose lithium batteries',
     emobility: 'E-bikes, e-scooters and electric boards',
     flammables: 'Flammable products',
@@ -451,6 +440,7 @@ export const landing: Landing = {
     vehiclebattery: 'Vehicle batteries',
     battery: 'Batteries (type to be confirmed)',
     regulated: 'Regulated products',
+    animals: 'Live animals',
     freshfood: 'Fresh food, plants or seeds',
     valuables: 'Cash and high-value items',
     furniture: 'Furniture',
@@ -459,6 +449,7 @@ export const landing: Landing = {
     alkaline: 'Alkaline batteries',
     games: 'Video games and accessories',
     electronics: 'Electronics',
+    healthcare: 'Health and personal care',
     techaccessories: 'Electronic accessories',
     sports: 'Sports and fitness',
     clothing: 'Clothing and footwear',
