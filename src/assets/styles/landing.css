@@ -3648,14 +3648,6 @@ html:lang(ar) .rate-price small {
 .icon-btn {
   text-decoration: none;
 }
-/* Arabic has no flag in the language menu: a globe, drawn like the other icons. */
-.lang-glyph {
-  width: 18px;
-  height: 18px;
-}
-.lang-menu .lang-glyph {
-  color: var(--muted);
-}
 
 /* ───────── Signed in or not ─────────
    The page is the same file for everyone: what depends on being signed in is in it twice, and

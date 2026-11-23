@@ -85,6 +85,22 @@ test('the language menu has a place for every language', () => {
   assert.deepEqual(LANGUAGE_ORDER.slice(0, 5), ['es', 'en', 'pt', 'fr', 'zh']);
 });
 
+test('the language menu has a flag for each language, and every shape of a flag names its colour', () => {
+  const flags = Object.entries(ICONS).filter(([id]) => id.startsWith('flag-'));
+  // One per language (which flag is whose: FLAGS in components/landing/helpers.ts, checked by its type).
+  assert.equal(flags.length, LOCALES.length);
+  for (const [id, { viewBox, body }] of flags) {
+    assert.equal(viewBox, '0 0 640 480', `${id} is 4:3, like the others`);
+    // The page fills no drawing by itself (landing.css: `svg { fill: none }`), so a shape that names
+    // no colour is not drawn: the black band of a flag copied as it comes would show what is under it.
+    const shapes = body
+      .replace(/<g fill="[^"]+">.*?<\/g>/g, '')
+      .match(/<(?:path|circle|rect|ellipse|polygon)\b[^>]*>/g);
+    assert.ok(shapes?.length, `${id} has shapes`);
+    for (const shape of shapes) assert.match(shape, /\s(?:fill|stroke)="/, `${id}: ${shape} names no colour`);
+  }
+});
+
 test('every language names the devices with a price and the places a shipment starts from', () => {
   const devices = sorted(RATES.electronics.items.map((item) => item.id));
   const points = sorted(RECEPTION_POINTS.map((point) => point.id));

@@ -6,9 +6,10 @@ import type { ReviewSource } from '../../data/carinova.ts';
  * `<use href="#id">`). Line icons take their colour from the text; the part that is filled
  * (`--ia`, `--iao`) is tinted by whoever uses the icon (landing.css).
  *
- * The flags of the language menu are 4:3. The ones of the United States, France and China follow
- * flag-icons (MIT, github.com/lipis/flag-icons); Nicaragua's and Brazil's are simplified for the
- * size of an icon. Arabic, spoken in many countries, has no flag: the menu shows a globe.
+ * The flags of the language menu are 4:3. The ones of the United States, France, China and
+ * Palestine follow flag-icons (MIT, github.com/lipis/flag-icons); Nicaragua's and Brazil's are
+ * simplified for the size of an icon. Every shape of a flag names its colour: a shape that names
+ * none is not drawn here (landing.css: `svg { fill: none }`).
  */
 export const ICONS = {
   'i-plane': {
@@ -221,6 +222,11 @@ export const ICONS = {
   'flag-ru': {
     viewBox: '0 0 640 480',
     body: '<path fill="#fff" d="M0 0h640v160H0z"/><path fill="#0039a6" d="M0 160h640v160H0z"/><path fill="#d52b1e" d="M0 320h640v160H0z"/>',
+  },
+  // Arabic, by the developer's word (2026-11-23): Palestine's flag
+  'flag-ps': {
+    viewBox: '0 0 640 480',
+    body: '<path fill="#009639" d="M0 0h640v480H0z"/><path fill="#fff" d="M0 0h640v320H0z"/><path fill="#000" d="M0 0h640v160H0z"/><path fill="#ed2e38" d="m0 0 320 240L0 480Z"/>',
   },
   // Google's "G", in its four colours: the source of a review (drawn once a review comes from Google)
   's-google': {

@@ -20,7 +20,7 @@ const { part } = Astro.props;
 const { locale } = i18n(Astro);
 
 /** The first screen's icons, with the flag of this page's language (the language button shows it). */
-const first = new Set<string>([...FIRST_SCREEN_ICONS, ...(FLAGS[locale] ? [FLAGS[locale]] : [])]);
+const first = new Set<string>([...FIRST_SCREEN_ICONS, FLAGS[locale]]);
 /** Google's logo and the stars wait for a review from Google. */
 const unused = new Set<string>(REVIEWS.some((review) => review.source === 'google') ? [] : GOOGLE_ONLY_ICONS);
 
