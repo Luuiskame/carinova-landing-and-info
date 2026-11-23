@@ -28,12 +28,24 @@ const openLanguages = (focusCurrent: boolean) => {
   langButton.setAttribute('aria-expanded', 'true');
   if (focusCurrent) ($<HTMLElement>('[aria-current="true"]', langMenu) ?? $<HTMLElement>('a', langMenu))?.focus();
 };
+/**
+ * The room the menu has: from where it starts to the bottom of the screen. Where the menu is longer
+ * than that it scrolls inside itself (landing.css), so its last rows and its two buttons can be
+ * reached on a small phone, on a phone on its side and in a low window. Measured while it is open:
+ * the header is under the bar of notices at the top of the page and at the top of the screen after.
+ */
+const roomForMenu = () => {
+  if (!mobileMenu || mobileMenu.hidden) return;
+  const room = Math.floor(window.innerHeight - mobileMenu.getBoundingClientRect().top);
+  mobileMenu.style.setProperty('--menu-room', `${room}px`);
+};
 const setMenu = (open: boolean) => {
   if (!menuButton || !mobileMenu) return;
   mobileMenu.hidden = !open;
   menuButton.setAttribute('aria-expanded', String(open));
   menuButton.setAttribute('aria-label', (open ? menuButton.dataset.close : menuButton.dataset.open) ?? '');
   $('use', menuButton)?.setAttribute('href', open ? '#i-close' : '#i-menu');
+  roomForMenu();
 };
 const closeMenu = () => {
   if (mobileMenu && !mobileMenu.hidden) setMenu(false);
@@ -98,6 +110,8 @@ if (menuButton && mobileMenu) {
   mobileMenu.addEventListener('click', (event) => {
     if ((event.target as Element).closest('a')) closeMenu();
   });
+  window.addEventListener('resize', roomForMenu);
+  window.addEventListener('scroll', roomForMenu, { passive: true });
 }
 document.addEventListener('click', (event) => {
   const target = event.target as Element;

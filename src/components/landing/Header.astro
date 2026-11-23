@@ -8,6 +8,11 @@
 // which is where it leads without the script. The languages are links too: each one is this page at
 // the address of that language, in the order of Carinova's menu; the script keeps the visitor's
 // place and remembers the choice (scripts/boot.ts).
+//
+// The language button and its menu are drawn the same way in every language, from left to right:
+// the flag, then the name or the code. A row does not turn around for a language written from right
+// to left, nor does the menu on the Arabic page; only the name of a language is written in its own
+// direction (D-135). Whoever cannot read the page they landed on finds the same menu there.
 import wordmarkSvg from '~/assets/images/landing/wordmark.svg?raw';
 import { LANGUAGE_ORDER } from '~/data/landing';
 import { LOCALE_INFO, i18n, languagesOf } from '~/i18n';
@@ -38,6 +43,15 @@ const more = [
   { id: 'sucursales', text: t.navLocations },
   { id: 'preguntas', text: t.faqTitle },
 ];
+/**
+ * The rows of the menu: the sections of this page, then the page about Carinova. "Nuestras raíces"
+ * was the second thing a visitor saw here; since it is a page (D-131) the menu leads to it, in the
+ * words of the footer's link (D-133).
+ */
+const menu = [
+  ...[...sections, ...more].map(({ id, text }) => ({ href: `#${id}`, text })),
+  { href: href('/nosotros'), text: t.footerAbout },
+];
 ---
 
 <header class="site-header on-navy">
@@ -61,6 +75,7 @@ const more = [
               class="lang-btn"
               id="lang-button"
               type="button"
+              dir="ltr"
               aria-haspopup="true"
               aria-expanded="false"
               aria-controls="lang-menu"
@@ -80,14 +95,14 @@ const more = [
                   hreflang={LOCALE_INFO[code].htmlLang}
                   data-lang={code}
                   lang={LOCALE_INFO[code].htmlLang}
-                  dir={LOCALE_INFO[code].dir}
+                  dir="ltr"
                   aria-current={current ? 'true' : undefined}
                 >
                   <Icon name="check" class="lang-check" />
                   <svg class="lang-flag" aria-hidden="true">
                     <use href={`#${FLAGS[code]}`} />
                   </svg>
-                  <span>{LOCALE_INFO[code].name}</span>
+                  <span dir={LOCALE_INFO[code].dir}>{LOCALE_INFO[code].name}</span>
                   <span class="lang-code">{LOCALE_INFO[code].code}</span>
                 </a>
               ))}
@@ -111,8 +126,8 @@ const more = [
     </div>
     <nav class="mobile-nav" id="mobile-menu" aria-label={t.menuAria} hidden>
       {
-        [...sections, ...more].map(({ id, text }) => (
-          <a href={`#${id}`}>
+        menu.map(({ href: to, text }) => (
+          <a href={to}>
             <span>{text}</span>
             <Icon name="chevron" />
           </a>

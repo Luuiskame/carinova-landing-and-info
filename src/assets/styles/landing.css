@@ -570,7 +570,10 @@ svg {
   border-bottom: 1px solid var(--navy-line);
   box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.6);
 }
-.mobile-nav a {
+/* The rows of the menu, and only them. The file says `.mobile-nav a`: its two buttons under the rows
+   are buttons. Here they are links (they lead somewhere without the script), and as the file wrote
+   it this rule drew them as rows too: their words against the left edge, white on the orange one. */
+.mobile-nav > a {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -582,19 +585,21 @@ svg {
   color: var(--on-navy);
   text-decoration: none;
 }
-.mobile-nav a svg {
+.mobile-nav > a svg {
   width: 18px;
   height: 18px;
   color: var(--on-navy-3);
 }
-.mobile-nav a:hover {
+.mobile-nav > a:hover {
   color: #fff;
 }
-.mobile-nav a:hover svg {
+.mobile-nav > a:hover svg {
   color: var(--orange);
 }
-/* Two buttons side by side, each half of the row; where one of them needs more than its half (a
-   long word on a narrow phone) they go one under the other instead of leaving the screen. */
+/* Two buttons side by side, as the file's two equal columns draw them: each has half of the row,
+   or what its words need when that is more than half, and the other the rest. Where the two do not
+   fit on one line (long words on a narrow phone) they go one under the other instead of leaving
+   the screen. */
 .mobile-nav-actions {
   display: flex;
   flex-wrap: wrap;
@@ -602,7 +607,7 @@ svg {
   margin-top: 18px;
 }
 .mobile-nav-actions > .btn {
-  flex: 1 1 calc(50% - 5px);
+  flex: 1 1 0;
 }
 @media (min-width: 1080px) {
   .nav-desktop {
@@ -3647,6 +3652,25 @@ html:lang(ar) .rate-price small {
    without the script). */
 .icon-btn {
   text-decoration: none;
+}
+/* The menu is never longer than the room under the header. Where the screen is shorter than the
+   menu (a small phone, a phone on its side, a low window) it scrolls inside itself, so its last
+   rows and its two buttons can always be reached; where it fits, nothing changes. The script
+   measures the room when the menu opens (`--menu-room`: the bar of notices may be above the
+   header); without it, the room under a header that is at the top of the screen. */
+.mobile-nav {
+  max-height: var(--menu-room, calc(100vh - var(--header-h)));
+  overflow-y: auto;
+  /* A row or a button reached with the keyboard comes into view with room for its focus ring. */
+  scroll-padding-block: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+@media (min-width: 1080px) {
+  /* There it hangs from the bar as a card: it stops short of the bottom of the screen. */
+  .mobile-nav {
+    max-height: calc(var(--menu-room, 100vh - var(--header-h) - 8px) - 12px);
+  }
 }
 
 /* ───────── Signed in or not ─────────

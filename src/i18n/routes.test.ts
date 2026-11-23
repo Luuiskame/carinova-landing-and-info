@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { WA_MESSAGES } from '../data/carinova.ts';
 import { LOCALES, isLocale, localeFrom } from './locales.ts';
@@ -19,6 +19,22 @@ test('every page has one address per language, and a file to render it', () => {
   for (const locale of LOCALES) {
     const paths = routes.map((route) => pathIn(route, locale));
     assert.equal(new Set(paths).size, paths.length, `two pages share an address in ${locale}`);
+  }
+});
+
+test('a second name of a page (public/_redirects) leads to a page and takes the place of none', () => {
+  const lines = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  assert.ok(lines.length > 0);
+  const addresses = new Set(LOCALES.flatMap((locale) => routes.map((route) => pathIn(route, locale))));
+  for (const line of lines) {
+    const [from, to, status, ...more] = line.split(/\s+/);
+    assert.equal(more.length, 0, line);
+    assert.equal(status, '301', line);
+    assert.ok(addresses.has(to), `${line}: ${to} is not the address of a page`);
+    assert.ok(!addresses.has(from.replace(/\/$/, '')), `${line}: ${from} is the address of a page`);
   }
 });
 
