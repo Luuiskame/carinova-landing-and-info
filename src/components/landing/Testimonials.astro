@@ -1,63 +1,205 @@
 ---
-// "Lo que dicen nuestros clientes": one card at a time, advancing by themselves
-// (scripts/carousel.ts). With reviews in REVIEWS, the cards are the reviews. Until there are any,
-// the section shows the three cards of Carinova's page, which say that a customer's own words will
-// go there: a place kept for reviews, not a review.
-import { REVIEWS } from '~/data/carinova';
-import { i18n } from '~/i18n';
+// "Lo que dicen nuestros clientes": the newest reviews in a row that is moved by hand, with the
+// edge of the next card in view so that it shows there are more, arrows, a bar that says how far
+// along the row is, and the way to all of them (/opiniones). Asked by the developer on 2026-11-21
+// (D-130): Carinova's page showed one card at a time, changing by itself, with nothing to move it.
+//
+// - The cards are a preview: the newest of REVIEWS (src/data/carinova.ts), Facebook and Google
+//   taking turns once both have reviews (utils/reviews.ts → previewOf). Each is the review as its
+//   source publishes it, never translated: where and when it was published, the person's photo from
+//   Carinova's R2 bucket (their initials until there is one, or if it cannot be loaded), what the
+//   source says of it (a recommendation, or a Google review's stars) and a link to it there.
+// - A long review shows its beginning and leads to the whole of it on the page of reviews.
+// - When there are more reviews than cards, the last card of the row says so and leads to them.
+// - The row is a list that scrolls sideways by itself (a finger, a trackpad, the keyboard): the
+//   script only adds the arrows and the bar (scripts/carousel.ts), and without it nothing is lost.
+// - Until there are reviews, the section shows the three cards of Carinova's page, which say that
+//   a customer's own words will go there: a place kept for reviews, not a review.
+import { REVIEWS, REVIEW_SOURCES } from '~/data/carinova';
+import { LOCALE_INFO, i18n } from '~/i18n';
+import { previewOf, reviewCards, sourcesOf } from '~/utils/reviews';
+import { fill } from '~/utils/template';
 
 import Icon from './Icon.astro';
-import ScriptData from './ScriptData.astro';
+import { REVIEW_SOURCE_ICONS } from './icons';
 
-const { ui } = i18n(Astro);
+const { locale, href, ui } = i18n(Astro);
 const t = ui.landing;
+const words = ui.reviews;
 
+/** How many reviews the home page previews. */
+const PREVIEW = 6;
 /** The three cards of Carinova's page while there is nothing to quote. */
 const SLOTS = 3;
-const cards =
-  REVIEWS.length > 0
-    ? REVIEWS.map((review) => ({ quote: review.text, name: review.name, place: review.source ?? '', slot: false }))
-    : Array.from({ length: SLOTS }, () => ({
-        quote: t.testimonialSlotQuote,
-        name: t.testimonialSlotName,
-        place: t.testimonialSlotPlace,
-        slot: true,
-      }));
 
-const config = { carousel: t.uiCarousel, slide: t.uiSlide, slideLabel: t.uiSlideLabel };
+const reviews = reviewCards(previewOf(REVIEWS, PREVIEW), LOCALE_INFO[locale].intl, REVIEWS).map((review) => ({
+  ...review,
+  logo: REVIEW_SOURCE_ICONS[review.source],
+}));
+const hasMore = REVIEWS.length > reviews.length;
+const sources = sourcesOf(REVIEWS).map((source) => ({
+  ...REVIEW_SOURCES[source],
+  logo: REVIEW_SOURCE_ICONS[source],
+  source,
+}));
+const all = href('/opiniones');
 ---
 
 <section class="hero-section testimonials on-navy" id="clientes" aria-labelledby="testimonials-title">
   <div class="wrap">
     <h2 class="hero-title" id="testimonials-title">{t.testimonialsTitle}</h2>
-    <div
-      class="t-viewport"
-      id="t-viewport"
-      role="group"
-      aria-roledescription={t.uiCarousel}
-      aria-labelledby="testimonials-title"
-      aria-describedby="t-keys"
-      tabindex="0"
-    >
-      {/* The first card is in view before the script takes over; the script shows the others in turn. */}
-      <div class="t-track" id="t-track" aria-live="off">
-        {
-          cards.map(({ quote, name, place, slot }, index) => (
-            <div class:list={['t-card', slot && 'is-slot', index === 0 && 'is-active']} role="group">
-              <Icon name="quote" class="t-mark" />
-              <blockquote>
-                <p dir="auto">{quote}</p>
-              </blockquote>
-              <p class="t-who">
-                <strong dir="auto">{name}</strong>
-                {place && <span>{place}</span>}
-              </p>
-            </div>
-          ))
-        }
-      </div>
+  </div>
+  {/* The row is as wide as the screen, so a card leaves it at the edge of the screen. */}
+  <div
+    class="t-viewport"
+    id="t-viewport"
+    role="group"
+    aria-roledescription={t.uiCarousel}
+    aria-labelledby="testimonials-title"
+    aria-describedby="t-keys"
+    tabindex="0"
+  >
+    <ul class="t-track" id="t-track">
+      {
+        reviews.length > 0
+          ? reviews.map((review) => (
+              <li class:list={['t-card', review.long && 'is-long']}>
+                <div class="t-top">
+                  <Icon name="quote" class="t-mark" />
+                  <p class="t-source">
+                    <svg aria-hidden="true" class={`t-logo is-${review.source}`}>
+                      <use href={`#${review.logo}`} />
+                    </svg>
+                    <span>{review.sourceName}</span>
+                    <time datetime={review.date.slice(0, 7)}>{review.month}</time>
+                  </p>
+                </div>
+                <blockquote lang={review.lang} cite={review.link || undefined}>
+                  {review.long ? (
+                    <p dir="auto">{review.text}</p>
+                  ) : (
+                    review.paragraphs.map((paragraph) => <p dir="auto">{paragraph}</p>)
+                  )}
+                </blockquote>
+                {review.long && (
+                  <a class="link t-read" href={`${all}#${review.id}`} aria-describedby={`t-name-${review.id}`}>
+                    {words.readAll}
+                    <Icon name="arrow" />
+                  </a>
+                )}
+                <div class="t-who t-by">
+                  <div class="t-avatar" aria-hidden="true">
+                    {review.initials}
+                    {review.photoSrc && (
+                      <img
+                        src={review.photoSrc}
+                        alt=""
+                        width="48"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
+                        onerror="this.remove()"
+                      />
+                    )}
+                  </div>
+                  <p class="t-person">
+                    <strong dir="auto" id={`t-name-${review.id}`}>
+                      {review.name}
+                    </strong>
+                    {review.stars > 0 ? (
+                      <span class="t-stars" role="img" aria-label={fill(words.rating, { rating: review.stars })}>
+                        {Array.from({ length: 5 }, (_, star) => (
+                          <Icon name="star" class={star < review.stars ? undefined : 'is-off'} />
+                        ))}
+                      </span>
+                    ) : (
+                      <span>{words.recommends}</span>
+                    )}
+                  </p>
+                  {review.link && (
+                    <a
+                      class="link t-link"
+                      href={review.link}
+                      target="_blank"
+                      rel="noopener"
+                      aria-describedby={`t-name-${review.id}`}
+                    >
+                      {fill(words.seeOn, { source: review.sourceName })}
+                      <Icon name="external" />
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))
+          : Array.from({ length: SLOTS }, () => (
+              <li class="t-card is-slot">
+                <Icon name="quote" class="t-mark" />
+                <blockquote>
+                  <p dir="auto">{t.testimonialSlotQuote}</p>
+                </blockquote>
+                <p class="t-who">
+                  <strong dir="auto">{t.testimonialSlotName}</strong>
+                  <span>{t.testimonialSlotPlace}</span>
+                </p>
+              </li>
+            ))
+      }
+      {
+        hasMore && (
+          <li class="t-card t-more">
+            <Icon name="quote" class="t-mark" />
+            <p class="t-more-title">{words.moreTitle}</p>
+            <p class="t-more-text">{words.moreText}</p>
+            <a class="btn btn-primary btn-sm" href={all}>
+              <span>{words.seeAll}</span>
+              <Icon name="arrow" />
+            </a>
+          </li>
+        )
+      }
+    </ul>
+  </div>
+  <div class="wrap">
+    {
+      /*
+      The arrows that move the row and how far along it is: the script shows them (scripts/carousel.ts).
+      The arrows are where the row starts: the floating WhatsApp button sits over the other end.
+    */
+    }
+    <div class="t-controls" id="t-controls">
+      <button class="t-arrow is-back" id="t-prev" type="button" aria-label={words.previous} aria-controls="t-track">
+        <Icon name="arrow" />
+      </button>
+      <button class="t-arrow" id="t-next" type="button" aria-label={words.next} aria-controls="t-track">
+        <Icon name="arrow" />
+      </button>
+      <div class="t-bar" id="t-bar" aria-hidden="true"><span></span></div>
     </div>
     <p class="sr-only" id="t-keys">{t.uiCarouselKeys}</p>
+    {
+      reviews.length > 0 && (
+        <ul class="t-sources">
+          <li>
+            <a class="link link-light t-all" href={all}>
+              {words.seeAll}
+              <Icon name="arrow" />
+            </a>
+          </li>
+          {sources.map(({ name, url, logo, source }) => (
+            <li>
+              <a class="link link-light t-all" href={url} target="_blank" rel="noopener">
+                <span class="t-badge" aria-hidden="true">
+                  <svg class={`t-logo is-${source}`}>
+                    <use href={`#${logo}`} />
+                  </svg>
+                </span>
+                {fill(words.allOn, { source: name })}
+                <Icon name="external" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
   </div>
 </section>
-<ScriptData name="carousel" value={config} />

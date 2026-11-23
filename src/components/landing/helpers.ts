@@ -23,17 +23,18 @@ export const unitAfter = (locale: Locale, unit: string): string =>
   unit.startsWith('/') ? unit : `${LOCALE_INFO[locale].wordGap}${unit}`;
 
 /**
- * The flag of each language in the language menu: the ones Carinova's page chose, and Russia's for
- * Russian. Arabic is the language of many countries: it has no flag, the menu draws a globe.
+ * The flag of each language in the language menu: the ones Carinova's page chose for its five, and
+ * for the two the site adds, Russia's for Russian and Palestine's for Arabic (the developer's
+ * choice: D-132).
  */
-export const FLAGS: Record<Locale, IconId | null> = {
+export const FLAGS: Record<Locale, IconId> = {
   es: 'flag-ni',
   en: 'flag-us',
   pt: 'flag-br',
   fr: 'flag-fr',
   zh: 'flag-cn',
   ru: 'flag-ru',
-  ar: null,
+  ar: 'flag-ps',
 };
 
 /** The icon of each network of the footer, by the name it has in SOCIAL_LINKS. */

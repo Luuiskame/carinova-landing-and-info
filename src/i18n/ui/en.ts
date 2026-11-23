@@ -16,7 +16,7 @@ import {
   type PaymentStatus,
 } from '../../data/account.ts';
 import { BUSINESS_DISCLAIMER, BUSINESS_SOLUTIONS, BUSINESS_VOLUMES } from '../../data/business.ts';
-import { sentence } from '../../data/carinova.ts';
+import { CONTACT, sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/en/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -27,6 +27,8 @@ import { landing } from './landing/en.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -597,26 +599,43 @@ export const ui: UI = {
   // pages/nosotros.astro
   aboutPage: {
     tagline: 'About us',
-    description: `Carinova is a Nicaraguan company that ships from the United States to Nicaragua, with branches in ${cityNames.join(' and ')}.`,
-    title: 'We are Carinova',
-    subtitle: `A Nicaraguan company that brings the stores of the United States closer to ${cityNames.join(' and ')}.`,
-    logoAlt: 'Carinova logo: three people raise a lit torch together in front of a globe.',
-    storyTitle: 'Our story',
-    story: [
-      'Carinova was born in Nicaragua with a simple idea: buying in the United States should be easy, safe and clearly priced for everyone.',
-      `From our branches in ${cityNames.join(' and ')} we look after every customer personally, on WhatsApp and in person, and we make sure every purchase and every package reaches its destination safely.`,
-    ],
+    metaTitle: 'About us: who we are and where we come from',
+    description: `Carinova is a Nicaraguan company that ships from the United States to Nicaragua, born in ${bluefields}. Get to know our roots, what we do and where to find us in ${cityNames.join(' and ')}.`,
+    title: `We are Carinova, the courier born in ${bluefields}`,
+    subtitle: `A Nicaraguan company that brings your purchases, your family’s packages and your business cargo from the United States, with branches in ${cityNames.join(' and ')}.`,
+    roots: {
+      title: 'Our roots',
+      text: 'Carinova was born in Bluefields, on Nicaragua’s South Caribbean Coast. The warmth, commitment and strength of our multicultural homeland are in our DNA, and every day we work to shorten distances and deliver your packages with the trust and care that define us.',
+      emblemAlt: 'Carinova emblem: three figures hold a flame inside a circle',
+    },
+    whatTagline: 'What we do',
+    whatTitle: 'We bring the stores of the United States closer to Nicaragua',
+    what: `With your account you get your Carinova ID and an address in ${warehouse.city} to buy at any store. We receive your packages there, bring them by air or by sea, and you pick them up in ${cityNames.join(' or ')}.`,
+    servicesLink: 'See the services in detail',
+    factsTagline: 'In a few words',
+    factsTitle: 'Carinova in facts',
+    facts: {
+      origin: 'We were born in',
+      originValue: `${bluefields}, South Caribbean Coast of Nicaragua`,
+      route: 'Our route',
+      routeValue: 'From the United States to Nicaragua',
+      reception: 'We receive your purchases in',
+      branches: 'Branches in Nicaragua',
+      transport: 'How your packages travel',
+      contact: 'Help on WhatsApp',
+      networks: 'Follow us on',
+    },
     valuesTagline: 'Our values',
     valuesTitle: 'What moves us',
     values: [
       {
         title: 'Teamwork',
         description:
-          'As in our logo: three people raising the same torch together. Every shipment is teamwork, from Miami to your branch.',
+          'As in our emblem: three figures holding up the same flame together. Every shipment is teamwork, from Miami to your branch.',
       },
       {
         title: 'International reach',
-        description: 'The globe in our name is the bridge we cross every day between the United States and Nicaragua.',
+        description: 'The circle around them is the bridge we cross every day between the United States and Nicaragua.',
       },
       {
         title: 'Commitment',
@@ -624,6 +643,37 @@ export const ui: UI = {
       },
     ],
     where: 'Where we are',
+    reviewsTagline: 'Reviews',
+    reviewsTitle: 'What our customers say',
+    faqTitle: 'Questions about Carinova',
+    faq: [
+      {
+        title: 'What is Carinova?',
+        description:
+          'Carinova is a Nicaraguan shipping company. We bring personal purchases, family packages and business cargo from the United States to Nicaragua, by air or by sea.',
+      },
+      {
+        title: 'Where is Carinova from?',
+        description: `Carinova was born in ${bluefields}, on Nicaragua’s South Caribbean Coast, and today has branches in ${cityNames.join(' and ')}.`,
+      },
+      {
+        title: 'Where are Carinova’s branches and when are they open?',
+        description: sentence(`In ${cityNames.join(' and ')}. We are open ${describeHours(hours)}`),
+      },
+      {
+        title: 'Where does Carinova bring packages from?',
+        description: `We receive them at our warehouse in ${warehouse.city}, ${warehouse.state}, and bring them to Nicaragua by air in ${air.transit} or by sea in ${sea.transit}, counted from the moment the package reaches the warehouse.`,
+      },
+      {
+        title: 'How do I contact Carinova?',
+        description: `On WhatsApp, at <span dir="ltr">${CONTACT.whatsappDisplay}</span>, or at any of our branches.`,
+      },
+      {
+        title: 'Where can I read reviews from Carinova customers?',
+        description:
+          'The reviews page of this site has the ones our customers posted, just as they wrote them and with a link to where each one was posted.',
+      },
+    ],
     careers: {
       title: 'Join our team.',
       text: 'We are looking for people committed to service and operational excellence.',
@@ -633,6 +683,64 @@ export const ui: UI = {
       title: 'Let us make your first shipment',
       subtitle: 'Create your account online or get a quote for your shipment before you buy.',
       lead: 'Would you like to know us better?',
+    },
+  },
+
+  // What a review's card says (the reviews themselves are never translated)
+  reviews: {
+    recommends: 'Recommends Carinova',
+    rating: '{rating} out of 5 stars',
+    seeOn: 'View on {source}',
+    allOn: 'All reviews on {source}',
+    readAll: 'Read it in full',
+    seeAll: 'See all reviews',
+    moreTitle: 'There are more reviews',
+    moreText: 'Read everything our customers say about their shipments.',
+    previous: 'Previous reviews',
+    next: 'Next reviews',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: 'Reviews',
+    metaTitle: 'Customer reviews',
+    description:
+      'Real reviews from Carinova customers about their shipments from the United States to Nicaragua, just as they posted them on {sources}. Read them before your first shipment.',
+    title: 'What Carinova customers say',
+    subtitle:
+      'Real reviews from people who have already brought their purchases from the United States to Nicaragua with us, just as they posted them on {sources}.',
+    listTitle: 'Reviews from customers',
+    filterLabel: 'Show reviews from',
+    all: 'All',
+    howTitle: 'How we show reviews',
+    how: [
+      {
+        title: 'Posted by their authors',
+        text: 'Each review was posted by its author, under their own name, on {sources}.',
+      },
+      {
+        title: 'Not a word changed',
+        text: 'We copy them exactly as written and in their original language, without correcting or translating them.',
+      },
+      {
+        title: 'With a link to the source',
+        text: 'Each one leads to Carinova’s page where it was posted. All of them are there, the newest too.',
+      },
+    ],
+    writeTitle: 'Already received your package? Tell us how it went',
+    writeText: 'Your review helps other people decide and helps us improve.',
+    writeOn: 'Review us on {source}',
+    nextTitle: 'Before your first shipment',
+    next: {
+      how: 'See how it works, step by step',
+      quote: 'Work out what your shipment costs',
+      branches: 'Find where you pick up your package',
+      about: 'Find out who we are',
+    },
+    closing: {
+      title: 'Make your first shipment with Carinova',
+      subtitle: 'Create your account online and get your Carinova ID and your US address.',
+      lead: 'Would you like to ask us something first?',
     },
   },
 
@@ -770,6 +878,7 @@ export const ui: UI = {
     tracking: 'Tracking',
     faq: 'Frequently asked questions',
     about: 'About us',
+    reviews: 'Reviews',
     terms: 'Terms of service',
     privacy: 'Privacy',
     and: ' and ',

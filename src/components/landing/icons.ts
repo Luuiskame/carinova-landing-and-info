@@ -1,12 +1,15 @@
+import type { ReviewSource } from '../../data/carinova.ts';
+
 /**
  * The icons of the home page: the ones of the page Carinova wrote on 2026-11-18, by the id each has
  * in the page's sprite (Sprite.astro draws them once; Icon.astro and the scripts point at them with
  * `<use href="#id">`). Line icons take their colour from the text; the part that is filled
  * (`--ia`, `--iao`) is tinted by whoever uses the icon (landing.css).
  *
- * The flags of the language menu are 4:3. The ones of the United States, France and China follow
- * flag-icons (MIT, github.com/lipis/flag-icons); Nicaragua's and Brazil's are simplified for the
- * size of an icon. Arabic, spoken in many countries, has no flag: the menu shows a globe.
+ * The flags of the language menu are 4:3. The ones of the United States, France, China and
+ * Palestine follow flag-icons (MIT, github.com/lipis/flag-icons); Nicaragua's and Brazil's are
+ * simplified for the size of an icon. Every shape of a flag names its colour: a shape that names
+ * none is not drawn here (landing.css: `svg { fill: none }`).
  */
 export const ICONS = {
   'i-plane': {
@@ -178,6 +181,12 @@ export const ICONS = {
     viewBox: '0 0 24 24',
     body: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   },
+  // A review's card: the link that leads to it on its source, and the stars of a review from Google
+  'i-external': { viewBox: '0 0 24 24', body: '<path d="M7 17 17 7M9 7h8v8"/>' },
+  'i-star': {
+    viewBox: '0 0 24 24',
+    body: '<path fill="currentColor" d="M12 2.5l2.25 6.91h7.26l-5.88 4.27 2.25 6.91L12 16.32l-5.88 4.27 2.25-6.91-5.88-4.27h7.27z"/>',
+  },
   'flag-ni': {
     viewBox: '0 0 640 480',
     body: '<path fill="#0067c6" d="M0 0h640v480H0z"/><path fill="#fff" d="M0 160h640v160H0z"/><circle cx="320" cy="240" r="56" fill="#fff" stroke="#c09a00" stroke-width="12"/><path fill="#4aa3df" d="M320 204 352 259H288z"/><path fill="#2f8a3c" d="M288 259l14-22 9 11 9-14 9 14 9-11 14 22z"/>',
@@ -214,9 +223,28 @@ export const ICONS = {
     viewBox: '0 0 640 480',
     body: '<path fill="#fff" d="M0 0h640v160H0z"/><path fill="#0039a6" d="M0 160h640v160H0z"/><path fill="#d52b1e" d="M0 320h640v160H0z"/>',
   },
+  // Arabic, by the developer's word (2026-11-23): Palestine's flag
+  'flag-ps': {
+    viewBox: '0 0 640 480',
+    body: '<path fill="#009639" d="M0 0h640v480H0z"/><path fill="#fff" d="M0 0h640v320H0z"/><path fill="#000" d="M0 0h640v160H0z"/><path fill="#ed2e38" d="m0 0 320 240L0 480Z"/>',
+  },
+  // Google's "G", in its four colours: the source of a review (drawn once a review comes from Google)
+  's-google': {
+    viewBox: '0 0 24 24',
+    body: '<g stroke="none"><path fill="#4285f4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34a853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/><path fill="#fbbc05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/><path fill="#ea4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></g>',
+  },
 } as const;
 
 export type IconId = keyof typeof ICONS;
+
+/** The logo that names the source of a review on its card (the reviews: src/data/carinova.ts). */
+export const REVIEW_SOURCE_ICONS = { facebook: 's-facebook', google: 's-google' } as const satisfies Record<
+  ReviewSource,
+  IconId
+>;
+
+/** What only a review from Google draws (its logo, its stars): left out of the page until one is there (Sprite.astro). */
+export const GOOGLE_ONLY_ICONS: ReadonlyArray<IconId> = ['s-google', 'i-star'];
 
 /**
  * The icons a visitor sees before scrolling: the ones of the bar of notices, the header, the opening

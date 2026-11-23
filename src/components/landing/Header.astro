@@ -65,13 +65,9 @@ const more = [
               aria-expanded="false"
               aria-controls="lang-menu"
             >
-              {FLAGS[locale] ? (
-                <svg class="lang-flag" aria-hidden="true">
-                  <use href={`#${FLAGS[locale]}`} />
-                </svg>
-              ) : (
-                <Icon name="globe" class="lang-glyph" />
-              )}
+              <svg class="lang-flag" aria-hidden="true">
+                <use href={`#${FLAGS[locale]}`} />
+              </svg>
               <span class="sr-only">
                 <span>{t.language}</span>:{' '}
               </span>
@@ -88,13 +84,9 @@ const more = [
                   aria-current={current ? 'true' : undefined}
                 >
                   <Icon name="check" class="lang-check" />
-                  {FLAGS[code] ? (
-                    <svg class="lang-flag" aria-hidden="true">
-                      <use href={`#${FLAGS[code]}`} />
-                    </svg>
-                  ) : (
-                    <Icon name="globe" class="lang-glyph" />
-                  )}
+                  <svg class="lang-flag" aria-hidden="true">
+                    <use href={`#${FLAGS[code]}`} />
+                  </svg>
                   <span>{LOCALE_INFO[code].name}</span>
                   <span class="lang-code">{LOCALE_INFO[code].code}</span>
                 </a>

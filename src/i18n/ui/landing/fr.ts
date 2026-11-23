@@ -57,12 +57,6 @@ export const landing: Landing = {
   heroPerUnit: '/unité',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Emblème de Carinova : trois figures portent une flamme à l’intérieur d’un cercle',
-  aboutTitle: 'NOS RACINES',
-  aboutHeroText:
-    'Carinova est née à Bluefields, sur la côte caraïbe sud du Nicaragua. La chaleur, l’engagement et la force de notre terre multiculturelle font partie de notre ADN, et nous travaillons chaque jour pour réduire les distances et livrer vos colis avec la confiance et l’attention qui nous caractérisent.',
-
   // The four steps
   howTitle: 'Votre prochain envoi. En seulement quatre étapes.',
   step1: 'Inscrivez-vous',
@@ -291,8 +285,6 @@ export const landing: Landing = {
   testimonialsTitle: 'Ce que disent nos clients',
   uiCarouselKeys: 'Utilisez les flèches gauche et droite du clavier pour voir d’autres témoignages.',
   uiCarousel: 'carrousel',
-  uiSlide: 'témoignage',
-  uiSlideLabel: '{number} sur {total}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'Questions Fréquentes',
@@ -444,7 +436,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'Marchandise générale',
     drugs: 'Substances illicites',
     explosives: 'Explosifs et feux d’artifice',
     weapons: 'Armes, munitions et accessoires',
@@ -453,6 +444,9 @@ export const landing: Landing = {
     aircraft: 'Accessoires pour avions',
     radio: 'Émetteurs radio',
     drones: 'Drones',
+    vehicles: 'Voitures et autres véhicules',
+    motorcycles: 'Motos',
+    machinery: 'Engins lourds',
     lithium: 'Batteries au lithium non intégrées',
     emobility: 'Vélos, trottinettes et planches électriques',
     flammables: 'Produits inflammables',
@@ -464,6 +458,7 @@ export const landing: Landing = {
     vehiclebattery: 'Batteries de véhicule',
     battery: 'Batteries (type à confirmer)',
     regulated: 'Produits réglementés',
+    animals: 'Animaux vivants',
     freshfood: 'Aliments frais, plantes ou graines',
     valuables: 'Argent et objets de valeur',
     furniture: 'Meubles',
@@ -472,6 +467,7 @@ export const landing: Landing = {
     alkaline: 'Piles alcalines',
     games: 'Jeux vidéo et accessoires',
     electronics: 'Électronique',
+    healthcare: 'Santé et soins personnels',
     techaccessories: 'Accessoires électroniques',
     sports: 'Sport et fitness',
     clothing: 'Vêtements et chaussures',

@@ -4,8 +4,8 @@
 // src/data/carinova.ts, written in every language of the site). Shared by the page's script (in the
 // browser) and the unit tests, so both read a text the same way.
 //
-// What neither of them knows is general merchandise, as in Carinova's page, when it is a word at
-// all; "12345" or one letter is for the team to look at.
+// What neither of them knows is for the team to look at ("Requiere revisión"): the search says an
+// article can travel only when the catalogue names its kind (D-128).
 import type { ArticleRule, ArticleStatus } from '../data/articles.ts';
 import { findRestricted, plain, type SearchGroup } from './restricted.ts';
 
@@ -21,6 +21,8 @@ export const normalizeArticle = (text: string): string =>
 
 export interface CompiledRule extends ArticleRule {
   test: RegExp;
+  /** Phrases that are another article: taken out of the text before `test` looks at it. */
+  aside: RegExp | null;
   skip: RegExp | null;
   /** Its words in the languages the catalogue was not written in, as the lists compare them. */
   words: Array<string>;
@@ -51,6 +53,7 @@ export const compileCatalogue = (source: CatalogueSource): Catalogue => ({
   rules: source.rules.map((rule) => ({
     ...rule,
     test: new RegExp([rule.terms ? `\\b(?:${rule.terms})\\b` : '', rule.cjk || ''].filter(Boolean).join('|')),
+    aside: rule.apart ? new RegExp(rule.apart, 'g') : null,
     skip: rule.unless ? new RegExp(rule.unless) : null,
     words: (source.words?.[rule.id] ?? []).map(plain),
   })),
@@ -78,7 +81,8 @@ const first = (padded: string, words: ReadonlyArray<string>): number =>
 
 /**
  * The first rule of the catalogue the text matches. `excluded` says a rule would have matched if
- * it were not for what the text adds ("cerveza sin alcohol"): nothing else should claim it.
+ * it were not for what the text adds ("cerveza sin alcohol", "repuestos para carro"): the lists of
+ * what cannot be brought must not claim it by one of its words.
  */
 export const lookupCatalogue = (
   query: string,
@@ -93,7 +97,11 @@ export const lookupCatalogue = (
     const accessory = { status: 'allowed' as const, id: rule.console ? 'games' : 'techaccessories' };
     const device = { status: 'air' as const, id: rule.id, electronic: rule.electronic };
 
-    const hit = rule.test.exec(text);
+    // What is another article by its whole phrase ("pistola de agua") is set aside; the rest of the
+    // text can still be the rule's ("y una pistola 9 mm").
+    const rest = rule.aside ? text.replace(rule.aside, ' ') : text;
+    const hit = rule.test.exec(rest);
+    if (!hit && rest !== text && rule.test.test(text)) excluded = true;
     if (hit) {
       if (rule.skip?.test(text)) {
         excluded = true;
@@ -121,11 +129,8 @@ export const lookupCatalogue = (
 };
 
 export interface ArticleAnswer {
-  /**
-   * How it travels. `notYet` is the list of what Carinova is not authorised to bring yet;
-   * `review` is also the answer for what nobody knows.
-   */
-  status: ArticleStatus | 'notYet';
+  /** How it travels. `review` is also the answer for what nobody knows. */
+  status: ArticleStatus;
   /** The kind of article in the catalogue (`landing.cat[id]`); empty when it came from a list or from nowhere. */
   id: string;
   electronic?: string;
@@ -136,7 +141,7 @@ export interface ArticleAnswer {
 }
 
 /** Which list of /articulos-prohibidos means what, for the answer. */
-const LIST_STATUS: Record<string, ArticleAnswer['status']> = {
+const LIST_STATUS: Record<string, ArticleStatus> = {
   prohibited: 'prohibited',
   notYet: 'notYet',
   seaOnly: 'sea',
@@ -144,9 +149,8 @@ const LIST_STATUS: Record<string, ArticleAnswer['status']> = {
 
 /**
  * The answer to a search: the catalogue's, then the lists' (`groups`, from the strictest to the
- * mildest, in the language of the page), then general merchandise for anything that is a word
- * (two letters together, or a Chinese character), as Carinova's page answers; "requires review"
- * for the rest.
+ * mildest, in the language of the page). What neither knows is for the team to look at: an article
+ * nobody has named is never said to be allowed, whatever it is ("grúa", "tigre", "qzqzqz").
  */
 export const classifyArticle = (
   query: string,
@@ -160,7 +164,5 @@ export const classifyArticle = (
   if (listed && LIST_STATUS[listed.group.id]) {
     return { status: LIST_STATUS[listed.group.id], id: '', item: listed.name, known: true };
   }
-  return /\p{L}{2,}|\p{Script=Han}/u.test(normalizeArticle(query))
-    ? { status: 'allowed', id: 'general', known: false }
-    : { status: 'review', id: '', known: false };
+  return { status: 'review', id: '', known: false };
 };

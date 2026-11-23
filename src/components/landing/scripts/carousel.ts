@@ -1,148 +1,71 @@
-// The cards of "Lo que dicen nuestros clientes", one at a time (the reviews, or the three places
-// kept for them while there are none): they advance by themselves with a horizontal
-// glide (the current one leaves on the side the text starts from, the next one comes in from the
-// other). The time each stays grows with its text. They stop under the pointer, with the focus,
-// while a finger is on them, off screen and in a hidden tab; a swipe or the arrow keys move them.
-// Where movement is reduced, or with a single card, all are shown one under the other.
+// The row of reviews of "Lo que dicen nuestros clientes". The row scrolls by itself (it is a list
+// with a scroll of its own: a finger, a trackpad, a mouse wheel); this script adds what makes it
+// plain that there is more and easy to reach: the two arrows, which move the row by the cards that
+// are whole in view, the bar that says how far along it is, and the arrow keys.
 //
-// Fetched when the page is idle (boot.ts): the first card is in view from the start.
-import { fill } from '~/utils/template';
+// Nothing moves by itself (D-130): a visitor reads a review for as long as they want.
+//
+// Fetched when the page is idle (boot.ts): the first cards are in view from the start.
+import { $$, need, smooth } from './dom';
 
-import { $, $$, need, pageData, reducedMotion } from './dom';
-
-const text = pageData<{ carousel: string; slide: string; slideLabel: string }>('carousel');
-
-const section = need('#clientes');
-const track = need('#t-track');
 const viewport = need('#t-viewport');
-const cards = $$('.t-card', track);
+const track = need('#t-track');
+const controls = need('#t-controls');
+const bar = need('#t-bar');
+const previous = need<HTMLButtonElement>('#t-prev');
+const next = need<HTMLButtonElement>('#t-next');
 
-/** In a page written from right to left, "next" comes in from the left. */
+/** In a page written from right to left the row runs the other way, and so do its numbers. */
 const forwards = document.documentElement.dir === 'rtl' ? -1 : 1;
-const SHIFT = 'var(--t-shift)';
-const BACK = 'calc(var(--t-shift) * -1)';
-const side = (direction: number) => (direction * forwards > 0 ? SHIFT : BACK);
 
-const state = { hovered: false, focused: false, pressed: false, visible: false };
-let index = 0;
-let timer = 0;
-let startX: number | null = null;
+/** How far the row can go, in pixels, and how far it has gone, from 0 to 1. */
+const reach = (): number => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+const progress = (): number => (reach() ? Math.min(1, Math.abs(viewport.scrollLeft) / reach()) : 0);
 
-const stacked = () => reducedMotion.matches || cards.length < 2;
-const paused = () => state.hovered || state.focused || state.pressed || !state.visible || document.hidden;
-/** Long enough to read it: between five and a half and eleven seconds. */
-const readingTime = (card: HTMLElement) =>
-  Math.round(Math.min(11000, Math.max(5500, 2500 + 45 * (card.textContent ?? '').replace(/\s+/g, ' ').trim().length)));
-
-const sync = () => {
-  section.classList.toggle('is-paused', paused());
-  clearTimeout(timer);
-  if (!stacked() && !paused()) timer = window.setTimeout(() => show(index + 1), readingTime(cards[index]));
+/** One step of an arrow: the cards that are whole in view, and never less than one. */
+const stride = (): number => {
+  const [first, second] = $$('.t-card', track);
+  if (!first) return viewport.clientWidth;
+  const pitch = second ? Math.abs(second.offsetLeft - first.offsetLeft) : first.offsetWidth;
+  const gap = pitch - first.offsetWidth;
+  const row = viewport.clientWidth - 2 * (parseFloat(getComputedStyle(track).paddingInlineStart) || 0);
+  return Math.max(1, Math.floor((row + gap) / pitch)) * pitch;
 };
 
-function show(next: number, { announce = false, direction = 1 } = {}): void {
-  const from = index;
-  index = ((next % cards.length) + cards.length) % cards.length;
-  if (from !== index && !stacked()) {
-    // The next one always comes in from the right side, whatever it did last.
-    const incoming = cards[index];
-    incoming.style.transition = 'none';
-    incoming.classList.remove('is-leaving');
-    incoming.style.setProperty('--enter', side(direction));
-    void incoming.offsetWidth;
-    incoming.style.transition = '';
-    cards[from].style.setProperty('--exit', side(-direction));
-  }
-  cards.forEach((card, position) => {
-    const shown = stacked() || position === index;
-    const leaving = !stacked() && position === from && from !== index;
-    if (!shown && !leaving && card.classList.contains('is-leaving')) {
-      // One that already left goes back to its place without crossing the screen.
-      card.style.transition = 'none';
-      card.classList.remove('is-leaving');
-      void card.offsetWidth;
-      card.style.transition = '';
-    }
-    card.classList.toggle('is-active', shown);
-    card.classList.toggle('is-leaving', leaving);
-    card.toggleAttribute('inert', !shown);
-    card.setAttribute('aria-hidden', String(!shown));
-  });
-  section.classList.toggle('is-stacked', stacked());
-  viewport.tabIndex = stacked() ? -1 : 0;
-  track.setAttribute('aria-live', announce ? 'polite' : 'off');
-  sync();
-}
+const move = (direction: number): void =>
+  viewport.scrollBy({ left: direction * forwards * stride(), behavior: smooth() });
 
-const step = (direction: number) => show(index + direction, { announce: true, direction });
+/** A button at the end of its way says so and stays where it is: disabling it would drop the focus. */
+const setEnd = (button: HTMLButtonElement, atEnd: boolean): void => {
+  button.setAttribute('aria-disabled', String(atEnd));
+};
 
-if (cards.length) {
-  viewport.setAttribute('aria-roledescription', text.carousel);
-  cards.forEach((card, position) => {
-    card.setAttribute('aria-roledescription', text.slide);
-    card.setAttribute('aria-label', fill(text.slideLabel, { number: position + 1, total: cards.length }));
-  });
+let queued = 0;
+const sync = (): void => {
+  queued = 0;
+  const at = progress();
+  // With every card in view there is nothing to move: the arrows and the bar stay out of sight.
+  controls.classList.toggle('is-ready', reach() > 1);
+  bar.style.setProperty('--t-size', String(Math.min(1, viewport.clientWidth / (viewport.scrollWidth || 1))));
+  bar.style.setProperty('--t-at', String(at));
+  setEnd(previous, at <= 0.005);
+  setEnd(next, at >= 0.995);
+};
+const later = (): void => {
+  queued ||= requestAnimationFrame(sync);
+};
 
-  viewport.addEventListener('keydown', (event) => {
-    if (stacked() || (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft')) return;
-    event.preventDefault();
-    step((event.key === 'ArrowRight' ? 1 : -1) * forwards);
-  });
-  // Only the card that is shown stops it, not the whole band: it keeps advancing while the page is read.
-  const overCard = (node: EventTarget | null) => Boolean((node as Element | null)?.closest?.('.t-card.is-active'));
-  track.addEventListener('pointerover', (event) => {
-    if (event.pointerType === 'mouse' && overCard(event.target)) {
-      state.hovered = true;
-      sync();
-    }
-  });
-  track.addEventListener('pointerout', (event) => {
-    if (event.pointerType === 'mouse' && !overCard(event.relatedTarget)) {
-      state.hovered = false;
-      sync();
-    }
-  });
-  section.addEventListener('focusin', (event) => {
-    state.focused = (event.target as Element).matches(':focus-visible');
-    sync();
-  });
-  section.addEventListener('focusout', (event) => {
-    if (!section.contains(event.relatedTarget as Node | null)) {
-      state.focused = false;
-      sync();
-    }
-  });
-  viewport.addEventListener('pointerdown', (event) => {
-    startX = event.clientX;
-    state.pressed = true;
-    sync();
-  });
-  // On the window: a finger lifted outside the card resumes it too.
-  window.addEventListener('pointerup', (event) => {
-    if (startX === null) return;
-    const distance = event.clientX - startX;
-    startX = null;
-    state.pressed = false;
-    if (Math.abs(distance) > 40 && !stacked()) step((distance < 0 ? 1 : -1) * forwards);
-    else sync();
-  });
-  window.addEventListener('pointercancel', () => {
-    if (startX === null) return;
-    startX = null;
-    state.pressed = false;
-    sync();
-  });
-  document.addEventListener('visibilitychange', sync);
-  reducedMotion.addEventListener?.('change', () => show(index));
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(
-      ([entry]) => {
-        state.visible = entry.isIntersecting;
-        sync();
-      },
-      { threshold: 0.35 }
-    ).observe($('#t-viewport') ?? viewport);
-  } else state.visible = true;
+previous.addEventListener('click', () => move(-1));
+next.addEventListener('click', () => move(1));
+viewport.addEventListener('keydown', (event) => {
+  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+  event.preventDefault();
+  // The right arrow moves the row towards the right of the screen, whichever way the page is written.
+  viewport.scrollBy({ left: (event.key === 'ArrowRight' ? 1 : -1) * stride(), behavior: smooth() });
+});
+viewport.addEventListener('scroll', later, { passive: true });
+// The row changes when the window does, and when the font arrives and the cards take their size.
+addEventListener('resize', later);
+if ('ResizeObserver' in window) new ResizeObserver(later).observe(track);
 
-  show(0);
-}
+sync();

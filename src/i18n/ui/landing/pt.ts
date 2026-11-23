@@ -57,12 +57,6 @@ export const landing: Landing = {
   heroPerUnit: '/un.',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Emblema da Carinova: três figuras sustentam uma chama dentro de um círculo',
-  aboutTitle: 'NOSSAS RAÍZES',
-  aboutHeroText:
-    'A Carinova nasceu em Bluefields, na Costa Caribe Sul da Nicarágua. Levamos no nosso DNA o calor humano, o compromisso e a força da nossa terra multicultural, e trabalhamos todos os dias para encurtar distâncias e entregar seus pacotes com a confiança e o carinho que nos caracterizam.',
-
   // The four steps
   howTitle: 'Seu próximo envio. Em apenas quatro passos.',
   step1: 'Cadastre-se',
@@ -288,8 +282,6 @@ export const landing: Landing = {
   testimonialsTitle: 'O que dizem nossos clientes',
   uiCarouselKeys: 'Use as setas para a esquerda e para a direita do teclado para ver mais depoimentos.',
   uiCarousel: 'carrossel',
-  uiSlide: 'depoimento',
-  uiSlideLabel: '{number} de {total}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'Perguntas Frequentes',
@@ -428,7 +420,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'Mercadoria geral',
     drugs: 'Substâncias ilegais',
     explosives: 'Explosivos e fogos de artifício',
     weapons: 'Armas, munições e acessórios',
@@ -437,6 +428,9 @@ export const landing: Landing = {
     aircraft: 'Acessórios para aeronaves',
     radio: 'Transmissores de rádio',
     drones: 'Drones',
+    vehicles: 'Carros e outros veículos',
+    motorcycles: 'Motos',
+    machinery: 'Maquinário pesado',
     lithium: 'Baterias de lítio avulsas',
     emobility: 'Bicicletas, patinetes e skates elétricos',
     flammables: 'Produtos inflamáveis',
@@ -448,6 +442,7 @@ export const landing: Landing = {
     vehiclebattery: 'Baterias de veículo',
     battery: 'Baterias (tipo a confirmar)',
     regulated: 'Produtos regulamentados',
+    animals: 'Animais vivos',
     freshfood: 'Alimentos frescos, plantas ou sementes',
     valuables: 'Dinheiro e itens de alto valor',
     furniture: 'Móveis',
@@ -456,6 +451,7 @@ export const landing: Landing = {
     alkaline: 'Pilhas alcalinas',
     games: 'Videogames e acessórios',
     electronics: 'Eletrônicos',
+    healthcare: 'Saúde e cuidados pessoais',
     techaccessories: 'Acessórios eletrônicos',
     sports: 'Esportes e fitness',
     clothing: 'Roupas e calçados',

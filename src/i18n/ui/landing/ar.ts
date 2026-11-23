@@ -58,12 +58,6 @@ export const landing: Landing = {
   heroPerUnit: 'للوحدة',
   heroPerPound: 'للرطل',
 
-  // Nuestras raíces
-  emblemAlt: 'شعار Carinova: ثلاثة أشخاص يحملون شعلة داخل دائرة',
-  aboutTitle: 'جذورنا',
-  aboutHeroText:
-    'وُلدت Carinova في بلوفيلدز، على ساحل الكاريبي الجنوبي في نيكاراغوا. نحمل في جيناتنا دفء أرضنا متعددة الثقافات والتزامها وقوتها، ونعمل كل يوم لنقرّب المسافات ونسلّمك طرودك بالثقة والمودّة اللتين تميّزاننا.',
-
   // The four steps
   howTitle: 'شحنتك القادمة. على بُعد أربع خطوات فقط.',
   step1: 'سجّل',
@@ -288,8 +282,6 @@ export const landing: Landing = {
   testimonialsTitle: 'ماذا يقول عملاؤنا',
   uiCarouselKeys: 'استخدم مفتاحَي السهم الأيمن والأيسر في لوحة المفاتيح لرؤية المزيد من الآراء.',
   uiCarousel: 'عرض متحرك',
-  uiSlide: 'رأي عميل',
-  uiSlideLabel: '{number} من {total}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'الأسئلة الشائعة',
@@ -438,7 +430,6 @@ export const landing: Landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'بضائع عامة',
     drugs: 'المواد غير المشروعة',
     explosives: 'المتفجرات والألعاب النارية',
     weapons: 'الأسلحة والذخائر وملحقاتها',
@@ -447,6 +438,9 @@ export const landing: Landing = {
     aircraft: 'ملحقات الطائرات',
     radio: 'أجهزة الإرسال اللاسلكي',
     drones: 'الطائرات المسيّرة',
+    vehicles: 'السيارات والمركبات الأخرى',
+    motorcycles: 'الدراجات النارية',
+    machinery: 'الآلات الثقيلة',
     lithium: 'بطاريات الليثيوم المنفصلة',
     emobility: 'الدراجات والسكوترات والألواح الكهربائية',
     flammables: 'المنتجات القابلة للاشتعال',
@@ -458,6 +452,7 @@ export const landing: Landing = {
     vehiclebattery: 'بطاريات المركبات',
     battery: 'البطاريات (نوعها قيد التأكيد)',
     regulated: 'المنتجات الخاضعة للتنظيم',
+    animals: 'الحيوانات الحية',
     freshfood: 'الأغذية الطازجة أو النباتات أو البذور',
     valuables: 'النقود والأشياء الثمينة',
     furniture: 'الأثاث',
@@ -466,6 +461,7 @@ export const landing: Landing = {
     alkaline: 'البطاريات القلوية',
     games: 'ألعاب الفيديو وملحقاتها',
     electronics: 'الإلكترونيات',
+    healthcare: 'الصحة والعناية الشخصية',
     techaccessories: 'الملحقات الإلكترونية',
     sports: 'الرياضة واللياقة البدنية',
     clothing: 'الملابس والأحذية',

@@ -1,8 +1,9 @@
 ---
 // Inicio: the page Carinova wrote on 2026-11-18, section by section, in its order and in its words
 // (docs/INFORMATION-ARCHITECTURE.md → "The home page"): the notices, the header, the opening with
-// the rates, "Nuestras raíces", the four steps, Carinova Bot, Personal Shopper, the calculator,
-// Carinova Business, what customers say, the questions and the closing.
+// the rates, the four steps, Carinova Bot, Personal Shopper, the calculator, Carinova Business,
+// what customers say, the questions and the closing. "Nuestras raíces", its second section, has
+// been the page about Carinova since 2026-11-21 (/nosotros, D-131).
 //
 // It keeps Carinova's look (src/assets/styles/landing.css) and is built the way the rest of the
 // site is: a static page per language (like every page, it renders in Spanish at its own address
@@ -14,7 +15,6 @@
 // into it; the calculator's script, the article search with its catalogue, the dialogs and the
 // directory of stores with its logos are fetched when they are used (components/landing/scripts).
 import StructuredData from '~/components/common/StructuredData.astro';
-import About from '~/components/landing/About.astro';
 import Account from '~/components/landing/Account.astro';
 import Announce from '~/components/landing/Announce.astro';
 import ArticleCheck from '~/components/landing/ArticleCheck.astro';
@@ -52,7 +52,6 @@ const metadata = { title: ui.homePage.title, ignoreTitleTemplate: true, descript
 
   <main id="main" tabindex="-1">
     <Hero />
-    <About />
     <Steps />
     <ArticleCheck />
     <Shopper />

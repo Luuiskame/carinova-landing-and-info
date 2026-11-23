@@ -3,7 +3,7 @@
  * the Spanish dictionary, translated. The customer is addressed as "vous".
  */
 import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, SESSION_DAYS } from '../../data/account.ts';
-import { sentence } from '../../data/carinova.ts';
+import { CONTACT, sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/fr/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -14,6 +14,8 @@ import { landing } from './landing/fr.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -598,27 +600,44 @@ export const ui: UI = {
   // pages/nosotros.astro
   aboutPage: {
     tagline: 'À propos',
-    description: `Carinova est une entreprise nicaraguayenne d’envois des États-Unis vers le Nicaragua, avec des agences à ${cityNames.join(' et ')}.`,
-    title: 'Nous sommes Carinova',
-    subtitle: `Une entreprise nicaraguayenne qui rapproche les magasins des États-Unis de ${cityNames.join(' et ')}.`,
-    logoAlt: 'Logo de Carinova : trois personnes lèvent ensemble une torche allumée devant un globe terrestre.',
-    storyTitle: 'Notre histoire',
-    story: [
-      'Carinova est née au Nicaragua d’une idée simple : acheter aux États-Unis devrait être facile, sûr et à des prix clairs pour tout le monde.',
-      `Depuis nos agences de ${cityNames.join(' et ')}, nous accompagnons chaque client personnellement, sur WhatsApp et en personne, et nous veillons à ce que chaque achat et chaque colis arrivent à bon port.`,
-    ],
+    metaTitle: 'À propos : qui nous sommes et d’où nous venons',
+    description: `Carinova est une entreprise nicaraguayenne d’envois des États-Unis vers le Nicaragua, née à ${bluefields}. Découvrez nos racines, ce que nous faisons et où nous trouver à ${cityNames.join(' et ')}.`,
+    title: `Nous sommes Carinova, le transporteur né à ${bluefields}`,
+    subtitle: `Une entreprise nicaraguayenne qui achemine vos achats, les colis de votre famille et le fret de votre entreprise depuis les États-Unis, avec des agences à ${cityNames.join(' et ')}.`,
+    roots: {
+      title: 'Nos racines',
+      text: 'Carinova est née à Bluefields, sur la côte caraïbe sud du Nicaragua. La chaleur, l’engagement et la force de notre terre multiculturelle font partie de notre ADN, et nous travaillons chaque jour pour réduire les distances et livrer vos colis avec la confiance et l’attention qui nous caractérisent.',
+      emblemAlt: 'Emblème de Carinova : trois figures portent une flamme à l’intérieur d’un cercle',
+    },
+    whatTagline: 'Ce que nous faisons',
+    whatTitle: 'Nous rapprochons les magasins des États-Unis du Nicaragua',
+    what: `Avec votre compte, vous recevez votre Carinova ID et une adresse à ${warehouse.city} pour acheter dans n’importe quel magasin. Nous y recevons vos colis, nous les acheminons par avion ou par bateau et vous les retirez à ${cityNames.join(' ou ')}.`,
+    servicesLink: 'Voir les services en détail',
+    factsTagline: 'En quelques mots',
+    factsTitle: 'Carinova en bref',
+    facts: {
+      origin: 'Nous sommes nés à',
+      originValue: `${bluefields}, côte caraïbe sud du Nicaragua`,
+      route: 'Notre trajet',
+      routeValue: 'Des États-Unis au Nicaragua',
+      reception: 'Nous recevons vos achats à',
+      branches: 'Agences au Nicaragua',
+      transport: 'Comment voyagent vos colis',
+      contact: 'Assistance sur WhatsApp',
+      networks: 'Suivez-nous sur',
+    },
     valuesTagline: 'Nos valeurs',
     valuesTitle: 'Ce qui nous anime',
     values: [
       {
         title: 'Travail d’équipe',
         description:
-          'Comme dans notre logo : trois personnes qui lèvent ensemble la même torche. Chaque envoi est un travail d’équipe, de Miami jusqu’à votre agence.',
+          'Comme dans notre emblème : trois figures qui portent ensemble la même flamme. Chaque envoi est un travail d’équipe, de Miami jusqu’à votre agence.',
       },
       {
         title: 'Portée internationale',
         description:
-          'Le globe de notre nom est le pont que nous traversons chaque jour entre les États-Unis et le Nicaragua.',
+          'Le cercle qui les entoure est le pont que nous traversons chaque jour entre les États-Unis et le Nicaragua.',
       },
       {
         title: 'Engagement',
@@ -626,6 +645,37 @@ export const ui: UI = {
       },
     ],
     where: 'Où nous trouver',
+    reviewsTagline: 'Avis',
+    reviewsTitle: 'Ce que disent nos clients',
+    faqTitle: 'Questions sur Carinova',
+    faq: [
+      {
+        title: 'Qu’est-ce que Carinova ?',
+        description:
+          'Carinova est une entreprise nicaraguayenne d’envois. Nous acheminons des achats personnels, des colis familiaux et du fret d’entreprise des États-Unis au Nicaragua, par avion ou par bateau.',
+      },
+      {
+        title: 'D’où vient Carinova ?',
+        description: `Carinova est née à ${bluefields}, sur la côte caraïbe sud du Nicaragua, et compte aujourd’hui des agences à ${cityNames.join(' et ')}.`,
+      },
+      {
+        title: 'Où se trouvent les agences de Carinova et quels sont leurs horaires ?',
+        description: sentence(`À ${cityNames.join(' et ')}. Nous sommes ouverts ${describeHours(hours)}`),
+      },
+      {
+        title: 'D’où Carinova achemine-t-elle les colis ?',
+        description: `Nous les recevons dans notre entrepôt de ${warehouse.city}, ${warehouse.state}, et nous les acheminons au Nicaragua par avion en ${air.transit} ou par bateau en ${sea.transit}, à compter de l’arrivée du colis à l’entrepôt.`,
+      },
+      {
+        title: 'Comment contacter Carinova ?',
+        description: `Sur WhatsApp, au <span dir="ltr">${CONTACT.whatsappDisplay}</span>, ou dans l’une de nos agences.`,
+      },
+      {
+        title: 'Où lire des avis de clients de Carinova ?',
+        description:
+          'La page des avis de ce site réunit ceux que nos clients ont publiés, tels qu’ils les ont écrits et avec le lien vers l’endroit où chacun a été publié.',
+      },
+    ],
     careers: {
       title: 'Rejoignez notre équipe.',
       text: 'Nous recherchons des personnes engagées pour le service et l’excellence opérationnelle.',
@@ -635,6 +685,64 @@ export const ui: UI = {
       title: 'Faisons votre premier envoi',
       subtitle: 'Créez votre compte en ligne ou estimez votre envoi avant d’acheter.',
       lead: 'Vous voulez mieux nous connaître ?',
+    },
+  },
+
+  // What a review's card says (the reviews themselves are never translated)
+  reviews: {
+    recommends: 'Recommande Carinova',
+    rating: 'Note de {rating} sur 5',
+    seeOn: 'Voir sur {source}',
+    allOn: 'Tous les avis sur {source}',
+    readAll: 'Lire l’avis en entier',
+    seeAll: 'Voir tous les avis',
+    moreTitle: 'Il y a d’autres avis',
+    moreText: 'Lisez tout ce que nos clients racontent de leurs envois.',
+    previous: 'Avis précédents',
+    next: 'Avis suivants',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: 'Avis',
+    metaTitle: 'Avis des clients',
+    description:
+      'Des avis réels de clients de Carinova sur leurs envois des États-Unis vers le Nicaragua, tels qu’ils les ont publiés sur {sources}. Lisez-les avant votre premier envoi.',
+    title: 'Ce que disent les clients de Carinova',
+    subtitle:
+      'Des avis réels de personnes qui ont déjà fait venir leurs achats des États-Unis au Nicaragua avec nous, tels qu’ils les ont publiés sur {sources}.',
+    listTitle: 'Les avis de nos clients',
+    filterLabel: 'Afficher les avis de',
+    all: 'Tous',
+    howTitle: 'Comment nous présentons les avis',
+    how: [
+      {
+        title: 'Publiés par leurs auteurs',
+        text: 'Chaque avis a été publié par son auteur, sous son nom, sur {sources}.',
+      },
+      {
+        title: 'Pas un mot changé',
+        text: 'Nous les reprenons tels qu’ils ont été écrits et dans leur langue d’origine, sans les corriger ni les traduire.',
+      },
+      {
+        title: 'Avec le lien vers la source',
+        text: 'Chacun mène à la page de Carinova où il a été publié. Ils y sont tous, les plus récents aussi.',
+      },
+    ],
+    writeTitle: 'Vous avez déjà reçu votre colis ? Racontez-nous',
+    writeText: 'Votre avis aide d’autres personnes à se décider et nous aide à nous améliorer.',
+    writeOn: 'Donner mon avis sur {source}',
+    nextTitle: 'Avant votre premier envoi',
+    next: {
+      how: 'Voir comment ça marche, étape par étape',
+      quote: 'Calculer le prix de votre envoi',
+      branches: 'Voir où retirer votre colis',
+      about: 'Découvrir qui nous sommes',
+    },
+    closing: {
+      title: 'Faites votre premier envoi avec Carinova',
+      subtitle: 'Créez votre compte en ligne et recevez votre Carinova ID et votre adresse aux États-Unis.',
+      lead: 'Une question avant de commencer ?',
     },
   },
 
@@ -776,6 +884,7 @@ export const ui: UI = {
     tracking: 'Suivi',
     faq: 'Questions fréquentes',
     about: 'À propos',
+    reviews: 'Avis',
     terms: 'Conditions du service',
     privacy: 'Confidentialité',
     and: ' et ',

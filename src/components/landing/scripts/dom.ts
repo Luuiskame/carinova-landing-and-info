@@ -22,8 +22,11 @@ const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;'
 export const esc = (value: unknown): string =>
   String(value ?? '').replace(/[&<>"']/g, (character) => ESCAPES[character]);
 
-/** The icons that say "forwards": they turn round in a page written from right to left (Icon.astro marks the same ones). */
-const FORWARD: ReadonlyArray<string> = ['arrow', 'chevron'];
+/**
+ * The icons that say "forwards", and the one of a link that leads out of the site: they turn round
+ * in a page written from right to left (Icon.astro marks the same ones).
+ */
+const FORWARD: ReadonlyArray<string> = ['arrow', 'chevron', 'external'];
 
 /** An icon of the page's sprite, by its name without "i-". */
 export const icon = (name: string): string =>

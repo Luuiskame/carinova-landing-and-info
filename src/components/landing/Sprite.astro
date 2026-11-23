@@ -6,10 +6,11 @@
 // few icons of the bar of notices, the header, the opening and the WhatsApp button come before
 // them (`part="first"`), and all the others at the end of the page (`part="rest"`). An icon that
 // points at a drawing that has not arrived yet shows when it arrives.
+import { REVIEWS } from '~/data/carinova';
 import { i18n } from '~/i18n';
 
 import { FLAGS } from './helpers';
-import { FIRST_SCREEN_ICONS, ICONS } from './icons';
+import { FIRST_SCREEN_ICONS, GOOGLE_ONLY_ICONS, ICONS } from './icons';
 
 export interface Props {
   part: 'first' | 'rest';
@@ -19,9 +20,12 @@ const { part } = Astro.props;
 const { locale } = i18n(Astro);
 
 /** The first screen's icons, with the flag of this page's language (the language button shows it). */
-const first = new Set<string>([...FIRST_SCREEN_ICONS, ...(FLAGS[locale] ? [FLAGS[locale]] : [])]);
+const first = new Set<string>([...FIRST_SCREEN_ICONS, FLAGS[locale]]);
+/** Google's logo and the stars wait for a review from Google. */
+const unused = new Set<string>(REVIEWS.some((review) => review.source === 'google') ? [] : GOOGLE_ONLY_ICONS);
 
 const symbols = Object.entries(ICONS)
+  .filter(([id]) => !unused.has(id))
   .filter(([id]) => first.has(id) === (part === 'first'))
   .map(([id, { viewBox, body }]) => `<symbol id="${id}" viewBox="${viewBox}">${body}</symbol>`)
   .join('');

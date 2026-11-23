@@ -63,12 +63,6 @@ export const landing = {
   heroPerUnit: '/u',
   heroPerPound: '/lb',
 
-  // Nuestras raíces
-  emblemAlt: 'Emblema de Carinova: tres figuras sostienen una llama dentro de un círculo',
-  aboutTitle: 'NUESTRAS RAÍCES',
-  aboutHeroText:
-    'Carinova nació en Bluefields, en la Costa Caribe Sur de Nicaragua. Llevamos en nuestro ADN la calidez, el compromiso y la fuerza de nuestra tierra multicultural, y trabajamos cada día para acortar distancias y entregar tus paquetes con la confianza y el cariño que nos caracterizan.',
-
   // The four steps
   howTitle: 'Tu próximo envío. A solo cuatro pasos.',
   step1: 'Registrate',
@@ -294,8 +288,6 @@ export const landing = {
   testimonialsTitle: 'Lo que dicen nuestros clientes',
   uiCarouselKeys: 'Usá las flechas izquierda y derecha del teclado para ver más testimonios.',
   uiCarousel: 'carrusel',
-  uiSlide: 'testimonio',
-  uiSlideLabel: '{number} de {total}',
 
   // Preguntas frecuentes (the questions are under `faq`)
   faqTitle: 'Preguntas Frecuentes',
@@ -445,7 +437,6 @@ export const landing = {
 
   // What the bot calls each kind of article, and the directory its categories
   cat: {
-    general: 'Mercancía general',
     drugs: 'Sustancias ilegales',
     explosives: 'Explosivos y pirotecnia',
     weapons: 'Armas, municiones y accesorios',
@@ -454,6 +445,9 @@ export const landing = {
     aircraft: 'Accesorios para aviones',
     radio: 'Transmisores de radio',
     drones: 'Drones',
+    vehicles: 'Carros y otros vehículos',
+    motorcycles: 'Motos',
+    machinery: 'Maquinaria pesada',
     lithium: 'Baterías de litio sueltas',
     emobility: 'Bicicletas, scooters y patinetas eléctricas',
     flammables: 'Productos inflamables',
@@ -465,6 +459,7 @@ export const landing = {
     vehiclebattery: 'Baterías de vehículo',
     battery: 'Baterías (tipo por confirmar)',
     regulated: 'Productos regulados',
+    animals: 'Animales vivos',
     freshfood: 'Alimentos frescos, plantas o semillas',
     valuables: 'Dinero y objetos de alto valor',
     furniture: 'Muebles',
@@ -473,6 +468,7 @@ export const landing = {
     alkaline: 'Pilas alcalinas',
     games: 'Videojuegos y accesorios',
     electronics: 'Electrónica',
+    healthcare: 'Salud y cuidado personal',
     techaccessories: 'Accesorios electrónicos',
     sports: 'Deportes y fitness',
     clothing: 'Ropa y calzado',

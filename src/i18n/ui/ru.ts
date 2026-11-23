@@ -7,7 +7,7 @@
  * "в Майами" is written as it is.
  */
 import { LOGIN_CODE_DIGITS, LOGIN_CODE_MINUTES, SESSION_DAYS } from '../../data/account.ts';
-import { sentence } from '../../data/carinova.ts';
+import { CONTACT, sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/ru/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -18,6 +18,8 @@ import { landing } from './landing/ru.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -603,26 +605,43 @@ export const ui: UI = {
   // pages/nosotros.astro
   aboutPage: {
     tagline: 'О нас',
-    description: `Carinova — никарагуанская компания, которая доставляет посылки из США в Никарагуа. Отделения в городах ${cityNames.join(' и ')}.`,
-    title: 'Мы — Carinova',
-    subtitle: `Никарагуанская компания, благодаря которой магазины США становятся ближе для жителей городов ${cityNames.join(' и ')}.`,
-    logoAlt: 'Логотип Carinova: три человека вместе поднимают горящий факел на фоне земного шара.',
-    storyTitle: 'Наша история',
-    story: [
-      'Carinova появилась в Никарагуа с простой идеей: покупать в США должно быть легко, безопасно и по понятным ценам — для всех.',
-      `В наших отделениях в городах ${cityNames.join(' и ')} мы лично обслуживаем каждого клиента — в WhatsApp и на месте — и следим, чтобы каждая покупка и каждая посылка благополучно дошли до адресата.`,
-    ],
+    metaTitle: 'О нас: кто мы и откуда',
+    description: `Carinova — никарагуанская компания, которая доставляет посылки из США в Никарагуа. Она родилась в городе ${bluefields}. Узнайте о наших корнях, о том, что мы делаем и где нас найти: ${cityNames.join(' и ')}.`,
+    title: `Мы — Carinova, служба доставки родом из города ${bluefields}`,
+    subtitle: `Никарагуанская компания, которая привозит из США ваши покупки, посылки от родных и грузы для бизнеса. Отделения в городах ${cityNames.join(' и ')}.`,
+    roots: {
+      title: 'Наши корни',
+      text: 'Carinova родилась в Блуфилдсе, на Южном Карибском побережье Никарагуа. Теплота, преданность делу и сила нашей многокультурной родной земли — в нашей ДНК, и каждый день мы работаем, чтобы сокращать расстояния и доставлять ваши посылки с той надёжностью и заботой, которые нас отличают.',
+      emblemAlt: 'Эмблема Carinova: три фигуры держат пламя внутри круга',
+    },
+    whatTagline: 'Чем мы занимаемся',
+    whatTitle: 'Мы делаем магазины США ближе к Никарагуа',
+    what: `С аккаунтом вы получаете Carinova ID и адрес в городе ${warehouse.city}, чтобы покупать в любом магазине. Мы принимаем там ваши посылки, доставляем их самолётом или морем, а вы забираете их в городах ${cityNames.join(' или ')}.`,
+    servicesLink: 'Подробнее об услугах',
+    factsTagline: 'В двух словах',
+    factsTitle: 'Carinova в фактах',
+    facts: {
+      origin: 'Откуда мы',
+      originValue: `${bluefields}, Южное Карибское побережье Никарагуа`,
+      route: 'Наш маршрут',
+      routeValue: 'Из США в Никарагуа',
+      reception: 'Где мы принимаем ваши покупки',
+      branches: 'Отделения в Никарагуа',
+      transport: 'Как едут ваши посылки',
+      contact: 'Поддержка в WhatsApp',
+      networks: 'Мы в соцсетях',
+    },
     valuesTagline: 'Наши ценности',
     valuesTitle: 'Что нами движет',
     values: [
       {
         title: 'Командная работа',
         description:
-          'Как на нашем логотипе: три человека вместе поднимают один факел. Каждая отправка — работа команды, от Майами до вашего отделения.',
+          'Как на нашей эмблеме: три фигуры вместе держат одно пламя. Каждая отправка — работа команды, от Майами до вашего отделения.',
       },
       {
         title: 'Международный охват',
-        description: 'Земной шар в нашем названии — это мост, который мы каждый день проходим между США и Никарагуа.',
+        description: 'Круг, который их окружает, — это мост, который мы каждый день проходим между США и Никарагуа.',
       },
       {
         title: 'Ответственность',
@@ -630,6 +649,37 @@ export const ui: UI = {
       },
     ],
     where: 'Где мы находимся',
+    reviewsTagline: 'Отзывы',
+    reviewsTitle: 'Что говорят наши клиенты',
+    faqTitle: 'Вопросы о Carinova',
+    faq: [
+      {
+        title: 'Что такое Carinova?',
+        description:
+          'Carinova — никарагуанская компания по доставке. Мы привозим личные покупки, посылки от родных и грузы для бизнеса из США в Никарагуа, самолётом или морем.',
+      },
+      {
+        title: 'Откуда Carinova?',
+        description: `Carinova родилась в городе ${bluefields}, на Южном Карибском побережье Никарагуа, а сегодня у неё есть отделения в городах ${cityNames.join(' и ')}.`,
+      },
+      {
+        title: 'Где находятся отделения Carinova и когда они работают?',
+        description: sentence(`В городах ${cityNames.join(' и ')}. Мы работаем ${describeHours(hours)}`),
+      },
+      {
+        title: 'Откуда Carinova привозит посылки?',
+        description: `Мы принимаем их на нашем складе в городе ${warehouse.city}, ${warehouse.state}, и доставляем в Никарагуа: самолётом — ${air.transit}, морем — ${sea.transit}, считая с момента поступления посылки на склад.`,
+      },
+      {
+        title: 'Как связаться с Carinova?',
+        description: `Через WhatsApp по номеру <span dir="ltr">${CONTACT.whatsappDisplay}</span> или в любом из наших отделений.`,
+      },
+      {
+        title: 'Где прочитать отзывы клиентов Carinova?',
+        description:
+          'На странице отзывов этого сайта собраны те, что опубликовали наши клиенты, — в том виде, в каком они написаны, и со ссылкой на место публикации каждого.',
+      },
+    ],
     careers: {
       title: 'Присоединяйтесь к нашей команде.',
       text: 'Мы ищем людей, преданных сервису и безупречной работе.',
@@ -639,6 +689,64 @@ export const ui: UI = {
       title: 'Давайте сделаем вашу первую отправку',
       subtitle: 'Создайте аккаунт онлайн или рассчитайте доставку до покупки.',
       lead: 'Хотите узнать нас поближе?',
+    },
+  },
+
+  // What a review's card says (the reviews themselves are never translated)
+  reviews: {
+    recommends: 'Рекомендует Carinova',
+    rating: 'Оценка {rating} из 5',
+    seeOn: 'Открыть в {source}',
+    allOn: 'Все отзывы в {source}',
+    readAll: 'Читать отзыв полностью',
+    seeAll: 'Смотреть все отзывы',
+    moreTitle: 'Есть и другие отзывы',
+    moreText: 'Прочитайте всё, что клиенты рассказывают о своих отправлениях.',
+    previous: 'Предыдущие отзывы',
+    next: 'Следующие отзывы',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: 'Отзывы',
+    metaTitle: 'Отзывы клиентов',
+    description:
+      'Настоящие отзывы клиентов Carinova о доставке из США в Никарагуа — в том виде, в каком они опубликованы в {sources}. Прочитайте их перед первой отправкой.',
+    title: 'Что говорят клиенты Carinova',
+    subtitle:
+      'Настоящие отзывы тех, кто уже привёз с нами свои покупки из США в Никарагуа, — в том виде, в каком они опубликованы в {sources}.',
+    listTitle: 'Отзывы наших клиентов',
+    filterLabel: 'Показать отзывы из',
+    all: 'Все',
+    howTitle: 'Как мы показываем отзывы',
+    how: [
+      {
+        title: 'Опубликованы самими авторами',
+        text: 'Каждый отзыв опубликован автором под своим именем в {sources}.',
+      },
+      {
+        title: 'Ни одного изменённого слова',
+        text: 'Мы приводим их так, как они написаны, на языке оригинала, без правок и перевода.',
+      },
+      {
+        title: 'Со ссылкой на источник',
+        text: 'Каждый ведёт на страницу Carinova, где он опубликован. Там есть все отзывы, включая самые новые.',
+      },
+    ],
+    writeTitle: 'Уже получили посылку? Расскажите, как всё прошло',
+    writeText: 'Ваш отзыв помогает другим определиться, а нам — становиться лучше.',
+    writeOn: 'Оставить отзыв в {source}',
+    nextTitle: 'Перед первой отправкой',
+    next: {
+      how: 'Посмотрите, как это работает, шаг за шагом',
+      quote: 'Рассчитайте стоимость доставки',
+      branches: 'Узнайте, где забрать посылку',
+      about: 'Узнайте, кто мы',
+    },
+    closing: {
+      title: 'Сделайте первую отправку с Carinova',
+      subtitle: 'Создайте аккаунт онлайн и получите свой Carinova ID и адрес в США.',
+      lead: 'Хотите сначала задать вопрос?',
     },
   },
 
@@ -776,6 +884,7 @@ export const ui: UI = {
     tracking: 'Отслеживание',
     faq: 'Частые вопросы',
     about: 'О нас',
+    reviews: 'Отзывы',
     terms: 'Условия обслуживания',
     privacy: 'Конфиденциальность',
     and: ' и ',

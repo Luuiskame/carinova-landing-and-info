@@ -36,7 +36,9 @@ const help = [
   { text: t.navHow, href: '#como-funciona' },
   { text: t.navCheck, href: '#restricciones' },
   { text: t.faqTitle, href: '#preguntas' },
-  { text: t.footerAbout, href: '#sobre-nosotros' },
+  // Two pages of their own: who Carinova is (with "Nuestras raíces", once a section of this page) and what its customers say.
+  { text: t.footerAbout, href: href('/nosotros') },
+  { text: ui.nav.reviews, href: href('/opiniones') },
 ];
 const networks = SOCIAL_LINKS.filter((link) => SOCIAL_ICONS[link.name]);
 const hasCompany = Boolean(COMPANY.legalName || COMPANY.ruc);

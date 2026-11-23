@@ -228,6 +228,13 @@ export const PAYMENTS = { cash: true, banks: ['BAC', 'Banpro', 'LAFISE'] };
 export const COMPANY = { legalName: '', ruc: '' };
 
 /**
+ * Where Carinova comes from, in its own words on the page it wrote on 2026-11-18 ("Carinova nació
+ * en Bluefields, en la Costa Caribe Sur de Nicaragua"): what the company's structured data says on
+ * the page about it (src/utils/schema.ts). The sentences of that page are in the dictionaries.
+ */
+export const ORIGIN = { city: 'Bluefields', region: 'Costa Caribe Sur', country: 'Nicaragua', countryCode: 'NI' };
+
+/**
  * Delivery to the customer's door (última milla). From Carinova's prototype: it is coordinated case
  * by case, anywhere in the country, and has an additional charge that depends on the destination.
  * There is no published price: it is confirmed when the delivery is arranged.
@@ -404,12 +411,55 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
     items: [
       {
         name: 'Carros',
-        match: ['carro', 'carros', 'auto', 'autos', 'automovil', 'vehiculo', 'vehiculos', 'camioneta'],
+        match: [
+          'carro',
+          'carros',
+          'auto',
+          'autos',
+          'automovil',
+          'vehiculo',
+          'vehiculos',
+          'camioneta',
+          'automoviles',
+          'camionetas',
+          'camion',
+          'camiones',
+          'pick up',
+          'pickup',
+          'bus',
+          'buses',
+          'autobus',
+          'microbus',
+          'furgon',
+          'rastra',
+          'cuadraciclo',
+          'cuatrimoto',
+        ],
       },
-      { name: 'Motos', match: ['moto', 'motos', 'motocicleta', 'motocicletas'] },
+      {
+        name: 'Motos',
+        match: ['moto', 'motos', 'motocicleta', 'motocicletas', 'motoneta', 'pasola', 'mototaxi', 'caponera'],
+      },
       {
         name: 'Maquinaria pesada',
-        match: ['maquinaria', 'maquinaria pesada', 'excavadora', 'retroexcavadora', 'tractor', 'montacargas'],
+        match: [
+          'maquinaria',
+          'maquinaria pesada',
+          'excavadora',
+          'retroexcavadora',
+          'tractor',
+          'montacargas',
+          'excavadoras',
+          'tractores',
+          'grua',
+          'gruas',
+          'bulldozer',
+          'cargador frontal',
+          'minicargador',
+          'motoniveladora',
+          'compactadora',
+          'cosechadora',
+        ],
       },
     ],
   },
@@ -437,11 +487,21 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
         ],
       },
       {
-        // Since Carinova's home page of 2026-11-18. "Alcohol" by itself stays among the flammables.
+        // Since Carinova's home page of 2026-11-18. "Alcohol" by itself is the drink (D-128); the
+        // alcohol that travels by sea is named whole among the flammables ("alcohol en gel").
         name: 'Bebidas alcohólicas',
         match: [
           'bebida alcoholica',
           'bebidas alcoholicas',
+          'alcohol',
+          'trago',
+          'tragos',
+          'guaro',
+          'whiskey',
+          'ginebra',
+          'aguardiente',
+          'champan',
+          'sidra',
           'licor',
           'licores',
           'ron',
@@ -454,7 +514,10 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
           'vinos',
         ],
       },
-      { name: 'Accesorios para aeronaves', match: ['aeronave', 'aeronaves', 'avion', 'aviones', 'avioneta'] },
+      {
+        name: 'Accesorios para aeronaves',
+        match: ['aeronave', 'aeronaves', 'avion', 'aviones', 'avioneta', 'helicoptero', 'helicopteros'],
+      },
       {
         name: 'Transmisores de radio',
         match: ['transmisor', 'transmisores', 'transmisor de radio', 'radio transmisor', 'walkie talkie'],
@@ -468,7 +531,25 @@ export const RESTRICTED_ITEMS: Record<RestrictedGroupId, RestrictedGroup> = {
     items: [
       {
         name: 'Productos inflamables',
-        match: ['inflamable', 'inflamables', 'combustible', 'gasolina', 'pintura', 'solvente', 'alcohol'],
+        match: [
+          'inflamable',
+          'inflamables',
+          'combustible',
+          'gasolina',
+          'pintura',
+          'solvente',
+          'alcohol en gel',
+          'alcohol gel',
+          'gel antibacterial',
+          'alcohol isopropilico',
+          'alcohol etilico',
+          'alcohol antiseptico',
+          'alcohol desinfectante',
+          'acetona',
+          'thinner',
+          'encendedor',
+          'encendedores',
+        ],
       },
       {
         name: 'Baterías de litio sueltas',
@@ -632,8 +713,129 @@ export const STORES: Array<Store> = [
   },
 ];
 
-/** Customer reviews (Google). The reviews section is hidden while this list is empty. Only real reviews. */
-export const REVIEWS: Array<{ name: string; text: string; rating: number; source?: string }> = [];
+/**
+ * Where Carinova's reviews are published, each with the address of the page that shows all of them.
+ * A source is named on the home page once REVIEWS has a review from it and it has an address.
+ */
+export const REVIEW_SOURCES = {
+  /** The "Opiniones" (reviews) tab of the Facebook page of SOCIAL_LINKS. TODO: click it once to check it. */
+  facebook: { name: 'Facebook', url: 'https://www.facebook.com/profile.php?id=61591437427298&sk=reviews' },
+  /**
+   * TODO: the reviews of Carinova's Google Business Profile, once it has some (its link from
+   * "Compartir" in Google Maps, or https://search.google.com/local/reviews?placeid=<its Place ID>).
+   */
+  google: { name: 'Google', url: '' },
+};
+
+export type ReviewSource = keyof typeof REVIEW_SOURCES;
+
+/**
+ * A review as its source publishes it. A Facebook review is a recommendation ("recomienda
+ * Carinova"), so it has no stars; a Google review has its stars, `rating`, from 1 to 5.
+ */
+export type Review = {
+  /** The person's name as the review shows it, accents and all. */
+  name: string;
+  /** Their words exactly as written: line breaks (\n), punctuation and emoji included. Never translated or corrected. */
+  text: string;
+  /** The language the words are written in ('es', 'en'): screen readers read them in it. */
+  lang: string;
+  /** The day it was published, as YYYY-MM-DD. The card shows its month and its year. */
+  date: string;
+  /** The address of this review, when it has one; without it, the card links to all the reviews of its source. */
+  url?: string;
+  /** The person's photo: the name of its file in REVIEW_PHOTOS_URL, or a full address. Without one, the card shows initials. */
+  photo?: string;
+} & ({ source: 'facebook' } | { source: 'google'; rating: 1 | 2 | 3 | 4 | 5 });
+
+/**
+ * The public address of the R2 bucket that holds the photos of the people who wrote the reviews,
+ * without the final slash (for example 'https://media.carinovanic.com/resenas'). Each review names
+ * its file in `photo`. While this is empty, the cards show each person's initials.
+ *
+ * The page shows a photo 48 px wide and loads the file as it is in the bucket: upload them square,
+ * about 160 × 160 px, in WebP or JPEG, under 20 KB each. Serve the bucket from a domain of the
+ * site's Cloudflare account: its r2.dev address is rate-limited and not cached. TODO: the address.
+ */
+export const REVIEW_PHOTOS_URL = '';
+
+/**
+ * What customers wrote about Carinova, newest first (the home page orders them by date anyway).
+ * Only real reviews, each as it is published: the name and the words are copied exactly, never
+ * translated or corrected. A Facebook review goes here only if it recommends Carinova. While the
+ * list is empty, the home page shows the three places Carinova's page keeps for reviews.
+ *
+ * The eight of Carinova's Facebook page on 2026-11-21 ("100% recommend (8 reviews)", from the
+ * developer's screenshots of 2026-11-20 and 2026-11-21). The four of November were minutes or hours
+ * old on them ("8 m", "1 h", "17 h"), so their day may be one off; the pages show only the month.
+ * Elgen Tinoco and James Trace Lewis shared theirs with their friends only: Facebook does not show
+ * those two to a visitor who follows the link. James Trace Lewis has no photo on Facebook.
+ */
+export const REVIEWS: ReadonlyArray<Review> = [
+  {
+    source: 'facebook',
+    name: 'Otoniel Marin',
+    text: 'Muy buena experiencia con Carinova. Mi compra llegó sin ningún inconveniente y todo salió excelente. Me gustó mucho el servicio y la responsabilidad con la que trabajan. Es una excelente opción para quienes queremos traer productos de Estados Unidos a Nicaragua de forma fácil y segura.\n\n¡Totalmente recomendados! Sin duda volvería a comprar con ellos. 🇺🇸🇳🇮',
+    lang: 'es',
+    date: '2026-11-20',
+    photo: 'otoniel-marin.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Kenard López Masis',
+    text: 'Excelente servicio! Super recomendados! Rápido, seguro y fácil',
+    lang: 'es',
+    date: '2026-11-20',
+    photo: 'kenard-lopez-masis.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Elgen Tinoco',
+    text: 'Fácil, rápido y seguro.\nExcelente servicio',
+    lang: 'es',
+    date: '2026-11-19',
+    photo: 'elgen-tinoco.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Emiya Shirou',
+    text: 'Excelente servicio, amables, rápidos muy recomendable ⭐⭐⭐⭐⭐',
+    lang: 'es',
+    date: '2026-11-19',
+    photo: 'emiya-shirou.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Yudeisa Gonzalez',
+    text: 'Excelente servicio, recibí mis paquetes la semana pasada, seguros y en el tiempo!✨',
+    lang: 'es',
+    date: '2026-08-03',
+    photo: 'yudeisa-gonzalez.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'James Trace Lewis',
+    text: 'My package arrived in a timely manner, thanks🙏',
+    lang: 'en',
+    date: '2026-08-02',
+  },
+  {
+    source: 'facebook',
+    name: 'Brian Jimenez',
+    text: 'Los mejores, recibí mi paquete sin daños y a tiempo, los recomiendo 10/10',
+    lang: 'es',
+    date: '2026-07-31',
+    photo: 'brian-jimenez.jpg',
+  },
+  {
+    source: 'facebook',
+    name: 'Emily N Gutierrez',
+    text: 'Muy útil ⭐⭐⭐⭐⭐\n\nBuena comunicación.',
+    lang: 'es',
+    date: '2026-07-04',
+    photo: 'emily-n-gutierrez.jpg',
+  },
+];
 
 const hello = (text: string) => `Hola Carinova 👋 ${text}`;
 
@@ -665,6 +867,7 @@ export const WA_MESSAGES = {
     '/preguntas-frecuentes': hello('Tengo una pregunta que no encontré en su página.'),
     '/articulos-prohibidos': hello('Tengo una duda sobre los artículos que no pueden traer.'),
     '/nosotros': hello('Quiero conocer más sobre Carinova.'),
+    '/opiniones': hello('Leí las opiniones de sus clientes y tengo una consulta.'),
     '/terminos': hello('Tengo una consulta sobre sus términos y condiciones.'),
     '/privacidad': hello('Tengo una consulta sobre mis datos personales.'),
   } as Record<string, string>,
@@ -759,6 +962,8 @@ export const WA_MESSAGES = {
   faqClosing: hello('No encontré mi respuesta en sus preguntas frecuentes.'),
   restricted: hello('Antes de comprar, quiero saber si pueden traer este producto: '),
   aboutClosing: hello('Conocí Carinova en su página y quiero empezar a enviar con ustedes.'),
+  /** The closing band of the page of reviews. */
+  reviewsClosing: hello('Leí las opiniones de otros clientes y quiero hacer mi primer envío con ustedes.'),
   /** "Formá parte de nuestro equipo", on the page about Carinova. */
   careers: hello('Quiero formar parte del equipo de Carinova. Me interesa el área de: '),
   notFound: hello('Llegué a una página de su sitio que no existe.'),

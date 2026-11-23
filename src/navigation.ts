@@ -112,6 +112,7 @@ export const getFooterData = ({ href, data, ui }: PageI18n, pathname: string) =>
             external: true,
           },
           { text: t.about, href: href('/nosotros') },
+          { text: t.reviews, href: href('/opiniones') },
           { text: t.terms, href: href('/terminos') },
           { text: t.privacy, href: href('/privacidad') },
         ],

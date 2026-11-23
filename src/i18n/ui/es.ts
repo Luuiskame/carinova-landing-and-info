@@ -24,7 +24,7 @@ import {
   type PaymentStatus,
 } from '../../data/account.ts';
 import { BUSINESS_DISCLAIMER, BUSINESS_SOLUTIONS, BUSINESS_VOLUMES } from '../../data/business.ts';
-import { sentence } from '../../data/carinova.ts';
+import { CONTACT, sentence } from '../../data/carinova.ts';
 import { BRANCHES, CTA, RATES, RECEPTION_POINTS, describeHours } from '../../data/carinova.ts';
 import { CONFIRM_LINK_HOURS } from '../../data/signup.ts';
 import { CUBIC_CM_PER_CUBIC_FOOT, formatNumber, formatUSD } from '../../utils/rates.ts';
@@ -34,6 +34,8 @@ import { landing } from './landing/es.ts';
 const { air, sea } = RATES;
 const cityNames = BRANCHES.map((branch) => branch.city);
 const cities = cityNames;
+/** The city Carinova was born in, as this language writes it. */
+const bluefields = BRANCHES.find((branch) => branch.id === 'bluefields')?.city ?? 'Bluefields';
 const [hours] = BRANCHES[0].hours;
 /** The warehouse that receives packages today (the one that is open). */
 const [warehouse] = RECEPTION_POINTS.filter((point) => point.available);
@@ -622,28 +624,47 @@ export const ui = {
 
   // pages/nosotros.astro
   aboutPage: {
-    tagline: 'Nosotros',
-    description: `Carinova es una empresa nicaragüense de envíos de Estados Unidos a Nicaragua, con sucursales en ${cityNames.join(' y ')}.`,
-    title: 'Somos Carinova',
-    subtitle: `Una empresa nicaragüense que acerca las tiendas de Estados Unidos a ${cityNames.join(' y ')}.`,
-    logoAlt: 'Logo de Carinova: tres personas levantan juntas una antorcha encendida frente a un globo terráqueo.',
-    storyTitle: 'Nuestra historia',
-    story: [
-      'Carinova nació en Nicaragua con una idea sencilla: que comprar en Estados Unidos sea fácil, seguro y con precios claros para todos.',
-      `Desde nuestras sucursales en ${cityNames.join(' y ')} atendemos a cada cliente de forma personal, por WhatsApp y en persona, y nos encargamos de que cada compra y cada encomienda lleguen bien a su destino.`,
-    ],
+    tagline: 'Sobre nosotros',
+    metaTitle: 'Sobre nosotros: quiénes somos y de dónde venimos',
+    description: `Carinova es una empresa nicaragüense de envíos de Estados Unidos a Nicaragua, nacida en ${bluefields}. Conocé nuestras raíces, qué hacemos y dónde encontrarnos en ${cityNames.join(' y ')}.`,
+    title: `Somos Carinova, el courier que nació en ${bluefields}`,
+    subtitle: `Una empresa nicaragüense que trae tus compras, tus encomiendas y la carga de tu negocio desde Estados Unidos, con sucursales en ${cityNames.join(' y ')}.`,
+    // "Nuestras raíces": Carinova's own words, from the page it wrote on 2026-11-18. A section of the
+    // home page until 2026-11-21 (D-131).
+    roots: {
+      title: 'Nuestras raíces',
+      text: 'Carinova nació en Bluefields, en la Costa Caribe Sur de Nicaragua. Llevamos en nuestro ADN la calidez, el compromiso y la fuerza de nuestra tierra multicultural, y trabajamos cada día para acortar distancias y entregar tus paquetes con la confianza y el cariño que nos caracterizan.',
+      emblemAlt: 'Emblema de Carinova: tres figuras sostienen una llama dentro de un círculo',
+    },
+    whatTagline: 'Qué hacemos',
+    whatTitle: 'Acercamos las tiendas de Estados Unidos a Nicaragua',
+    what: `Con tu cuenta recibís tu Carinova ID y una dirección en ${warehouse.city} para comprar en cualquier tienda. Recibimos tus paquetes allá, los traemos por aire o por mar y los retirás en ${cityNames.join(' o ')}.`,
+    servicesLink: 'Ver los servicios en detalle',
+    factsTagline: 'En pocas palabras',
+    factsTitle: 'Carinova en datos',
+    facts: {
+      origin: 'Nacimos en',
+      originValue: `${bluefields}, Costa Caribe Sur de Nicaragua`,
+      route: 'Nuestra ruta',
+      routeValue: 'De Estados Unidos a Nicaragua',
+      reception: 'Recibimos tus compras en',
+      branches: 'Sucursales en Nicaragua',
+      transport: 'Cómo viajan tus paquetes',
+      contact: 'Atención por WhatsApp',
+      networks: 'Seguinos en',
+    },
     valuesTagline: 'Nuestros valores',
     valuesTitle: 'Lo que nos mueve',
     values: [
       {
         title: 'Trabajo en equipo',
         description:
-          'Como en nuestro logo: tres personas levantando juntas la misma antorcha. Cada envío es trabajo de equipo, desde Miami hasta tu sucursal.',
+          'Como en nuestro emblema: tres figuras que sostienen juntas la misma llama. Cada envío es trabajo de equipo, desde Miami hasta tu sucursal.',
       },
       {
         title: 'Alcance internacional',
         description:
-          'El globo de nuestro nombre es el puente que cruzamos todos los días entre Estados Unidos y Nicaragua.',
+          'El círculo que las rodea es el puente que cruzamos todos los días entre Estados Unidos y Nicaragua.',
       },
       {
         title: 'Compromiso',
@@ -651,6 +672,37 @@ export const ui = {
       },
     ],
     where: 'Dónde estamos',
+    reviewsTagline: 'Opiniones',
+    reviewsTitle: 'Lo que dicen nuestros clientes',
+    faqTitle: 'Preguntas sobre Carinova',
+    faq: [
+      {
+        title: '¿Qué es Carinova?',
+        description:
+          'Carinova es una empresa nicaragüense de envíos. Traemos compras personales, encomiendas familiares y carga empresarial desde Estados Unidos hasta Nicaragua, por aire o por mar.',
+      },
+      {
+        title: '¿De dónde es Carinova?',
+        description: `Carinova nació en ${bluefields}, en la Costa Caribe Sur de Nicaragua, y hoy tiene sucursales en ${cityNames.join(' y ')}.`,
+      },
+      {
+        title: '¿Dónde están las sucursales de Carinova y en qué horario atienden?',
+        description: sentence(`En ${cityNames.join(' y ')}. Atendemos de ${describeHours(hours)}`),
+      },
+      {
+        title: '¿Desde dónde trae Carinova los paquetes?',
+        description: `Los recibimos en nuestra bodega de ${warehouse.city}, ${warehouse.state}, y los traemos a Nicaragua por vía aérea en ${air.transit} o por vía marítima en ${sea.transit}, contados desde que el paquete llega a la bodega.`,
+      },
+      {
+        title: '¿Cómo me comunico con Carinova?',
+        description: `Por WhatsApp, al <span dir="ltr">${CONTACT.whatsappDisplay}</span>, o en cualquiera de nuestras sucursales.`,
+      },
+      {
+        title: '¿Dónde leo opiniones de clientes de Carinova?',
+        description:
+          'En la página de opiniones de este sitio están las que nuestros clientes publicaron, tal como las escribieron y con el enlace a donde se publicó cada una.',
+      },
+    ],
     careers: {
       title: 'Formá parte de nuestro equipo.',
       text: 'Buscamos personas comprometidas con el servicio y la excelencia operativa.',
@@ -660,6 +712,66 @@ export const ui = {
       title: 'Hagamos tu primer envío',
       subtitle: 'Creá tu cuenta en línea o cotizá tu envío antes de comprar.',
       lead: '¿Querés conocernos mejor?',
+    },
+  },
+
+  // What a review's card says, on the home page, on the page of reviews and on the page about
+  // Carinova (components/carinova/ReviewCard.astro, components/landing/Testimonials.astro). The
+  // reviews themselves are REVIEWS (src/data/carinova.ts) and are never translated.
+  reviews: {
+    recommends: 'Recomienda Carinova',
+    rating: '{rating} de 5 estrellas',
+    seeOn: 'Ver en {source}',
+    allOn: 'Todas las opiniones en {source}',
+    readAll: 'Leer completa',
+    seeAll: 'Ver todas las opiniones',
+    moreTitle: 'Hay más opiniones',
+    moreText: 'Leé todo lo que nuestros clientes cuentan de sus envíos.',
+    previous: 'Opiniones anteriores',
+    next: 'Opiniones siguientes',
+  },
+
+  // pages/opiniones.astro
+  reviewsPage: {
+    tagline: 'Opiniones',
+    metaTitle: 'Opiniones y reseñas de clientes',
+    description:
+      'Opiniones reales de clientes de Carinova sobre sus envíos de Estados Unidos a Nicaragua, tal como las publicaron en {sources}. Leelas antes de tu primer envío.',
+    title: 'Lo que dicen los clientes de Carinova',
+    subtitle:
+      'Opiniones reales de quienes ya trajeron sus compras de Estados Unidos a Nicaragua con nosotros, tal como las publicaron en {sources}.',
+    listTitle: 'Opiniones de clientes',
+    filterLabel: 'Mostrar opiniones de',
+    all: 'Todas',
+    howTitle: 'Cómo mostramos las opiniones',
+    how: [
+      {
+        title: 'Publicadas por sus autores',
+        text: 'Cada opinión fue publicada por su autor, con su nombre, en {sources}.',
+      },
+      {
+        title: 'Ni una palabra cambiada',
+        text: 'Las copiamos tal como fueron escritas y en su idioma original, sin corregirlas ni traducirlas.',
+      },
+      {
+        title: 'Con el enlace a su origen',
+        text: 'Cada una lleva a la página de Carinova donde se publicó. Ahí están todas, también las más nuevas.',
+      },
+    ],
+    writeTitle: '¿Ya recibiste tu paquete? Contanos cómo te fue',
+    writeText: 'Tu opinión ayuda a otras personas a decidirse y a nosotros a mejorar.',
+    writeOn: 'Opinar en {source}',
+    nextTitle: 'Antes de tu primer envío',
+    next: {
+      how: 'Mirá cómo funciona, paso a paso',
+      quote: 'Calculá cuánto cuesta tu envío',
+      branches: 'Conocé dónde retirás tu paquete',
+      about: 'Conocé quiénes somos',
+    },
+    closing: {
+      title: 'Hacé tu primer envío con Carinova',
+      subtitle: 'Creá tu cuenta en línea y recibí tu Carinova ID y tu dirección en Estados Unidos.',
+      lead: '¿Querés preguntarnos algo antes?',
     },
   },
 
@@ -799,6 +911,7 @@ export const ui = {
     tracking: 'Rastreo',
     faq: 'Preguntas frecuentes',
     about: 'Nosotros',
+    reviews: 'Opiniones',
     terms: 'Condiciones del servicio',
     privacy: 'Privacidad',
     and: ' y ',
