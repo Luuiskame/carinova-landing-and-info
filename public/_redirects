@@ -1,0 +1,7 @@
+# A second name for a page: Cloudflare answers it with a permanent redirect to the page.
+# Each line is "from to 301"; the address a line leads to is a page of src/i18n/routes.ts
+# (routes.test.ts checks it).
+
+# The page about Carinova is /nosotros; "Sobre nosotros" is what the site calls it (D-134).
+/sobre-nosotros /nosotros 301
+/sobre-nosotros/ /nosotros 301
