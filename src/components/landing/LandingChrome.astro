@@ -1,11 +1,13 @@
 ---
-// The home page's header, footer and WhatsApp button on another page of the site (D-137). The
-// developer asked on 2026-11-25 that the page a visitor opens from the home page's menu, "Sobre
-// nosotros", look like the home page: its bar with the flag of the language and no "Ingresá", its
-// footer, its green button. The parts are the home page's own components (Header.astro and
-// Footer.astro, with `inner`), and what draws them is the home page's stylesheet, landing.css,
-// reduced to the rules that draw them and fenced into them (utils/scope-css.ts): the rest of the
-// page keeps its own look, and the parts cannot drift from the home page's.
+// The home page's header, footer and WhatsApp button on every other page of the site (D-137,
+// D-139). The developer asked on 2026-11-25 that the page a visitor opens from the home page's
+// menu, "Sobre nosotros", look like the home page: its bar with the flag of the language and no
+// "Ingresá", its footer, its green button. Since 2026-11-26 every other page has them too (all
+// of them are built on PageLayout.astro, which puts them in). The parts are the home page's own
+// components (Header.astro and Footer.astro, with `inner`), and what draws them is the home
+// page's stylesheet, landing.css, reduced to the rules that draw them and fenced into them
+// (utils/scope-css.ts): the rest of the page keeps its own look, and the parts cannot drift from
+// the home page's.
 //
 // The page hands the header in the slot `header` and the footer in `footer` (PageLayout.astro).
 // Which rules come is read from the two as they are rendered, so a class added to them brings its

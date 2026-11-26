@@ -386,16 +386,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'We connect',
-    usa: 'the United States',
-    with: 'with',
-    nicaragua: 'Nicaragua',
-    soon: 'coming soon',
-    to: 'to',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'Your address in the United States',
@@ -406,12 +396,6 @@ export const ui: UI = {
       `Soon you will also be able to receive your purchases in ${city}, ${state}. When the warehouse is open, its address will appear here.`,
     meanwhile: (city: string) => `In the meantime, use your ${city} address.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: 'Which branch?', label: 'Write to us' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'Main navigation', menu: 'Menu' },
 
   // pages/404.astro
   notFoundPage: {
@@ -849,45 +833,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'We are online',
-    channelsTitle: 'Follow us and write to us',
-    previous: 'Previous channels',
-    next: 'More channels',
-    email: 'E-mail',
-    languages: 'Languages',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'Home',
-    services: 'Services',
-    shopper: 'We shop for you',
-    rates: 'Rates',
-    calculator: 'Calculator',
-    howItWorks: 'How it works',
-    business: 'Business',
-    help: 'Help',
-    explore: 'Explore',
-    yours: 'Your Carinova',
-    near: 'We are close',
-    canItEnter: 'Can it enter?',
-    tracking: 'Tracking',
-    faq: 'Frequently asked questions',
-    about: 'About us',
     reviews: 'Reviews',
-    terms: 'Terms of service',
-    privacy: 'Privacy',
-    and: ' and ',
     or: ' or ',
-    brand: 'Shipments that bring us together. We bring your purchases, your family and your company’s projects closer.',
-    route: ['USA', 'Nicaragua'],
-    rights: 'All rights reserved. Rates and delivery times are subject to verification.',
-    language: 'Language',
-    languageChoose: 'Choose your language',
-    locker: `US address in ${warehouse.city}`,
-    stores: 'Stores',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

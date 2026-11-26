@@ -377,16 +377,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'Conectamos os',
-    usa: 'Estados Unidos',
-    with: 'à',
-    nicaragua: 'Nicarágua',
-    soon: 'em breve',
-    to: 'para',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'Seu endereço nos Estados Unidos',
@@ -397,12 +387,6 @@ export const ui: UI = {
       `Em breve você também vai poder receber suas compras em ${city}, ${state}. Quando o armazém estiver aberto, o endereço dele vai aparecer aqui.`,
     meanwhile: (city: string) => `Enquanto isso, use seu endereço de ${city}.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: 'Com qual filial?', label: 'Fale conosco' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'Navegação principal', menu: 'Menu' },
 
   // pages/404.astro
   notFoundPage: {
@@ -841,45 +825,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'Estamos on-line',
-    channelsTitle: 'Siga-nos e fale conosco',
-    previous: 'Canais anteriores',
-    next: 'Mais canais',
-    email: 'E-mail',
-    languages: 'Idiomas',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'Início',
-    services: 'Serviços',
-    shopper: 'Compramos para você',
-    rates: 'Tarifas',
-    calculator: 'Calculadora',
-    howItWorks: 'Como funciona',
-    business: 'Empresas',
-    help: 'Ajuda',
-    explore: 'Explore',
-    yours: 'Sua Carinova',
-    near: 'Estamos perto',
-    canItEnter: 'Pode entrar?',
-    tracking: 'Rastreamento',
-    faq: 'Perguntas frequentes',
-    about: 'Quem somos',
     reviews: 'Avaliações',
-    terms: 'Termos de serviço',
-    privacy: 'Privacidade',
-    and: ' e ',
     or: ' ou ',
-    brand: 'Envios que unem. Aproximamos suas compras, sua família e os projetos da sua empresa.',
-    route: ['EUA', 'Nicarágua'],
-    rights: 'Todos os direitos reservados. Tarifas e prazos sujeitos a verificação.',
-    language: 'Idioma',
-    languageChoose: 'Escolha seu idioma',
-    locker: `Endereço nos EUA em ${warehouse.city}`,
-    stores: 'Lojas',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

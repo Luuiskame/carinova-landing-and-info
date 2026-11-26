@@ -11,11 +11,10 @@
 //   it and with Esc (the browser's own). The browser also keeps the focus inside while it is open
 //   and gives it back to the opener afterwards; a field marked `autofocus` gets it on opening.
 //
-// The header persists from page to page and the dialogs do not, so the listener is on the document:
-// registered once, it looks for the dialog in the page being shown. It listens on the way down
-// (capture): the page router also listens for clicks on links, and it must find this one already
-// handled, or it would take the visitor to the link's page. The look of a dialog is the `cn-dialog`
-// class (tailwind.css).
+// One listener on the document serves every opener of the page. It listens on the way down
+// (capture), so the click is handled before anything else on the page can follow the link (the
+// site had a client router that did until D-139). The look of a dialog is the `cn-dialog` class
+// (tailwind.css).
 ---
 
 <script>
@@ -31,8 +30,7 @@
         return;
       }
       event.preventDefault();
-      // The phone menu covers the page: close it first (the header's toggle does it).
-      document.querySelector<HTMLElement>('[data-aw-toggle-menu].expanded')?.click();
+      // The header's menu closes by itself on a click outside it (components/landing/scripts/chrome.ts).
       if (!dialog.open) dialog.showModal();
       dialog.dispatchEvent(new CustomEvent('cn:open', { detail: { opener } }));
       return;
@@ -43,9 +41,4 @@
     if (dialog && (target.closest('[data-cn-dialog-close]') || target === dialog)) dialog.close();
   };
   document.addEventListener('click', onClick, { capture: true });
-
-  // A page swapped in by the router starts with its dialogs closed, whatever was open before.
-  document.addEventListener('astro:before-swap', () => {
-    for (const dialog of document.querySelectorAll<HTMLDialogElement>('dialog.cn-dialog[open]')) dialog.close();
-  });
 </script>

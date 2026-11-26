@@ -384,16 +384,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'Nous relions',
-    usa: 'les États-Unis',
-    with: 'au',
-    nicaragua: 'Nicaragua',
-    soon: 'prochainement',
-    to: 'vers',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'Votre adresse aux États-Unis',
@@ -404,12 +394,6 @@ export const ui: UI = {
       `Bientôt, vous pourrez aussi recevoir vos achats à ${city}, ${state}. Quand l’entrepôt sera ouvert, son adresse apparaîtra ici.`,
     meanwhile: (city: string) => `En attendant, utilisez votre adresse de ${city}.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: 'Quelle agence ?', label: 'Écrivez-nous' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'Navigation principale', menu: 'Menu' },
 
   // pages/404.astro
   notFoundPage: {
@@ -855,46 +839,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'Nous sommes en ligne',
-    channelsTitle: 'Suivez-nous et écrivez-nous',
-    previous: 'Canaux précédents',
-    next: 'Plus de canaux',
-    email: 'E-mail',
-    languages: 'Langues',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'Accueil',
-    services: 'Services',
-    shopper: 'Achat assisté',
-    rates: 'Tarifs',
-    calculator: 'Calculateur',
-    howItWorks: 'Fonctionnement',
-    business: 'Entreprises',
-    help: 'Aide',
-    explore: 'Explorer',
-    yours: 'Votre Carinova',
-    near: 'Tout près de vous',
-    canItEnter: 'Peut-il entrer ?',
-    tracking: 'Suivi',
-    faq: 'Questions fréquentes',
-    about: 'À propos',
     reviews: 'Avis',
-    terms: 'Conditions du service',
-    privacy: 'Confidentialité',
-    and: ' et ',
     or: ' ou ',
-    brand:
-      'Des envois qui nous unissent. Nous rapprochons vos achats, votre famille et les projets de votre entreprise.',
-    route: ['États-Unis', 'Nicaragua'],
-    rights: 'Tous droits réservés. Tarifs et délais sous réserve de vérification.',
-    language: 'Langue',
-    languageChoose: 'Choisissez votre langue',
-    locker: `Votre adresse à ${warehouse.city}`,
-    stores: 'Magasins',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

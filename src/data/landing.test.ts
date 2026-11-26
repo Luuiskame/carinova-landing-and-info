@@ -1,10 +1,11 @@
 // What the home page takes from several places agrees: the lists and their icons, the stores and
 // their logos, and the words each language has for the stores, the categories and the notices.
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 import { ICONS } from '../components/landing/icons.ts';
 import { LOCALES, type Locale } from '../i18n/locales.ts';
+import { ROUTES } from '../i18n/routes.ts';
 import { ui as uiAr } from '../i18n/ui/ar.ts';
 import { ui as uiEn } from '../i18n/ui/en.ts';
 import { ui as uiEs } from '../i18n/ui/es.ts';
@@ -23,6 +24,7 @@ import {
   LANGUAGE_ORDER,
   LOGO_SCALE,
   RESTRICTED_ICONS,
+  SECTION_PAGES,
   STORE_DIRECTORY,
 } from './landing.ts';
 import { NOTICES } from './notices.ts';
@@ -77,6 +79,21 @@ test('the forms list the departments the sign-up knows, each once, each with its
   // A department is sent to the Worker by the name its language gives it, found by its place in
   // the Spanish list (Account.astro): every language lists the same seventeen, in the same order.
   for (const locale of LOCALES) assert.equal(states(locale).length, states('es').length, locale);
+});
+
+test('on the other pages each section of the header and the footer leads to a page of the site', () => {
+  const pages = new Set<string>(Object.values(ROUTES).map((route) => route.es));
+  // The sections the two name (Header.astro, Footer.astro): each one with a page is in the map.
+  const parts = ['Header.astro', 'Footer.astro']
+    .map((name) => readFileSync(new URL(`../components/landing/${name}`, import.meta.url), 'utf8'))
+    .join('\n');
+  for (const [section, page] of Object.entries(SECTION_PAGES)) {
+    assert.ok(pages.has(page), `${section} leads to ${page}, which is not a page of the site`);
+    assert.ok(
+      parts.includes(`id: '${section}'`) || parts.includes(`section('${section}')`),
+      `no header or footer names ${section}`
+    );
+  }
 });
 
 test('the language menu has a place for every language', () => {

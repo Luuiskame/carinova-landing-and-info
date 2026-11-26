@@ -353,16 +353,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: '连接',
-    usa: '美国',
-    with: '与',
-    nicaragua: '尼加拉瓜',
-    soon: '即将开通',
-    to: '至',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: '您的美国收货地址',
@@ -373,12 +363,6 @@ export const ui: UI = {
       `很快，您也可以在 ${city}（${state}）接收您的网购商品。仓库开通后，其地址将显示在这里。`,
     meanwhile: (city: string) => `在此期间，请使用您的 ${city} 地址。`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: '哪个网点？', label: '联系我们' },
-
-  // components/widgets/Header.astro
-  header: { navigation: '主导航', menu: '菜单' },
 
   // pages/404.astro
   notFoundPage: {
@@ -793,45 +777,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: '我们在线',
-    channelsTitle: '关注我们，联系我们',
-    previous: '上一组渠道',
-    next: '更多渠道',
-    email: '电子邮件',
-    languages: '语言',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: '首页',
-    services: '服务',
-    shopper: '代购服务',
-    rates: '运费',
-    calculator: '运费计算器',
-    howItWorks: '使用流程',
-    business: '企业服务',
-    help: '帮助',
-    explore: '探索',
-    yours: '您的 Carinova',
-    near: '离您很近',
-    canItEnter: '可以寄吗？',
-    tracking: '包裹追踪',
-    faq: '常见问题',
-    about: '关于我们',
     reviews: '客户评价',
-    terms: '服务条款',
-    privacy: '隐私政策',
-    and: ' 和 ',
     or: ' 或 ',
-    brand: '寄送，连接彼此。让您的网购、家人和企业项目更加贴近。',
-    route: ['美国', '尼加拉瓜'],
-    rights: '版权所有。运费和时效以核实为准。',
-    language: '语言',
-    languageChoose: '选择语言',
-    locker: `${warehouse.city} 收货地址`,
-    stores: '商店',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

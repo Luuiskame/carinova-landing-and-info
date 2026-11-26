@@ -2,22 +2,22 @@
 import { Font } from 'astro:assets';
 
 import Layout from '~/layouts/Layout.astro';
-import Header from '~/components/widgets/Header.astro';
-import Footer from '~/components/widgets/Footer.astro';
 import DialogKit from '~/components/carinova/DialogKit.astro';
 import SigninDialog from '~/components/carinova/SigninDialog.astro';
-import TopStrip from '~/components/carinova/TopStrip.astro';
-import WhatsAppFloat from '~/components/carinova/WhatsAppFloat.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
 import LandingChrome from '~/components/landing/LandingChrome.astro';
 import LandingFooter from '~/components/landing/Footer.astro';
 import LandingHeader from '~/components/landing/Header.astro';
 
-import { i18n, spanishPath } from '~/i18n';
-import { getFooterData, getHeaderData } from '~/navigation';
+import { i18n } from '~/i18n';
 import { getCanonical } from '~/utils/permalinks';
 
 import type { MetaData } from '~/types';
+
+// Every page of the site but the home page. Its header, footer and WhatsApp button are the home
+// page's (D-137, D-139): whichever page a visitor opens, the bar, the footer and the green button
+// are the ones they saw on the home page. Their sections lead to the pages that own them
+// (components/landing/Header.astro). The page's content keeps the site's look.
 
 export interface Props {
   metadata?: MetaData;
@@ -27,20 +27,18 @@ export interface Props {
    */
   breadcrumb?: string;
   /**
-   * The home page's header, footer and WhatsApp button instead of the site's (D-137): the page the
-   * home page's menu leads to looks like the home page. Its content keeps the site's look.
+   * The sign-in dialog (SigninDialog.astro), for a page that has something to open it
+   * (`data-dialog-open` with SIGNIN_DIALOG_ID): "Mi cuenta" and the tracker. Elsewhere it would be
+   * markup nobody opens, and on the sign-in page the form is the page itself. Without the dialog
+   * such a link leads to the sign-in page.
    */
-  homeParts?: boolean;
+  signinDialog?: boolean;
 }
 
-const { metadata, breadcrumb, homeParts = false } = Astro.props;
+const { metadata, breadcrumb, signinDialog = false } = Astro.props;
 
-// Header and footer in the language of the page (its address decides: src/i18n).
 const page = i18n(Astro);
 const { pathname } = Astro.url;
-
-// "Ingresá" opens the sign-in dialog on every page but the sign-in page, which is the form itself.
-const hasSigninDialog = spanishPath(pathname) !== page.data.CTA.signin.path;
 
 const trail = breadcrumb && {
   '@context': 'https://schema.org',
@@ -52,49 +50,18 @@ const trail = breadcrumb && {
 };
 ---
 
-<Layout metadata={metadata} router={!homeParts}>
+<Layout metadata={metadata}>
   {trail && <StructuredData slot="head" schema={trail} />}
   {/* The home page's font, for its parts. Not fetched ahead, as on the home page (LandingLayout.astro). */}
-  {homeParts && <Font slot="head" cssVariable="--font-manrope" />}
+  <Font slot="head" cssVariable="--font-manrope" />
   <slot name="head" slot="head" />
-  {
-    /*
-    Slot fallbacks are rendered explicitly. With `<slot name="x">fallback</slot>`
-    Astro still evaluates the fallback when the page overrides the slot, and
-    astro-icon then believes the icons inside it (the RSS icon of the default
-    header, for instance) were already emitted, so their SVG sprite symbol
-    goes missing on that page.
-  */
-  }
-  {
-    homeParts ? (
-      /* No strip above the header and no "Ingresá": the home page has neither. Its account icon
-         leads to /mi-cuenta, where a visitor signs in. */
-      <LandingChrome>
-        <LandingHeader slot="header" inner />
-        <main class="flex-1">
-          <slot />
-        </main>
-        <LandingFooter slot="footer" inner />
-      </LandingChrome>
-    ) : (
-      <>
-        {Astro.slots.has('header') ? (
-          <slot name="header" />
-        ) : (
-          <>
-            <TopStrip />
-            <Header {...getHeaderData(page, pathname)} isSticky isDark position="right" />
-          </>
-        )}
-        <main class="flex-1">
-          <slot />
-        </main>
-        {Astro.slots.has('footer') ? <slot name="footer" /> : <Footer {...getFooterData(page, pathname)} />}
-        <WhatsAppFloat path={pathname} />
-        {hasSigninDialog && <SigninDialog />}
-      </>
-    )
-  }
+  <LandingChrome>
+    <LandingHeader slot="header" inner />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <LandingFooter slot="footer" inner />
+  </LandingChrome>
+  {signinDialog && <SigninDialog />}
   <DialogKit />
 </Layout>

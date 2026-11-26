@@ -14,10 +14,12 @@
 //   servicio" opens Carinova's summary (Dialogs.astro). Without the script: the policy and the terms.
 // - The WhatsApp button carries the message of the page it is on (WA_MESSAGES.floating).
 //
-// The same footer ends the page about Carinova (`inner`, D-137), without the closing call (that
-// page has its own): the sections it names are the home page's, and what opens a dialog on the
-// home page is a plain link to its page there. Its look comes with it (LandingChrome.astro).
+// The same footer ends every other page of the site (`inner`, D-137, D-139), without the closing
+// call (each page ends with its own): what it names leads to the page that owns it (SECTION_PAGES),
+// and what opens a dialog on the home page is a plain link to its page there. Its look comes with
+// it (LandingChrome.astro).
 import { COMPANY, CONTACT, SOCIAL_LINKS } from '~/data/carinova';
+import { SECTION_PAGES } from '~/data/landing';
 import { i18n, spanishPath } from '~/i18n';
 import { whatsappLink } from '~/utils/whatsapp';
 
@@ -25,7 +27,7 @@ import { SOCIAL_ICONS, hoursRange } from './helpers';
 import Icon from './Icon.astro';
 
 export interface Props {
-  /** On another page of the site than the home page (D-137). */
+  /** On another page of the site than the home page (D-137, D-139). */
   inner?: boolean;
 }
 
@@ -37,8 +39,8 @@ const t = ui.landing;
 /** The branches open at the same times: their hours are said once (the first one's). */
 const [branchHours] = BRANCHES[0].hours;
 
-/** A section of the home page: from this page, or from another page of the site. */
-const section = (id: string) => (inner ? href(`/#${id}`) : `#${id}`);
+/** A section of the home page: there, the section; on another page, the page that owns it (D-139). */
+const section = (id: string) => (inner ? href(SECTION_PAGES[id] ?? `/#${id}`) : `#${id}`);
 /** What opens a view of the home page's dialog there; elsewhere the link leads to its page. */
 const dialog = (view: string) => (inner ? undefined : view);
 const services = [

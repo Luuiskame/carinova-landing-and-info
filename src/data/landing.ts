@@ -55,6 +55,22 @@ export const DEFAULT_DEPARTMENT = 'Managua';
 export const LANGUAGE_ORDER: ReadonlyArray<string> = ['es', 'en', 'pt', 'fr', 'zh', 'ru', 'ar'];
 
 /**
+ * The page of the site that owns what a section of the home page summarises (Spanish paths), where
+ * the home page's header and footer lead on every other page (D-140): there "Tarifas" is the
+ * calculator's page, not the home page's calculator, and each page stays a link away from all the
+ * others. A section that no page owns (Carinova's personal shopper) leads to the home page's
+ * section. `landing.test.ts` checks each one is a page of the site.
+ */
+export const SECTION_PAGES: Readonly<Record<string, string>> = {
+  'como-funciona': '/como-comprar',
+  restricciones: '/articulos-prohibidos',
+  cotizador: '/cotizador',
+  business: '/empresas',
+  sucursales: '/sucursales',
+  preguntas: '/preguntas-frecuentes',
+};
+
+/**
  * The icon of each item of the two lists of the home page ("No se reciben ni transportan" and "No
  * ingresan por vía aérea"), in the order of `prohibitedList` and `noAirList` in the dictionaries,
  * which is the order of RESTRICTED_ITEMS.prohibited and .seaOnly: a new item needs its icon here

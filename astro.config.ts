@@ -68,8 +68,8 @@ const pathOfUrl = (url: string) => new URL(url).pathname.replace(/\/+$/, '') || 
 export default defineConfig({
   output: 'static',
 
-  // Prefetch a page when the visitor hovers or touches its link (works together with
-  // <ClientRouter />). 'hover' instead of 'viewport' so phones on prepaid data don't
+  // Prefetch a page when the visitor hovers or touches its link (a script on every page; there is
+  // no client router: D-139). 'hover' instead of 'viewport' so phones on prepaid data don't
   // download every page linked from the home page.
   prefetch: {
     prefetchAll: true,

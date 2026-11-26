@@ -411,7 +411,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   },
   floatingDefault: hello('Venho do site de vocês e tenho uma pergunta.'),
   footer: hello('Venho do site de vocês e quero informações.'),
-  channels: hello('Encontrei vocês pelo site e quero conversar.'),
 
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('Li as condições do serviço na página inicial de vocês e tenho uma dúvida.'),

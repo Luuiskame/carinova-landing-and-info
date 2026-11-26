@@ -513,7 +513,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   },
   floatingDefault: hello('وصلت إليكم من موقعكم الإلكتروني وعندي استفسار.'),
   footer: hello('وصلت إليكم من موقعكم الإلكتروني وأريد بعض المعلومات.'),
-  channels: hello('وجدتكم في موقعكم الإلكتروني وأريد مراسلتكم.'),
 
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('قرأت شروط الخدمة في صفحتكم الرئيسية وعندي استفسار.'),

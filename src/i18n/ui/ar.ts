@@ -359,16 +359,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'نربط',
-    usa: 'الولايات المتحدة',
-    with: 'مع',
-    nicaragua: 'نيكاراغوا',
-    soon: 'قريبًا',
-    to: 'إلى',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'عنوانك في الولايات المتحدة',
@@ -379,12 +369,6 @@ export const ui: UI = {
       `قريبًا ستتمكن أيضًا من استلام مشترياتك في ${city}، ${state}. وعندما يُفتتح المستودع، سيظهر عنوانه هنا.`,
     meanwhile: (city: string) => `في هذه الأثناء، استخدم عنوانك في ${city}.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: 'أي فرع؟', label: 'راسلنا' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'التنقل الرئيسي', menu: 'القائمة' },
 
   // pages/404.astro
   notFoundPage: {
@@ -811,45 +795,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'نحن متصلون',
-    channelsTitle: 'تابعنا وراسلنا',
-    previous: 'القنوات السابقة',
-    next: 'المزيد من القنوات',
-    email: 'البريد الإلكتروني',
-    languages: 'اللغات',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'الرئيسية',
-    services: 'الخدمات',
-    shopper: 'نشتري لك',
-    rates: 'الأسعار',
-    calculator: 'الحاسبة',
-    howItWorks: 'كيف يعمل',
-    business: 'الشركات',
-    help: 'المساعدة',
-    explore: 'استكشف',
-    yours: 'رحلتك مع Carinova',
-    near: 'نحن قريبون منك',
-    canItEnter: 'هل يمكن إدخاله؟',
-    tracking: 'التتبّع',
-    faq: 'الأسئلة الشائعة',
-    about: 'من نحن',
     reviews: 'آراء العملاء',
-    terms: 'شروط الخدمة',
-    privacy: 'الخصوصية',
-    and: ' و',
     or: ' أو ',
-    brand: 'شحنات تجمعنا. نقرّب إليك مشترياتك وعائلتك ومشاريع شركتك.',
-    route: ['أمريكا', 'نيكاراغوا'],
-    rights: 'جميع الحقوق محفوظة. الأسعار ومدد التسليم خاضعة للتحقق.',
-    language: 'اللغة',
-    languageChoose: 'اختر لغتك',
-    locker: `عنوان أمريكي في ${warehouse.city}`,
-    stores: 'المتاجر',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

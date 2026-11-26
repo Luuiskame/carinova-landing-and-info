@@ -233,6 +233,6 @@ const chipClass =
       }
     });
   };
-  // On a normal load and after a page change without a reload (ClientRouter).
-  document.addEventListener('astro:page-load', setUp);
+  // A module runs once the page is parsed; the site has no client router (D-139).
+  setUp();
 </script>

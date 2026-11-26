@@ -13,24 +13,19 @@ import Analytics from '~/components/common/Analytics.astro';
 import Intersect from '~/components/common/Intersect.astro';
 import SessionState from '~/components/carinova/SessionState.astro';
 
-// Comment the line below to disable View Transitions
-import { ClientRouter } from 'astro:transitions';
-
 import { LOCALE_INFO, i18n } from '~/i18n';
 import type { MetaData as MetaDataType } from '~/types';
 
 export interface Props {
   metadata?: MetaDataType;
-  /**
-   * Whether links to other pages are followed by Astro's client router (a swap of the page's body).
-   * Off on a page that carries the home page's own parts (D-137): as on the home page, a link that
-   * leaves it or leads to it is a plain navigation, so the home page's stylesheet and the site's
-   * never stay together in one page.
-   */
-  router?: boolean;
 }
 
-const { metadata = {}, router = true } = Astro.props;
+// No client router (Astro's ClientRouter, which swaps a page's body in place): every page carries
+// the home page's header and footer, and the home page has none, so a link from one page to
+// another is a plain navigation, as it is on the home page (D-137, D-139). The pages are static
+// files, and the next one is fetched while the pointer rests on its link (astro.config.ts →
+// prefetch).
+const { metadata = {} } = Astro.props;
 // The language of the page comes from its address: Spanish at the root, a translation under its
 // prefix (/en, /fr…). The language decides which way the page is written too (Arabic: right to left).
 const { locale } = i18n(Astro);
@@ -56,9 +51,6 @@ const fontSubsets = locale === 'ar' ? [] : locale === 'ru' ? ['latin', 'cyrillic
     <Metadata {...metadata} />
     <SiteVerification />
     <Analytics />
-
-    <!-- Comment the line below to disable View Transitions -->
-    {router && <ClientRouter fallback="swap" />}
 
     <!-- Extra head content from pages: structured data, rel=prev/next, … -->
     <slot name="head" />

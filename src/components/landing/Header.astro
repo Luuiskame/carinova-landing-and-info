@@ -14,12 +14,15 @@
 // to left, nor does the menu on the Arabic page; only the name of a language is written in its own
 // direction (D-135). Whoever cannot read the page they landed on finds the same menu there.
 //
-// The same header is the header of the page about Carinova (`inner`, D-137): the wordmark and the
-// sections lead to the home page, the account and "Crear cuenta" are links to their pages (that
-// page has none of the home page's dialogs), and the menu's last row says it is the page in view.
-// Its look comes with it (LandingChrome.astro); its script is scripts/chrome.ts.
+// The same header is the header of every other page of the site (`inner`, D-137, D-139): the
+// wordmark leads to the home page, and each section to the page that owns it (SECTION_PAGES), so
+// that from any page the others are a link away; the account and "Crear cuenta" are links to their
+// pages (no other page has the home page's dialogs), and a link to the page in view says so. There
+// a customer who is signed in finds "Mi cuenta" where a visitor finds "Crear cuenta" (data-auth),
+// as everywhere on the site; on the home page the button opens the dialog, which gives a customer
+// their account. Its look comes with it (LandingChrome.astro); its script is scripts/chrome.ts.
 import wordmarkSvg from '~/assets/images/landing/wordmark.svg?raw';
-import { LANGUAGE_ORDER } from '~/data/landing';
+import { LANGUAGE_ORDER, SECTION_PAGES } from '~/data/landing';
 import { LOCALE_INFO, i18n, languagesOf, spanishPath } from '~/i18n';
 import { getPermalink } from '~/utils/permalinks';
 
@@ -27,7 +30,7 @@ import { FLAGS } from './helpers';
 import Icon from './Icon.astro';
 
 export interface Props {
-  /** On another page of the site than the home page (D-137). */
+  /** On another page of the site than the home page (D-137, D-139). */
   inner?: boolean;
 }
 
@@ -54,19 +57,23 @@ const more = [
   { id: 'sucursales', text: t.navLocations },
   { id: 'preguntas', text: t.faqTitle },
 ];
-/** A section of the home page: from this page, or from another page of the site. */
-const section = (id: string) => (inner ? href(`/#${id}`) : `#${id}`);
+/** The Spanish path of the page in view. */
+const here = spanishPath(Astro.url.pathname);
+/** A section of the home page: there, the section; on another page, the page that owns it (D-139). */
+const section = (id: string) => (inner ? href(SECTION_PAGES[id] ?? `/#${id}`) : `#${id}`);
+/** Whether a section's link leads to the page in view. */
+const isHere = (id: string) => inner && SECTION_PAGES[id] === here;
 /** What opens a view of the home page's dialog there; elsewhere the link leads to its page. */
 const dialog = (view: string) => (inner ? undefined : view);
 const about = '/nosotros';
 /**
- * The rows of the menu: the sections of the home page, then the page about Carinova, which says so
- * when it is the page in view. "Nuestras raíces" was the second thing a visitor saw here; since it
- * is a page (D-131) the menu leads to it, in the words of the footer's link (D-133).
+ * The rows of the menu: the sections of the home page, then the page about Carinova. "Nuestras
+ * raíces" was the second thing a visitor saw here; since it is a page (D-131) the menu leads to
+ * it, in the words of the footer's link (D-133).
  */
 const menu = [
-  ...[...sections, ...more].map(({ id, text }) => ({ href: section(id), text, current: false })),
-  { href: href(about), text: t.footerAbout, current: spanishPath(Astro.url.pathname) === about },
+  ...[...sections, ...more].map(({ id, text }) => ({ href: section(id), text, current: isHere(id) })),
+  { href: href(about), text: t.footerAbout, current: here === about },
 ];
 ---
 
@@ -76,16 +83,29 @@ const menu = [
     <nav class="nav-desktop" aria-label={t.mainNavAria}>
       {
         sections.map(({ id, text }) => (
-          <a href={section(id)} data-spy={inner ? undefined : id}>
+          <a href={section(id)} data-spy={inner ? undefined : id} aria-current={isHere(id) ? 'page' : undefined}>
             {text}
           </a>
         ))
       }
     </nav>
     <div class="header-tools">
-      <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-dialog={dialog('account')}
-        >{t.createCta}</a
-      >
+      {
+        inner ? (
+          <>
+            <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-auth="out">
+              {t.createCta}
+            </a>
+            <a class="btn btn-primary btn-sm header-cta" href={href(CTA.account.path)} data-auth="in">
+              {t.account}
+            </a>
+          </>
+        ) : (
+          <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-dialog="account">
+            {t.createCta}
+          </a>
+        )
+      }
       {
         languages.length > 0 && (
           <div class="lang-wrap">
@@ -153,7 +173,22 @@ const menu = [
       }
       <div class="mobile-nav-actions">
         <a class="btn btn-ghost btn-sm" href={href(CTA.track.path)} data-dialog={dialog('tracking')}>{t.trackCta}</a>
-        <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-dialog={dialog('account')}>{t.createCta}</a>
+        {
+          inner ? (
+            <>
+              <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-auth="out">
+                {t.createCta}
+              </a>
+              <a class="btn btn-primary btn-sm" href={href(CTA.account.path)} data-auth="in">
+                {t.account}
+              </a>
+            </>
+          ) : (
+            <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-dialog="account">
+              {t.createCta}
+            </a>
+          )
+        }
       </div>
     </nav>
   </div>

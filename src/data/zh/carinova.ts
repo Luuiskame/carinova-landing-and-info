@@ -346,7 +346,6 @@ export const WA_MESSAGES: typeof es.WA_MESSAGES = {
   },
   floatingDefault: hello('我从你们的网站过来，有个问题想咨询。'),
   footer: hello('我从你们的网站过来，想了解一些信息。'),
-  channels: hello('我在你们的网站上找到了你们，想和你们联系。'),
 
   /** "Contactar al equipo", under the conditions of the service on the home page. */
   homeConditions: hello('我在你们的首页看了服务条款，有一个问题想咨询。'),

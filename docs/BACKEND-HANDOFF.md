@@ -183,7 +183,7 @@ From `AGENTS.md`, the ones that matter most here:
 
 - `memoryStore()` in `worker/store.ts` stands in for the database in development and in the unit tests. It does not know the rules of packages, invoices and payments, and should not learn them twice: test the back office's statements against a real PostgreSQL (`db/check.mjs` has everything needed), and keep the in-memory store for what it does today.
 - `numeric` comes back from the driver as text and `bigint` as text or number depending on the driver; inside a `json_agg` both are JSON numbers. `worker/store.ts` → `numberOf`, `isoOf`, `jsonOf` handle it.
-- The pages use Astro's `ClientRouter`: a click handler on `document` has to listen in the capture phase or the router takes the click first (`DialogKit.astro`). A custom element is connected again after each navigation; clean up in `disconnectedCallback`.
+- There is no client router (D-139): a link from one page to another loads the page, and a page's scripts run once, on load. The custom elements still clean up in `disconnectedCallback` and still answer `astro:page-load`, so they would keep working if a router came back.
 - Scripts carry no sentences: the component hands them the texts in a `data-*` attribute (`AccountPanel.astro`, `fill()` in `src/utils/template.ts`).
 - `npm run preview` (the real Cloudflare runtime) is the only place where cookies with `__Host-`, the Worker's routing and the bindings behave as in production. Try every endpoint there once, with a `.dev.vars` that points at nothing real.
 - On Windows with Git Bash, an argument that is only `/` or starts with `/` is rewritten into a Windows path. Pass whole URLs to scripts.

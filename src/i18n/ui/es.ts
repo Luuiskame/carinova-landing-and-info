@@ -407,16 +407,6 @@ export const ui = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'Conectamos',
-    usa: 'Estados Unidos',
-    with: 'con',
-    nicaragua: 'Nicaragua',
-    soon: 'próximamente',
-    to: 'a',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'Tu dirección en Estados Unidos',
@@ -427,12 +417,6 @@ export const ui = {
       `Pronto vas a poder recibir tus compras también en ${city}, ${state}. Cuando la bodega esté habilitada, su dirección va a aparecer aquí.`,
     meanwhile: (city: string) => `Mientras tanto, usá tu dirección de ${city}.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: '¿Con qué sucursal?', label: 'Escribinos' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'Navegación principal', menu: 'Menú' },
 
   // pages/404.astro
   notFoundPage: {
@@ -881,47 +865,11 @@ export const ui = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'Estamos en línea',
-    channelsTitle: 'Seguinos y escribinos',
-    previous: 'Canales anteriores',
-    next: 'Más canales',
-    /** The name of the e-mail among the channels. */
-    email: 'Correo',
-    languages: 'Idiomas',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'Inicio',
-    services: 'Servicios',
-    shopper: 'Compras por vos',
-    rates: 'Tarifas',
-    calculator: 'Cotizador',
-    howItWorks: 'Cómo funciona',
-    business: 'Empresas',
-    help: 'Ayuda',
-    explore: 'Explorá',
-    yours: 'Tu Carinova',
-    near: 'Estamos cerca',
-    canItEnter: '¿Puede ingresar?',
-    tracking: 'Rastreo',
-    faq: 'Preguntas frecuentes',
-    about: 'Nosotros',
     reviews: 'Opiniones',
-    terms: 'Condiciones del servicio',
-    privacy: 'Privacidad',
-    and: ' y ',
     or: ' o ',
-    brand: 'Envíos que unen. Acercamos tus compras, tu familia y los proyectos de tu empresa.',
-    route: ['USA', 'Nicaragua'],
-    rights: 'Todos los derechos reservados. Tarifas y plazos sujetos a verificación.',
-    /** The language menu of the header. */
-    language: 'Idioma',
-    languageChoose: 'Elegí tu idioma',
-    locker: `Casillero en ${warehouse.city}`,
-    stores: 'Tiendas',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

@@ -25,8 +25,25 @@ const closeLanguages = (returnFocus = false) => {
   langButton.setAttribute('aria-expanded', 'false');
   if (returnFocus) langButton.focus();
 };
+/**
+ * Each language's link leads to this page in that language, with what the address carries now: a
+ * calculator filled in from a link, the token of a sign-up being confirmed, the package the tracker
+ * shows, a section. Read when the menu opens, since the tracker writes the package it shows into
+ * the address. A page that has no translations names none in its <head> (the 404 page): its links
+ * lead to each language's home page, as they are.
+ */
+const carryAddress = () => {
+  if (!langMenu || !document.head.querySelector('link[rel="alternate"][hreflang]')) return;
+  for (const link of $$<HTMLAnchorElement>('a[data-lang]', langMenu)) {
+    const url = new URL(link.href);
+    url.search = window.location.search;
+    url.hash = window.location.hash;
+    link.href = url.href;
+  }
+};
 const openLanguages = (focusCurrent: boolean) => {
   if (!langButton || !langMenu) return;
+  carryAddress();
   langMenu.hidden = false;
   langButton.setAttribute('aria-expanded', 'true');
   if (focusCurrent) ($<HTMLElement>('[aria-current="true"]', langMenu) ?? $<HTMLElement>('a', langMenu))?.focus();
@@ -125,13 +142,20 @@ document.addEventListener('keydown', (event) => {
   closeLanguages();
 });
 
-// "Crear cuenta" joins the bar once the page's opening is out of sight, and leaves it at the
-// page's closing call, which has its own: the first and the last sections of the page.
+// "Crear cuenta" ("Mi cuenta" for a customer who is signed in) joins the bar once the page's
+// opening (its first section) is out of sight, and leaves it at the page's closing call, which has
+// its own: the last section, when it leads where the bar's button leads. A page that ends otherwise
+// keeps the button to its end; the page it leads to never shows it.
 if ('IntersectionObserver' in window) {
   const header = $('.site-header');
-  const opening = $('main > :first-child');
-  const closing = $('main > :last-child');
-  if (header && opening && closing && opening !== closing) {
+  const signedIn = document.documentElement.dataset.session === 'in';
+  const cta = $<HTMLAnchorElement>(`.header-cta[data-auth="${signedIn ? 'in' : 'out'}"]`);
+  const sections = $$('main > :not(script, style, template)');
+  const opening = sections[0];
+  const last = sections.at(-1);
+  const closing =
+    cta && last && last !== opening && last.querySelector(`a[href="${cta.getAttribute('href')}"]`) ? last : null;
+  if (header && cta && opening && sections.length > 1 && cta.pathname !== window.location.pathname) {
     let pastOpening = false;
     let atClosing = false;
     const update = () => header.classList.toggle('show-cta', pastOpening && !atClosing);
@@ -139,10 +163,12 @@ if ('IntersectionObserver' in window) {
       pastOpening = !entry.isIntersecting && entry.boundingClientRect.top < 0;
       update();
     }).observe(opening);
-    new IntersectionObserver(([entry]) => {
-      atClosing = entry.isIntersecting;
-      update();
-    }).observe(closing);
+    if (closing) {
+      new IntersectionObserver(([entry]) => {
+        atClosing = entry.isIntersecting;
+        update();
+      }).observe(closing);
+    }
   }
 }
 

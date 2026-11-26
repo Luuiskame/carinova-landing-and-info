@@ -13,10 +13,10 @@
 // - The values are still a draft, drawn from the emblem: Carinova has to confirm them.
 // - Structured data: the page (AboutPage), the company with where it was born and where its
 //   branches are (src/utils/schema.ts), the trail and the questions.
-// - Its header, footer and WhatsApp button are the home page's (`homeParts`, D-137): a visitor
-//   comes here from the home page's menu, and the page looks like the one they came from. So
-//   Carinova's networks are in the footer, as icons, and "Carinova en datos" names them as icons
-//   too (D-138).
+// - Its header, footer and WhatsApp button are the home page's, as on every page (PageLayout.astro,
+//   D-137, D-139): a visitor comes here from the home page's menu, and the page looks like the one
+//   they came from. So Carinova's networks are in the footer, as icons, and "Carinova en datos"
+//   names them as icons too (D-138).
 import { Picture } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
@@ -74,7 +74,7 @@ const factNameClass = 'text-sm font-bold tracking-wide text-muted uppercase';
 const factValueClass = 'mt-1 text-lg font-semibold text-heading sm:mt-0';
 ---
 
-<Layout metadata={metadata} breadcrumb={t.tagline} homeParts>
+<Layout metadata={metadata} breadcrumb={t.tagline}>
   <StructuredData slot="head" schema={schema} />
   <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 

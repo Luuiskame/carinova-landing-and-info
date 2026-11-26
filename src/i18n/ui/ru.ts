@@ -392,16 +392,6 @@ export const ui: UI = {
     },
   },
 
-  // components/carinova/TopStrip.astro
-  topStrip: {
-    connect: 'Соединяем',
-    usa: 'США',
-    with: 'и',
-    nicaragua: 'Никарагуа',
-    soon: 'скоро',
-    to: 'в',
-  },
-
   // components/carinova/UsAddressCard.astro
   usAddressCard: {
     title: 'Ваш адрес в США',
@@ -412,12 +402,6 @@ export const ui: UI = {
       `Скоро вы сможете получать покупки и в городе ${city} (${state}). Когда склад откроется, его адрес появится здесь.`,
     meanwhile: (city: string) => `А пока используйте адрес в городе ${city}.`,
   },
-
-  // components/carinova/WhatsAppFloat.astro
-  whatsAppFloat: { whichBranch: 'Какое отделение?', label: 'Напишите нам' },
-
-  // components/widgets/Header.astro
-  header: { navigation: 'Основная навигация', menu: 'Меню' },
 
   // pages/404.astro
   notFoundPage: {
@@ -855,45 +839,11 @@ export const ui: UI = {
     },
   },
 
-  // components/widgets/Footer.astro
-  footer: {
-    channelsEyebrow: 'Мы на связи',
-    channelsTitle: 'Подписывайтесь и пишите нам',
-    previous: 'Предыдущие каналы',
-    next: 'Ещё каналы',
-    email: 'Почта',
-    languages: 'Языки',
-  },
-
-  // src/navigation.ts and the layouts: the header, the footer and the trail of a page
+  // The trail of a page (PageLayout.astro), the link to the reviews of the home page's footer, and "or".
   nav: {
     home: 'Главная',
-    services: 'Услуги',
-    shopper: 'Купим за вас',
-    rates: 'Тарифы',
-    calculator: 'Калькулятор',
-    howItWorks: 'Как это работает',
-    business: 'Бизнесу',
-    help: 'Помощь',
-    explore: 'Обзор',
-    yours: 'Ваш Carinova',
-    near: 'Мы рядом',
-    canItEnter: 'Можно ли ввезти?',
-    tracking: 'Отслеживание',
-    faq: 'Частые вопросы',
-    about: 'О нас',
     reviews: 'Отзывы',
-    terms: 'Условия обслуживания',
-    privacy: 'Конфиденциальность',
-    and: ' и ',
     or: ' или ',
-    brand: 'Доставка, которая сближает. Мы приближаем к вам покупки, родных и проекты вашей компании.',
-    route: ['США', 'Никарагуа'],
-    rights: 'Все права защищены. Тарифы и сроки подлежат проверке.',
-    language: 'Язык',
-    languageChoose: 'Выберите язык',
-    locker: `Адрес в ${warehouse.city}`,
-    stores: 'Магазины',
   },
 
   // components/common/Metadata.astro: what a page without its own title or description says

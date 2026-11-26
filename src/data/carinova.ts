@@ -872,9 +872,8 @@ export const WA_MESSAGES = {
     '/privacidad': hello('Tengo una consulta sobre mis datos personales.'),
   } as Record<string, string>,
   floatingDefault: hello('Vengo de su sitio web y tengo una consulta.'),
-  /** The footer: its WhatsApp link, and WhatsApp among Carinova's channels. */
+  /** The footer: its WhatsApp link, the number under "Contacto". */
   footer: hello('Vengo de su sitio web y quiero información.'),
-  channels: hello('Los encontré en su sitio web y quiero escribirles.'),
 
   // Home page
   /** "Contactar al equipo", under the conditions of the service on the home page. */
