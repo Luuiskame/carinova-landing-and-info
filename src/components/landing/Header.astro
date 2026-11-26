@@ -13,14 +13,25 @@
 // the flag, then the name or the code. A row does not turn around for a language written from right
 // to left, nor does the menu on the Arabic page; only the name of a language is written in its own
 // direction (D-135). Whoever cannot read the page they landed on finds the same menu there.
+//
+// The same header is the header of the page about Carinova (`inner`, D-137): the wordmark and the
+// sections lead to the home page, the account and "Crear cuenta" are links to their pages (that
+// page has none of the home page's dialogs), and the menu's last row says it is the page in view.
+// Its look comes with it (LandingChrome.astro); its script is scripts/chrome.ts.
 import wordmarkSvg from '~/assets/images/landing/wordmark.svg?raw';
 import { LANGUAGE_ORDER } from '~/data/landing';
-import { LOCALE_INFO, i18n, languagesOf } from '~/i18n';
+import { LOCALE_INFO, i18n, languagesOf, spanishPath } from '~/i18n';
 import { getPermalink } from '~/utils/permalinks';
 
 import { FLAGS } from './helpers';
 import Icon from './Icon.astro';
 
+export interface Props {
+  /** On another page of the site than the home page (D-137). */
+  inner?: boolean;
+}
+
+const { inner = false } = Astro.props;
 const { locale, href, data, ui } = i18n(Astro);
 const { CTA } = data;
 const t = ui.landing;
@@ -43,31 +54,38 @@ const more = [
   { id: 'sucursales', text: t.navLocations },
   { id: 'preguntas', text: t.faqTitle },
 ];
+/** A section of the home page: from this page, or from another page of the site. */
+const section = (id: string) => (inner ? href(`/#${id}`) : `#${id}`);
+/** What opens a view of the home page's dialog there; elsewhere the link leads to its page. */
+const dialog = (view: string) => (inner ? undefined : view);
+const about = '/nosotros';
 /**
- * The rows of the menu: the sections of this page, then the page about Carinova. "Nuestras raíces"
- * was the second thing a visitor saw here; since it is a page (D-131) the menu leads to it, in the
- * words of the footer's link (D-133).
+ * The rows of the menu: the sections of the home page, then the page about Carinova, which says so
+ * when it is the page in view. "Nuestras raíces" was the second thing a visitor saw here; since it
+ * is a page (D-131) the menu leads to it, in the words of the footer's link (D-133).
  */
 const menu = [
-  ...[...sections, ...more].map(({ id, text }) => ({ href: `#${id}`, text })),
-  { href: href('/nosotros'), text: t.footerAbout },
+  ...[...sections, ...more].map(({ id, text }) => ({ href: section(id), text, current: false })),
+  { href: href(about), text: t.footerAbout, current: spanishPath(Astro.url.pathname) === about },
 ];
 ---
 
 <header class="site-header on-navy">
   <div class="wrap header-inner">
-    <a class="brand" href="#inicio" aria-label={t.homeAria}><Fragment set:html={wordmark} /></a>
+    <a class="brand" href={inner ? href('/') : '#inicio'} aria-label={t.homeAria}><Fragment set:html={wordmark} /></a>
     <nav class="nav-desktop" aria-label={t.mainNavAria}>
       {
         sections.map(({ id, text }) => (
-          <a href={`#${id}`} data-spy={id}>
+          <a href={section(id)} data-spy={inner ? undefined : id}>
             {text}
           </a>
         ))
       }
     </nav>
     <div class="header-tools">
-      <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-dialog="account">{t.createCta}</a>
+      <a class="btn btn-primary btn-sm header-cta" href={href(CTA.signup.path)} data-dialog={dialog('account')}
+        >{t.createCta}</a
+      >
       {
         languages.length > 0 && (
           <div class="lang-wrap">
@@ -110,7 +128,7 @@ const menu = [
           </div>
         )
       }
-      <a class="icon-btn" href={href(CTA.account.path)} aria-label={t.account} data-dialog="account"
+      <a class="icon-btn" href={href(CTA.account.path)} aria-label={t.account} data-dialog={dialog('account')}
         ><Icon name="user" /><span class="account-dot" data-auth="in"></span></a
       >
       <button
@@ -126,16 +144,16 @@ const menu = [
     </div>
     <nav class="mobile-nav" id="mobile-menu" aria-label={t.menuAria} hidden>
       {
-        menu.map(({ href: to, text }) => (
-          <a href={to}>
+        menu.map(({ href: to, text, current }) => (
+          <a href={to} aria-current={current ? 'page' : undefined}>
             <span>{text}</span>
             <Icon name="chevron" />
           </a>
         ))
       }
       <div class="mobile-nav-actions">
-        <a class="btn btn-ghost btn-sm" href={href(CTA.track.path)} data-dialog="tracking">{t.trackCta}</a>
-        <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-dialog="account">{t.createCta}</a>
+        <a class="btn btn-ghost btn-sm" href={href(CTA.track.path)} data-dialog={dialog('tracking')}>{t.trackCta}</a>
+        <a class="btn btn-primary btn-sm" href={href(CTA.signup.path)} data-dialog={dialog('account')}>{t.createCta}</a>
       </div>
     </nav>
   </div>

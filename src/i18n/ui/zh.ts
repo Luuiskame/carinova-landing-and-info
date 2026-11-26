@@ -647,8 +647,6 @@ export const ui: UI = {
     seeAll: '查看全部评价',
     moreTitle: '还有更多评价',
     moreText: '看看客户们怎样讲述他们的寄件体验。',
-    previous: '上一组评价',
-    next: '下一组评价',
   },
 
   // pages/opiniones.astro

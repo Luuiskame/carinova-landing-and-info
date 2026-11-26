@@ -662,8 +662,6 @@ export const ui: UI = {
     seeAll: 'عرض كل المراجعات',
     moreTitle: 'هناك مراجعات أخرى',
     moreText: 'اقرأ كل ما يرويه عملاؤنا عن شحناتهم.',
-    previous: 'المراجعات السابقة',
-    next: 'المراجعات التالية',
   },
 
   // pages/opiniones.astro

@@ -696,8 +696,6 @@ export const ui: UI = {
     seeAll: 'See all reviews',
     moreTitle: 'There are more reviews',
     moreText: 'Read everything our customers say about their shipments.',
-    previous: 'Previous reviews',
-    next: 'Next reviews',
   },
 
   // pages/opiniones.astro

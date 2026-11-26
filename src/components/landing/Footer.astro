@@ -12,13 +12,24 @@
 // - The company's legal name and RUC show once COMPANY has them.
 // - "Privacidad" opens Carinova's note on privacy, which leads to the site's policy; "Condiciones del
 //   servicio" opens Carinova's summary (Dialogs.astro). Without the script: the policy and the terms.
+// - The WhatsApp button carries the message of the page it is on (WA_MESSAGES.floating).
+//
+// The same footer ends the page about Carinova (`inner`, D-137), without the closing call (that
+// page has its own): the sections it names are the home page's, and what opens a dialog on the
+// home page is a plain link to its page there. Its look comes with it (LandingChrome.astro).
 import { COMPANY, CONTACT, SOCIAL_LINKS } from '~/data/carinova';
-import { i18n } from '~/i18n';
+import { i18n, spanishPath } from '~/i18n';
 import { whatsappLink } from '~/utils/whatsapp';
 
 import { SOCIAL_ICONS, hoursRange } from './helpers';
 import Icon from './Icon.astro';
 
+export interface Props {
+  /** On another page of the site than the home page (D-137). */
+  inner?: boolean;
+}
+
+const { inner = false } = Astro.props;
 const { locale, href, data, ui } = i18n(Astro);
 const { BRANCHES, CTA, RECEPTION_HOURS, RECEPTION_POINTS, WA_MESSAGES } = data;
 const t = ui.landing;
@@ -26,16 +37,20 @@ const t = ui.landing;
 /** The branches open at the same times: their hours are said once (the first one's). */
 const [branchHours] = BRANCHES[0].hours;
 
+/** A section of the home page: from this page, or from another page of the site. */
+const section = (id: string) => (inner ? href(`/#${id}`) : `#${id}`);
+/** What opens a view of the home page's dialog there; elsewhere the link leads to its page. */
+const dialog = (view: string) => (inner ? undefined : view);
 const services = [
-  { text: t.footerQuote, href: '#cotizador' },
-  { text: t.trackCta, href: href(CTA.track.path), dialog: 'tracking' },
-  { text: t.shopperName, href: '#personal-shopper' },
-  { text: t.businessName, href: '#business' },
+  { text: t.footerQuote, href: section('cotizador') },
+  { text: t.trackCta, href: href(CTA.track.path), dialog: dialog('tracking') },
+  { text: t.shopperName, href: section('personal-shopper') },
+  { text: t.businessName, href: section('business') },
 ];
 const help = [
-  { text: t.navHow, href: '#como-funciona' },
-  { text: t.navCheck, href: '#restricciones' },
-  { text: t.faqTitle, href: '#preguntas' },
+  { text: t.navHow, href: section('como-funciona') },
+  { text: t.navCheck, href: section('restricciones') },
+  { text: t.faqTitle, href: section('preguntas') },
   // Two pages of their own: who Carinova is (with "Nuestras raíces", once a section of this page) and what its customers say.
   { text: t.footerAbout, href: href('/nosotros') },
   { text: ui.nav.reviews, href: href('/opiniones') },
@@ -43,27 +58,35 @@ const help = [
 const networks = SOCIAL_LINKS.filter((link) => SOCIAL_ICONS[link.name]);
 const hasCompany = Boolean(COMPANY.legalName || COMPANY.ruc);
 const year = new Date().getFullYear();
+// The messages are kept by the page's Spanish path, whatever language it is read in.
+const floating = WA_MESSAGES.floating[spanishPath(Astro.url.pathname)] ?? WA_MESSAGES.floatingDefault;
 ---
 
 <footer class="site-footer on-navy">
-  <div class="footer-cta hero-section">
-    <div class="wrap final">
-      <div class="final-head">
-        <h2 class="final-title" id="final-title">{t.finalHeading}</h2>
-        <p class="final-lead">{t.finalLead}</p>
+  {
+    !inner && (
+      <div class="footer-cta hero-section">
+        <div class="wrap final">
+          <div class="final-head">
+            <h2 class="final-title" id="final-title">
+              {t.finalHeading}
+            </h2>
+            <p class="final-lead">{t.finalLead}</p>
+          </div>
+          <div class="final-actions hero-cta">
+            <a class="btn btn-primary" href={href(CTA.signup.path)} data-dialog="account" data-account-kind="personal">
+              <Icon name="user" />
+              <span>{t.finalCtaPersonal}</span>
+            </a>
+            <a class="btn btn-ghost" href={href('/empresas')} data-dialog="account" data-account-kind="business">
+              <Icon name="briefcase" />
+              <span>{t.finalCtaBusiness}</span>
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="final-actions hero-cta">
-        <a class="btn btn-primary" href={href(CTA.signup.path)} data-dialog="account" data-account-kind="personal">
-          <Icon name="user" />
-          <span>{t.finalCtaPersonal}</span>
-        </a>
-        <a class="btn btn-ghost" href={href('/empresas')} data-dialog="account" data-account-kind="business">
-          <Icon name="briefcase" />
-          <span>{t.finalCtaBusiness}</span>
-        </a>
-      </div>
-    </div>
-  </div>
+    )
+  }
   <div class="footer-body">
     <div class="wrap footer-main">
       <nav class="footer-col" aria-labelledby="footer-services">
@@ -92,7 +115,8 @@ const year = new Date().getFullYear();
           }
         </ul>
       </nav>
-      <section class="footer-col footer-branches" id="sucursales" aria-labelledby="footer-places">
+      {/* Where the home page's menu leads for "Sucursales". Elsewhere the page may have a section of that name. */}
+      <section class="footer-col footer-branches" id={inner ? undefined : 'sucursales'} aria-labelledby="footer-places">
         <h2 id="footer-places">{t.navLocations}</h2>
         <div class="footer-places">
           <div>
@@ -172,18 +196,18 @@ const year = new Date().getFullYear();
     <div class="wrap footer-bottom">
       <p class="footer-copy">© <span id="year">{year}</span> Carinova. <span>{t.allRights}</span></p>
       <div class="footer-legal">
-        <a href={href('/privacidad')} data-dialog="privacy">{t.footerPrivacy}</a>
-        <a href={href('/terminos')} data-dialog="conditions">{t.serviceConditions}</a>
+        <a href={href('/privacidad')} data-dialog={dialog('privacy')}>{t.footerPrivacy}</a>
+        <a href={href('/terminos')} data-dialog={dialog('conditions')}>{t.serviceConditions}</a>
       </div>
     </div>
   </div>
   <a
     class="wa-fab"
-    href={whatsappLink(CONTACT.whatsapp, WA_MESSAGES.floating['/'] ?? WA_MESSAGES.floatingDefault)}
+    href={whatsappLink(CONTACT.whatsapp, floating)}
     target="_blank"
     rel="noopener"
     aria-label={t.whatsappAria}><Icon name="chat" /></a
   >
   {/* A short notice that goes away by itself ("Sesión cerrada."): written by scripts/dialogs.ts. */}
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  {!inner && <div class="toast" id="toast" role="status" aria-live="polite" hidden />}
 </footer>

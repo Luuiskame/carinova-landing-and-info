@@ -2384,11 +2384,12 @@ html.has-dock {
   block-size: auto;
 }
 
-/* ───────── What customers say: a row of reviews moved by hand, the next one in view ─────────
+/* ───────── What customers say: a row of reviews that moves by itself, the next one in view ─────────
    Carinova's page showed one card at a time, changing by itself. Since 2026-11-21 the cards stand
    side by side (one on a phone, two on a tablet, three on a desktop) with the edge of the next
-   one showing, so that it is plain there are more (D-130). The row scrolls by itself: a finger, a
-   trackpad, the keyboard. The script adds the arrows and the bar under it (scripts/carousel.ts). */
+   one showing, so that it is plain there are more (D-130). The row scrolls: a finger, a trackpad,
+   the keyboard. Since 2026-11-25 it also moves by itself, one card at a time and without end, with
+   nothing drawn under it to move it (D-136, scripts/carousel.ts). */
 .testimonials {
   overflow: hidden;
   background: linear-gradient(160deg, #1d4062 0%, #163a5c 55%, #11304d 100%);
@@ -2399,58 +2400,6 @@ html.has-dock {
 }
 .testimonials .hero-title {
   max-width: 12.11em;
-}
-/* Under the row: the two arrows, and how far along it is. Its place is kept from the start, so
-   nothing moves when the script arrives; it shows once the script has found that the row is wider
-   than the screen. */
-.t-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  visibility: hidden;
-}
-.t-controls.is-ready {
-  visibility: visible;
-}
-@media (scripting: none) {
-  .t-controls {
-    display: none;
-  }
-}
-.t-arrow {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--on-navy);
-  transition:
-    background-color 0.15s,
-    border-color 0.15s,
-    opacity 0.15s;
-}
-.t-arrow:hover:not([aria-disabled='true']) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.6);
-}
-.t-arrow[aria-disabled='true'] {
-  opacity: 0.35;
-  cursor: default;
-}
-.t-arrow svg {
-  width: 20px;
-  height: 20px;
-}
-/* "Back" is the same arrow turned round; in a page written from right to left, it is the other. */
-.t-arrow.is-back svg {
-  scale: -1 1;
-}
-[dir='rtl'] .t-arrow.is-back svg {
-  scale: 1 1;
 }
 .t-viewport {
   /* As wide as the screen, up to the section's column and its gutters. */
@@ -2664,23 +2613,6 @@ html.has-dock {
 .t-more .btn {
   margin-top: 6px;
   white-space: normal;
-}
-/* How far along the row is: as wide as the share of the row in view, and where that share is. */
-.t-bar {
-  flex: 1;
-  height: 4px;
-  margin-inline-start: 10px;
-  overflow: hidden;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.16);
-}
-.t-bar span {
-  display: block;
-  width: calc(var(--t-size, 1) * 100%);
-  height: 100%;
-  margin-inline-start: calc(var(--t-at, 0) * (1 - var(--t-size, 1)) * 100%);
-  border-radius: inherit;
-  background: var(--orange);
 }
 .t-sources {
   display: flex;

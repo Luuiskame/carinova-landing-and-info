@@ -1,0 +1,72 @@
+---
+// The home page's header, footer and WhatsApp button on another page of the site (D-137). The
+// developer asked on 2026-11-25 that the page a visitor opens from the home page's menu, "Sobre
+// nosotros", look like the home page: its bar with the flag of the language and no "Ingresá", its
+// footer, its green button. The parts are the home page's own components (Header.astro and
+// Footer.astro, with `inner`), and what draws them is the home page's stylesheet, landing.css,
+// reduced to the rules that draw them and fenced into them (utils/scope-css.ts): the rest of the
+// page keeps its own look, and the parts cannot drift from the home page's.
+//
+// The page hands the header in the slot `header` and the footer in `footer` (PageLayout.astro).
+// Which rules come is read from the two as they are rendered, so a class added to them brings its
+// rules along; `show-cta` is the one a script gives them, and `sprite` the one of the drawings of
+// their icons (the home page's, icons.ts: only those the parts use). Their script is
+// scripts/chrome.ts.
+import landingCss from '~/assets/styles/landing.css?raw';
+import { scopeCss } from '~/utils/scope-css';
+
+import { ICONS } from './icons';
+
+/** The class of the wrappers the parts are drawn in. */
+const SCOPE = 'landing-part';
+const inside = (selectors: string) =>
+  `:where(${selectors
+    .split(',')
+    .map((selector) => `.${SCOPE} ${selector}`)
+    .join(',')})`;
+/**
+ * The home page starts from the browser's own styles; the rest of the site from Tailwind's base
+ * (preflight), which changes what every element starts with (no margin, no padding, no border, a
+ * heading the size of the text, a link without underline…) and what the whole page inherits (the
+ * letter spacing of the site's text too: `tracking-tight` on the body, Layout.astro). Inside the
+ * parts the first go back to the browser's own (`revert`), at no weight, so that the home page's
+ * rules meet what they meet there; the second are written as the home page has them. The list is
+ * preflight's.
+ */
+const UNDO = [
+  `.${SCOPE}{letter-spacing:normal;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:initial;tab-size:initial}`,
+  `${inside('*')},${inside('*')}::before,${inside('*')}::after{margin:revert;padding:revert;border:revert}`,
+  `${inside('h1,h2,h3,h4,h5,h6')}{font-size:revert;font-weight:revert}`,
+  `${inside('a')}{color:revert;text-decoration:revert}`,
+  `${inside('b,strong')}{font-weight:revert}`,
+  `${inside('small')}{font-size:revert}`,
+  `${inside('ol,ul,menu')}{list-style:revert}`,
+  `${inside('img,svg,video,canvas,audio,iframe,embed,object')}{display:revert;vertical-align:revert}`,
+  `${inside('img,video')}{max-width:revert;height:revert}`,
+  `${inside('button,input,select,optgroup,textarea')}{font:revert;font-feature-settings:revert;font-variation-settings:revert;letter-spacing:revert;color:revert;border-radius:revert;background-color:revert;opacity:revert;appearance:revert}`,
+].join('');
+
+const header = await Astro.slots.render('header');
+const footer = await Astro.slots.render('footer');
+const markup = `${header}${footer}`;
+const css = UNDO + scopeCss(landingCss, { scope: SCOPE, markup, extraClasses: ['show-cta', 'sprite'] });
+
+/** The drawings the parts point at, and the one the menu's button takes while the menu is open. */
+const used = new Set(['i-close', ...Array.from(markup.matchAll(/href="#([\w-]+)"/g), (match) => match[1])]);
+const symbols = Object.entries(ICONS)
+  .filter(([id]) => used.has(id))
+  .map(([id, { viewBox, body }]) => `<symbol id="${id}" viewBox="${viewBox}">${body}</symbol>`)
+  .join('');
+---
+
+<style is:inline set:html={css}></style>
+<div class={SCOPE}>
+  <svg class="sprite" aria-hidden="true" focusable="false"><defs set:html={symbols} /></svg>
+  <Fragment set:html={header} />
+</div>
+<slot />
+<div class={SCOPE}><Fragment set:html={footer} /></div>
+
+<script>
+  import './scripts/chrome';
+</script>

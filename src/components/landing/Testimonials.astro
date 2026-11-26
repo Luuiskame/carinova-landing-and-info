@@ -1,8 +1,9 @@
 ---
-// "Lo que dicen nuestros clientes": the newest reviews in a row that is moved by hand, with the
-// edge of the next card in view so that it shows there are more, arrows, a bar that says how far
-// along the row is, and the way to all of them (/opiniones). Asked by the developer on 2026-11-21
-// (D-130): Carinova's page showed one card at a time, changing by itself, with nothing to move it.
+// "Lo que dicen nuestros clientes": the newest reviews in a row, with the edge of the next card in
+// view so that it shows there are more, and the way to all of them (/opiniones). The row came in
+// on 2026-11-21 (D-130), moved by hand with two arrows and a bar under it; since 2026-11-25 it
+// moves by itself, one card at a time and without end, and nothing is drawn to move it (D-136).
+// Carinova's page showed one card at a time, changing by itself, with nothing to move it.
 //
 // - The cards are a preview: the newest of REVIEWS (src/data/carinova.ts), Facebook and Google
 //   taking turns once both have reviews (utils/reviews.ts → previewOf). Each is the review as its
@@ -11,8 +12,8 @@
 //   source says of it (a recommendation, or a Google review's stars) and a link to it there.
 // - A long review shows its beginning and leads to the whole of it on the page of reviews.
 // - When there are more reviews than cards, the last card of the row says so and leads to them.
-// - The row is a list that scrolls sideways by itself (a finger, a trackpad, the keyboard): the
-//   script only adds the arrows and the bar (scripts/carousel.ts), and without it nothing is lost.
+// - The row is a list that scrolls sideways (a finger, a trackpad, the keyboard): the script makes
+//   it move by itself and without end (scripts/carousel.ts), and without it nothing is lost.
 // - Until there are reviews, the section shows the three cards of Carinova's page, which say that
 //   a customer's own words will go there: a place kept for reviews, not a review.
 import { REVIEWS, REVIEW_SOURCES } from '~/data/carinova';
@@ -160,21 +161,6 @@ const all = href('/opiniones');
     </ul>
   </div>
   <div class="wrap">
-    {
-      /*
-      The arrows that move the row and how far along it is: the script shows them (scripts/carousel.ts).
-      The arrows are where the row starts: the floating WhatsApp button sits over the other end.
-    */
-    }
-    <div class="t-controls" id="t-controls">
-      <button class="t-arrow is-back" id="t-prev" type="button" aria-label={words.previous} aria-controls="t-track">
-        <Icon name="arrow" />
-      </button>
-      <button class="t-arrow" id="t-next" type="button" aria-label={words.next} aria-controls="t-track">
-        <Icon name="arrow" />
-      </button>
-      <div class="t-bar" id="t-bar" aria-hidden="true"><span></span></div>
-    </div>
     <p class="sr-only" id="t-keys">{t.uiCarouselKeys}</p>
     {
       reviews.length > 0 && (

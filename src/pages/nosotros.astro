@@ -13,6 +13,10 @@
 // - The values are still a draft, drawn from the emblem: Carinova has to confirm them.
 // - Structured data: the page (AboutPage), the company with where it was born and where its
 //   branches are (src/utils/schema.ts), the trail and the questions.
+// - Its header, footer and WhatsApp button are the home page's (`homeParts`, D-137): a visitor
+//   comes here from the home page's menu, and the page looks like the one they came from. So
+//   Carinova's networks are in the footer, as icons, and "Carinova en datos" names them as icons
+//   too (D-138).
 import { Picture } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import Layout from '~/layouts/PageLayout.astro';
@@ -25,6 +29,8 @@ import ReviewCard from '~/components/carinova/ReviewCard.astro';
 import ServiceBadge from '~/components/carinova/ServiceBadge.astro';
 import WhatsAppHelp from '~/components/carinova/WhatsAppHelp.astro';
 import StructuredData from '~/components/common/StructuredData.astro';
+import { SOCIAL_ICONS } from '~/components/landing/helpers';
+import { ICONS } from '~/components/landing/icons';
 
 import emblem from '~/assets/images/landing/emblem.webp';
 import { CONTACT, REVIEWS, SOCIAL_LINKS } from '~/data/carinova';
@@ -53,6 +59,9 @@ const transport = [
   { rate: RATES.air, label: modes.air.overline },
   { rate: RATES.sea, label: modes.sea.overline },
 ];
+/** A network's drawing in the footer of the home page, which this page has (D-137); none for a network it does not draw. */
+const networkDrawing = (name: string): { viewBox: string; body: string } | undefined =>
+  name in SOCIAL_ICONS ? ICONS[SOCIAL_ICONS[name]] : undefined;
 /** The three newest reviews: the page of reviews has them all. */
 const reviews = reviewCards(newestFirst(REVIEWS).slice(0, 3), LOCALE_INFO[locale].intl, REVIEWS);
 
@@ -65,7 +74,7 @@ const factNameClass = 'text-sm font-bold tracking-wide text-muted uppercase';
 const factValueClass = 'mt-1 text-lg font-semibold text-heading sm:mt-0';
 ---
 
-<Layout metadata={metadata} breadcrumb={t.tagline}>
+<Layout metadata={metadata} breadcrumb={t.tagline} homeParts>
   <StructuredData slot="head" schema={schema} />
   <HeroText tagline={t.tagline} title={t.title} subtitle={t.subtitle} />
 
@@ -199,24 +208,33 @@ const factValueClass = 'mt-1 text-lg font-semibold text-heading sm:mt-0';
           <dd class={factValueClass}><span dir="ltr">{CONTACT.whatsappDisplay}</span></dd>
         </div>
         {
+          /* The networks as icons only, round and drawn as in the footer (D-138): their names are read out, not shown. */
           SOCIAL_LINKS.length > 0 && (
             <div class={factClass}>
               <dt class={factNameClass}>{t.facts.networks}</dt>
               <dd class={factValueClass}>
-                <ul class="flex flex-wrap gap-x-6 gap-y-1">
-                  {SOCIAL_LINKS.map((link) => (
-                    <li>
-                      <a
-                        class="inline-flex items-center gap-1.5 text-link underline underline-offset-4"
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener"
-                      >
-                        <Icon name={link.icon} class="h-5 w-5 shrink-0" />
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
+                <ul class="flex flex-wrap gap-2.5">
+                  {SOCIAL_LINKS.map((link) => {
+                    const drawing = networkDrawing(link.name);
+                    return (
+                      <li>
+                        <a
+                          class="grid h-11 w-11 place-items-center rounded-full border border-slate-300 text-heading transition hover:border-cta hover:bg-cta hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener"
+                          aria-label={link.name}
+                          title={link.name}
+                        >
+                          {drawing ? (
+                            <svg class="h-5 w-5" viewBox={drawing.viewBox} aria-hidden="true" set:html={drawing.body} />
+                          ) : (
+                            <Icon name={link.icon} class="h-5 w-5" />
+                          )}
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               </dd>
             </div>

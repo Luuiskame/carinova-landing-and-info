@@ -727,8 +727,6 @@ export const ui = {
     seeAll: 'Ver todas las opiniones',
     moreTitle: 'Hay más opiniones',
     moreText: 'Leé todo lo que nuestros clientes cuentan de sus envíos.',
-    previous: 'Opiniones anteriores',
-    next: 'Opiniones siguientes',
   },
 
   // pages/opiniones.astro

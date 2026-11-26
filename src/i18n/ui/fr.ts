@@ -698,8 +698,6 @@ export const ui: UI = {
     seeAll: 'Voir tous les avis',
     moreTitle: 'Il y a d’autres avis',
     moreText: 'Lisez tout ce que nos clients racontent de leurs envois.',
-    previous: 'Avis précédents',
-    next: 'Avis suivants',
   },
 
   // pages/opiniones.astro
